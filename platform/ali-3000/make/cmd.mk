@@ -1,5 +1,0 @@
-PLATFORM_TOOL_PATH	:= /mips-4.4/bin
-
-PLATFORM_TOOL_NAME	:= gcc44
-
-PLATFORM_TOOL_PREFIX	:= mips-linux-gnu-

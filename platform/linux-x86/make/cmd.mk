@@ -1,1 +1,0 @@
-PLATFORM_TOOL_NAME	:= gcc44
