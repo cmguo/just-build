@@ -16,10 +16,10 @@ make_code_boot		= $(eval $(call code_boot,$(1))) $(if $(call directory,$(1)),$(c
 
 boot//% : 
 	@$(MKDIR) $(patsubst boot//%,$(ROOT_BUILD_DIRECTORY)/%,$@)
-	@$(CP) $(ROOT_MAKE_DIRECTORY)/tpl/makefile.mk $(ROOT_BUILD_DIRECTORY)/$(patsubst boot/%,%,$@)/Makefile
+	@ls $(ROOT_BUILD_DIRECTORY)/$(patsubst boot/%,%,$@)/Makefile || $(CP) $(ROOT_MAKE_DIRECTORY)/tpl/makefile.mk $(ROOT_BUILD_DIRECTORY)/$(patsubst boot/%,%,$@)/Makefile
 
 %/BootStrap.mk : 
-	@$(CP) $(ROOT_MAKE_DIRECTORY)/tpl/bootstrap.mk $@
+	@ls $@ || $(CP) $(ROOT_MAKE_DIRECTORY)/tpl/bootstrap.mk $@
 
 boot/ :
 
