@@ -29,25 +29,29 @@ PLATFORM_TOOL_PATH		:= $(foreach path,$(PLATFORM_TOOL_PATH),$(shell cd $(path) ;
 $(foreach path,$(PLATFORM_TOOL_PATH),$(eval PATH:=$(path):$(PATH)))
 export PATH
 
-PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_DIRECTORY)
-
-ifneq ($(wildcard $(PLATFORM_DIRECTORY)/cex),)
-	PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_DIRECTORY)/cex
-        ifneq ($(LOCAL_NAME),/cex)
-		PLATFORM_DEPENDS		:= $(PLATFORM_DEPENDS) /cex
-        endif
-endif
-
 GLOBAL_COMPILE_FLAGS		:= $(GLOBAL_COMPILE_FLAGS) -DPLATFORM_NAME=$(PLATFORM_NAME) -DTOOL_NAME=$(PLATFORM_TOOL_NAME)
 GLOBAL_COMPILE_FLAGS		:= $(GLOBAL_COMPILE_FLAGS) -fvisibility=hidden
 
 GLOBAL_LINK_FLAGS		:= $(GLOBAL_LINK_FLAGS) -Wl,--exclude-libs,ALL
 
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_DIRECTORY)
+
+ifneq ($(LOCAL_NAME),/cex)
+        ifneq ($(wildcard $(PLATFORM_DIRECTORY)/cex),)
+		PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_DIRECTORY)/cex
+		PLATFORM_DEPENDS		:= $(PLATFORM_DEPENDS) /cex
+        endif
+endif
+
 COMMON_MAKE_FILES		:= $(addprefix $(ROOT_BUILD_DIRECTORY),$(addsuffix /Common.mk,$(call root_directories,$(LOCAL_NAME))) /Common.mk)
 
 -include $(COMMON_MAKE_FILES)
 
-include $(ROOT_PROJECT_DIRECTORY)$(LOCAL_NAME)/Makefile.in
+ifneq ($(LOCAL_NAME),/cex)
+        include $(ROOT_PROJECT_DIRECTORY)$(LOCAL_NAME)/Makefile.in
+else
+        include $(ROOT_MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.in
+endif
 
 COMMON_MAKE_FILES		:= $(addprefix $(ROOT_PROJECT_DIRECTORY),$(addsuffix /Common.mk,$(call root_directories,$(LOCAL_NAME))) /Common.mk)
 
