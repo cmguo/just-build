@@ -4,6 +4,7 @@
 ## @brief	处理工程目录细节
 ## @version	1.0
 ###############################################################################
+
 SOURCE_DIRECTORY	:= $(PROJECT_SOURCE_DIRECTORY)
 
 ifeq ($(SOURCE_DIRECTORY),)

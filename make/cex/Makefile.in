@@ -16,7 +16,7 @@ PROJECT_VERSION			:= 1.0.0
 
 ## 指定源文件目录（该项目源文件的总目录，相对于源文件根目录ROOT_SOURCE_DIRECTORY，默认为LOCAL_NAME）
 
-PROJECT_SOURCE_DIRECTORY	:= .
+PROJECT_SOURCE_DIRECTORY	:= $(PLATFORM_DIRECTORY)/cex
 
 ## 如果源码目录有子目录，指定子目录的名称（没有指定时，将自动搜索子目录）
 
@@ -28,7 +28,7 @@ PROJECT_SOURCE_DEPTH   		:= 2
 
 ## 指定头文件目录（该项目头文件的总目录，相对于头文件根目录ROOT_HEADER_DIRECTORY，默认为LOCAL_NAME）
 
-PROJECT_HEADER_DIRECTORY	:=
+PROJECT_HEADER_DIRECTORY	:= $(PLATFORM_DIRECTORY)/cex
 
 ## 项目预编译头文件
 
