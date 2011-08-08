@@ -9,7 +9,7 @@ include $(ROOT_MAKE_DIRECTORY)/func/info.mk
 
 # __为了防止重名
 define make_item_depends_pack
-$(2)            := $(strip $($(2)) $(1)__)
+$(2)            := $(strip $($(2)) __$(1)__)
 endef
 
 define get_format_depend
@@ -63,6 +63,6 @@ $(1)
 $(eval $(call make_item_depends_pack,$(1),$(4)))
 $(call get_item_info_vaul,$(1),$(2))
 $(eval $(call $(3),$(1),$(5)))
-$(foreach item,$(call get_child,$(1)),$(if $(findstring $(item)__,$($(4))),,$(call tree_visit,$(item),$(2),$(3),$(4),$(5))))
+$(foreach item,$(call get_child,$(1)),$(if $(findstring __$(item)__,$($(4))),,$(call tree_visit,$(item),$(2),$(3),$(4),$(5))))
 endef
 

@@ -18,7 +18,7 @@ config                  := $(CONFIG)
 
 
 VERSION_DEPEND          := $(call get_item_info,$(PACKET_VERSION_DEPEND),File)
-VERSION_DEPEND          := $(PLATFORM_DIRECTORY)$(PACKET_VERSION_DEPEND)/$(VERSION_DEPEND) 
+VERSION_DEPEND          := $(PLATFORM_BUILD_DIRECTORY)$(PACKET_VERSION_DEPEND)/$(VERSION_DEPEND) 
 
 VERSION                 := $(strip $(shell $(EV) $(VERSION_DEPEND) $(call get_item_info,$(PACKET_VERSION_DEPEND),Target)))
 
