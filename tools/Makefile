@@ -42,6 +42,6 @@ ROOT_TOOLS_DIRECTORY2	:= $(if $(filter /%,$(ROOT_TOOLS_DIRECTORY)),,../)$(ROOT_T
 $(PLATFORM_NAME_ALL) : $(addprefix $(PLATFORM_NAME_ALL),$(PLATFORM_TOOL_PATH))
 
 $(addprefix $(PLATFORM_NAME_ALL),$(PLATFORM_TOOL_PATH)) : 
-	$(LN) -s $(ROOT_TOOLS_DIRECTORY2)/$(call root_directory,$@,2) $(PLATFORM_NAME_ALL)/
+	-$(LN) -s $(ROOT_TOOLS_DIRECTORY2)/$(call root_directory,$@,2) $(PLATFORM_NAME_ALL)/
 
 endif
