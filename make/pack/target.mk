@@ -4,6 +4,7 @@
 ## @brief       删除临时文件，中间文件
 ## @version     1.0
 ###############################################################################
+
 include $(PACK_MAKE_DIRECTORY)/depends.mk
 
 MAKE_DIRECTORYS         := $(TARGET_DIRECTORY) $(TARGET_DIRECTORY)/$(PLATFORM_NAME)

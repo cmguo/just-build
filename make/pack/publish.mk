@@ -4,9 +4,10 @@
 ## @brief       删除临时文件，中间文件
 ## @version     1.0
 ###############################################################################
-include $(PACK_MAKE_DIRECTORY)/target.mk
 
 .PHONY: publish
-publish: target
+publish : $(TARGET_FILE_FULL)
+	@$(ECHO) "$(MKDIR) $(ROOT_PUBLISH_DIRECTORY)/$(PLATFORM_NAME)"
 	@$(MKDIR) $(ROOT_PUBLISH_DIRECTORY)/$(PLATFORM_NAME)
+	@$(ECHO) "$(LN) $(TARGET_FILE_FULL) $(ROOT_PUBLISH_DIRECTORY)/$(PLATFORM_NAME)/$(TARGET_FILE)"
 	@$(LN) $(TARGET_FILE_FULL) $(ROOT_PUBLISH_DIRECTORY)/$(PLATFORM_NAME)/$(TARGET_FILE)

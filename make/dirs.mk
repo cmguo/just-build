@@ -15,7 +15,7 @@ MAKE_TARGETS		:= $(filter $(TARGETS),$(MAKECMDGOALS))
 MAKE_DIRECTORYS		:= $(filter-out $(TARGETS),$(MAKECMDGOALS))
 
 ifeq ($(SUBS),)
-        SUBS			:= $(patsubst %/,%,$(MAKE_DIRECTORYS))
+        SUBS			:= $(subst ^,*,$(patsubst %/,%,$(MAKE_DIRECTORYS)))
 endif
 
 ifeq ($(SUBS),)
@@ -37,24 +37,25 @@ SUBS			:= $(foreach dir,$(SUBS),$(wildcard $(dir)/Makefile))
 SUBS			:= $(sort $(SUBS))
 SUBS			:= $(patsubst %/,%,$(dir $(SUBS)) $(SUBS1))
 
+OTHER_TARGETS		:= $(filter-out $(SUBS),$(MAKECMDGOALS))
+
+OTHER_TARGETS_NO_INFO	:= $(filter-out info,$(OTHER_TARGETS))
+
 ifeq ($(NO_RECURSION),yes)
         SUBS			:=
 endif
 
 .PHONY: $(TARGETS)
+$(filter-out info,$(TARGETS)) : $(SUBS)
 
-$(filter-out info,$(TARGETS)): $(SUBS) 
-
-.PHONY: info
 info:
 	@$(ECHO) "Name: $(LOCAL_NAME)"
 	@$(ECHO) "Type: $(LOCAL_TYPE)"
 	@$(ECHO) "Subs: $(strip $(DIRECTORY_SUBS))"
 	@$(ECHO) "Depends: $(addprefix $(LOCAL_NAME)/,$(DIRECTORY_SUBS))"
 
-# 命令行指定的子目录，可能输入最后的/
-%/: %
-	
+.PHONY: $(OTHER_TARGETS_NO_INFO)
+$(OTHER_TARGETS_NO_INFO): $(SUBS) 
 
 .PHONY: $(SUBS)
 $(SUBS): % : $(LOCAL_NAME)/%
