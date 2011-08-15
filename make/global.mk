@@ -43,7 +43,7 @@ ifneq ($(LOCAL_NAME),/cex)
         endif
 endif
 
-COMMON_MAKE_FILES		:= $(addprefix $(ROOT_BUILD_DIRECTORY),$(addsuffix /Common.mk,$(call root_directories,$(LOCAL_NAME))) /Common.mk)
+COMMON_MAKE_FILES		:= $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(addsuffix /Common.mk,$(call root_directories,$(LOCAL_NAME))) /Common.mk)
 
 -include $(COMMON_MAKE_FILES)
 
