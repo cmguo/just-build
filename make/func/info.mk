@@ -12,7 +12,7 @@
 
 define get_item_info
 $(strip \
-	$(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) PLATFORM_NAME=$(PLATFORM_NAME) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
+	$(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
 		awk -F : '{ if ($$1 == "$(2)") print $$2 }') \
 )
 endef
@@ -25,7 +25,7 @@ endef
 
 define get_item_info_as_var
 $(eval get_item_info_as_var_ret:=$(strip \
-	$(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) PLATFORM_NAME=$(PLATFORM_NAME) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
+	$(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
 		awk -F : ' 
 			BEGIN { $(foreach info,$(2),infos["$(info)"];) suffix="$(if $(3),$(3),$(subst /,_,$(1)))"; } 
 			{ if ($$1 in infos) printf "%s%s $$(eval %s%s:=%s)", $$1, suffix, $$1, suffix, $$2; } 
