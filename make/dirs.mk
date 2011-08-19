@@ -26,6 +26,10 @@ ifeq ($(SUBS),)
         SUBS			:= *
 endif
 
+ifeq ($(findstring all-project,$(SUBS)),all-project)
+	SUBS			:= $(DIRECTORY_SUBS) $(filter-out all-project,$(SUBS))
+endif
+
 SUBS1			:= $(SUBS)
 SUBS1			:= $(foreach dir,$(SUBS1),$(wildcard $(ROOT_PROJECT_DIRECTORY)$(LOCAL_NAME)/$(dir)/Makefile.in))
 SUBS1			:= $(patsubst $(ROOT_PROJECT_DIRECTORY)$(LOCAL_NAME)/%,%,$(SUBS1))
