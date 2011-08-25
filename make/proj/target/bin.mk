@@ -4,13 +4,10 @@
 ## @brief	生成可执行文件的规则
 ## @version	1.0
 ###############################################################################
+
 include $(TARGET_MAKE_DIRECTORY)/link.mk
 
-ifneq ($(CONFIG_COMPILE),release)
-	LINK_FLAGS		:= $(LINK_FLAGS)
-else
-	LINK_FLAGS		:= $(LINK_FLAGS)
-endif
+LINK_FLAGS		:= $(LINK_FLAGS)
 
 ifeq ($(CONFIG_COMPILE),release)
         ifneq ($(PROJECT_VERSION_SCRIPT),)

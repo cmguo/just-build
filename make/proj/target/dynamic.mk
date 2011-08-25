@@ -4,7 +4,9 @@
 ## @brief	生成动态链接库的规则
 ## @version	1.0
 ###############################################################################
+
 include $(TARGET_MAKE_DIRECTORY)/link.mk
+
 LINK_FLAGS		:= $(LINK_FLAGS) -shared -Wl,-soname=$(TARGET_FILE_VERSION)
 
 ifeq ($(CONFIG_COMPILE),release)
