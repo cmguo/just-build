@@ -66,7 +66,7 @@ $(SUBS): % : $(LOCAL_NAME)/%
 
 define make_item_depends
 $(1) : boot//$(PLATFORM_STRATEGY_NAME)$(1) $(2)
-$(3)		:= $($(3)) $(1)
+$(3)		:= $($(3)) __$(1)__
 
 endef
 
@@ -75,7 +75,7 @@ include $(ROOT_MAKE_DIRECTORY)/boot.mk
 define enable_item_depends
 $(eval $(call make_item_depends,$(1),$(2),$(3)))
 $(call make_code_boot,/$(PLATFORM_STRATEGY_NAME)$(1))
-$(foreach item,$(2),$(if $(findstring $(item),$($(3))),,$(call enable_item_depends,$(item),$(call get_item_depends,$(item)),$(3))))
+$(foreach item,$(2),$(if $(findstring __$(item)__,$($(3))),,$(call enable_item_depends,$(item),$(call get_item_depends,$(item)),$(3))))
 endef
 
 ifneq ($(MAKECMDGOALS),info)

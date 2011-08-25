@@ -22,7 +22,7 @@ VERSION_DEPEND          := $(PLATFORM_BUILD_DIRECTORY)$(PACKET_VERSION_DEPEND)/$
 
 VERSION                 := $(strip $(shell $(EV) $(VERSION_DEPEND) $(call get_item_info,$(PACKET_VERSION_DEPEND),Target)))
 
-TARGET_FILE             := $(PACKET_TARGET)-$(subst .,-,$(PLATFORM_STRATEGY_NAME)-$(CONIFG_COMPILE)-$(VERSION).tar.gz
+TARGET_FILE             := $(PACKET_TARGET)-$(subst .,-,$(PLATFORM_STRATEGY_NAME))-$(CONIFG_COMPILE)-$(VERSION).tar.gz
 
 TARGET_FILE_FULL        := $(TARGET_DIRECTORY)/$(TARGET_FILE)
 
