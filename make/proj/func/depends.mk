@@ -14,7 +14,7 @@ endef
 
 define get_format_depend
         $(strip \
-        $(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) PLATFORM_NAME=$(PLATFORM_NAME) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
+        $(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
                 awk -F : ' 
                         BEGIN { $(foreach info,$(2),infos["$(info)"]);print "$(1)";} 
                         { if ($$1 in infos) printf ":%s",$$2; }END{printf "!"}'))
@@ -42,7 +42,7 @@ endef
 
 define get_item_info_vaul
 $(eval get_item_info_as_var_ret:=$(strip \
-        $(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) PLATFORM_NAME=$(PLATFORM_NAME) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
+        $(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
                 awk -F : ' 
                         BEGIN { $(foreach info,$(2),infos["$(info)"];);ii="$(1)"; } 
                         { if ($$1 in infos) printf "%s%s $$(eval %s_%s:=%s)", ii, $$1, ii, $$1, $$2; } 
