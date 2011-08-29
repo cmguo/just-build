@@ -11,7 +11,7 @@
 
 __BEGIN_DECLS
 
-long int timezone = 8;
+long int timezone = -28800;
 
 int get_nprocs(void)
 {
