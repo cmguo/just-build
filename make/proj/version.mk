@@ -14,7 +14,7 @@ ifeq ($(PROJECT_VERSION),)
 		VERSION_HEADER		:= $(firstword $(wildcard $(addsuffix /$(PROJECT_VERSION_HEADER),$(HEADER_DIRECTORYS))))
 
                 ifeq ($(VERSION_HEADER),)
-                        $(error VERSION_HEADER $(VERSION_HEADER) not exists)
+                        $(error VERSION_HEADER $(PROJECT_VERSION_HEADER) not exists)
                 endif
 	
 		VERSION			:= $(call get_macro_info,$(VERSION_HEADER),VERSION)
