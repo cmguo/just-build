@@ -2,4 +2,4 @@ PLATFORM_TOOL_PATH	:= /toolchain /Developer/Platforms/iPhoneOS.platform/Develope
 
 PLATFORM_TOOL_NAME	:= gcc42
 
-PLATFORM_TOOL_PREFIX	:= armv7-linux-
+PLATFORM_TOOL_PREFIX	:= armv6-linux-
