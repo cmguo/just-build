@@ -9,19 +9,9 @@ include $(TARGET_MAKE_DIRECTORY)/link.mk
 
 LINK_FLAGS		:= $(LINK_FLAGS) -shared -Wl,-soname=$(TARGET_FILE_VERSION)
 
-ifeq ($(CONFIG_COMPILE),release)
-        ifneq ($(PROJECT_VERSION_SCRIPT),)
-		VERSION_SCRIPT		:= $(SOURCE_DIRECTORY)/$(PROJECT_VERSION_SCRIPT)
-        endif
+ifeq ($(DYNAMIC_NAME_SUFFIX),.dll)
+	LINK_FLAGS		:= $(LINK_FLAGS) -Wl,--out-implib,$(TARGET_FILE_FULL:%.dll=%.a)
 endif
-
-ifneq ($(VERSION_SCRIPT),)
-	LINK_FLAGS              := $(LINK_FLAGS) -Wl,--version-script=$(VERSION_SCRIPT)
-	DEPEND_FILES		:= $(VERSION_SCRIPT) $(DEPEND_FILES)
-endif
-
-
-LINK_FLAGS		:= $(strip $(LINK_FLAGS))
 
 $(TARGET_FILE_FULL): $(SOURCE_OBJECTS) $(DEPEND_FILES) $(MAKEFILE_LIST)
 	@$(RM) $@

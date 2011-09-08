@@ -4,6 +4,7 @@
 ## @brief	源文件、中间文件和子目录
 ## @version	1.0
 ###############################################################################
+
 VPATH   		:= $(DEPEND_DIRECTORY):$(OBJECT_DIRECTORY)
 
 SOURCE_DEPTH    	:= $(PROJECT_SOURCE_DEPTH)

@@ -18,7 +18,7 @@ BEGIN { FS = ":"; RS = "!";}
    lib[$1] = param1
    
    
-   if(0 < index($2,".so"))
+   if(0 < index($2,".so") || 0 < index($2,".dll"))
    {
        type[$1]=1
    }
