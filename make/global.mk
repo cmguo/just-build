@@ -49,7 +49,7 @@ ifneq ($(LOCAL_NAME),/cex)
         endif
 endif
 
-COMMON_MAKE_FILES		:= $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(addsuffix /Common.mk,$(call root_directories,$(LOCAL_NAME))) /Common.mk)
+COMMON_MAKE_FILES		:= $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(addsuffix /Common.mk,$(LOCAL_NAME) $(call root_directories,$(LOCAL_NAME))) /Common.mk)
 
 -include $(COMMON_MAKE_FILES)
 
@@ -59,7 +59,7 @@ else
         include $(ROOT_MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.in
 endif
 
-COMMON_MAKE_FILES		:= $(addprefix $(ROOT_PROJECT_DIRECTORY),$(addsuffix /Common.mk,$(call root_directories,$(LOCAL_NAME))) /Common.mk)
+COMMON_MAKE_FILES		:= $(addprefix $(ROOT_PROJECT_DIRECTORY),$(addsuffix /Common.mk,$(LOCAL_NAME) $(call root_directories,$(LOCAL_NAME))) /Common.mk)
 
 -include $(COMMON_MAKE_FILES)
 
