@@ -20,23 +20,24 @@ Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #define _EXECINFO_H 1
 
 #include <features.h>
-#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
 /* Store up to SIZE return address of the current program state in
 ARRAY and return the exact number of values stored.  */
-extern int backtrace (void **__array, int __size);
+extern int backtrace (void **__array, int __size) __nonnull ((1));
 
 
 /* Return names of functions from the backtrace list in ARRAY in a newly
 malloc()ed memory block.  */
-extern char **backtrace_symbols (void *__const *__array, int __size);
+extern char **backtrace_symbols (void *__const *__array, int __size)
+__THROW __nonnull ((1));
 
 
 /* This function is similar to backtrace_symbols() but it writes the result
 immediately to a file.  */
-extern void backtrace_symbols_fd (void *__const *__array, int __size, int __fd);
+extern void backtrace_symbols_fd (void *__const *__array, int __size, int __fd)
+__THROW __nonnull ((1));
 
 __END_DECLS
 
