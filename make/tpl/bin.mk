@@ -1,10 +1,10 @@
-## 项目类型
-
-LOCAL_TYPE			:= bin
-
 ## 该项目默认的配置
 
 LOCAL_CONFIG			:= debug multi
+
+## 项目类型
+
+PROJECT_TYPE			:= bin
 
 ## 生成目标名称（完整文件名称要根据类型LOCAL_TYPE、配置PROJECT_CONFIG、版本PROJECT_VERSION增加前缀、后缀）
 
