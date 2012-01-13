@@ -32,4 +32,4 @@ info:
 	@$(ECHO) "Version: $(VERSION)"
 	@$(ECHO) "File: $(TARGET_FILE_FULL)"
 	@$(ECHO) "Depends: $(DEPENDS1) $(DEPENDS2)"
-	@$(ECHO) "DependLibs: $(PROJECT_DEPEND_LIBRARYS) $(PLATFORM_DEPEND_LIBRARYS)"
+	@$(ECHO) "DependLibs: $(PROJECT_DEPEND_LIBRARYS)"
