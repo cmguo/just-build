@@ -14,17 +14,6 @@
 #include <unistd.h>
 #undef _POSIX_SHARED_MEMORY_OBJECTS
 
-#define INET_ADDRSTRLEN 16
-#define INET6_ADDRSTRLEN 46
-
-#define IN6_IS_ADDR_MC_NODELOCAL(a) \
-        (IN6_IS_ADDR_MULTICAST(a)                                             \
-         && ((((__const uint8_t *) (a))[1] & 0xf) == 0x1))
-
-#define IN6_IS_ADDR_MC_GLOBAL(a) \
-        (IN6_IS_ADDR_MULTICAST(a)                                             \
-         && ((((__const uint8_t *) (a))[1] & 0xf) == 0xe))
-
 __BEGIN_DECLS
 
 int get_nprocs(void);
