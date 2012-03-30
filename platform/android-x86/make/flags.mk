@@ -6,8 +6,8 @@ PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DI
 #PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/bionic
 #PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/ndk/build/platforms/android-8/arch-x86/usr/include
 
-PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/sources/cxx-stl/gnu-libstdc++/libs/x86
 PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/platforms/android-9/arch-x86/usr/lib
+PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/sources/cxx-stl/gnu-libstdc++/libs/x86
 
 #PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_TOOL_DIRECTORY)/android-froyo/ndk/build/platforms/android-8/arch-x86/usr/lib
 
@@ -41,6 +41,6 @@ PLATFORM_CRTEND_DYNAMICBIN	:= $(wildcard $(addsuffix /crtend_android.o,$(PLATFOR
 PLATFORM_CRTBEGIN_DYNAMIC	:= $(wildcard $(addsuffix /crtbegin_so.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
 PLATFORM_CRTEND_DYNAMIC		:= $(wildcard $(addsuffix /crtend_so.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
 
-PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS) gnustl_shared supc++ gcc c m dl
+PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS) gnustl_shared stdc++ supc++ gcc c m dl
 
 PLATFORM_DISABLE_FLAGS		:= -pthread
