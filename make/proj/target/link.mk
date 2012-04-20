@@ -26,5 +26,7 @@ ifneq ($(VERSION_SCRIPT),)
 	DEPEND_FILES		:= $(VERSION_SCRIPT) $(DEPEND_FILES)
 endif
 
+LINK_FLAGS		:= $(LINK_FLAGS) -Wl,-rpath=.
+
 LINK_FLAGS		:= $(strip $(LINK_FLAGS))
 
