@@ -5,10 +5,12 @@
 ## @version	1.0
 ###############################################################################
 
-ifeq ($(CONFIG_combine_static_lib),yes)
-        include $(TARGET_MAKE_DIRECTORY)/link.mk
-endif
+include $(TARGET_MAKE_DIRECTORY)/link.mk
 
 $(TARGET_FILE_FULL): $(SOURCE_OBJECTS) $(HEADER_OBJECTS) $(MAKEFILE_LIST)
 	@$(RM) $@
-	$(AR) $(ARFLAGS) $@ $(addprefix $(OBJECT_DIRECTORY)/, $(SOURCE_OBJECTS)) $(DEPEND_FILES)
+ifeq ($(CONFIG_combine_static_lib),yes)
+        $(LT) $(LINK_FLAGS) $(SOURCE_OBJECTS_FULL) $(LIB_PATHS) $(LIB_NAMES) -o $@
+else
+	$(AR) $(ARCHIVE_FLAGS) $@ $(SOURCE_OBJECTS_FULL) $(DEPEND_FILES)
+endif

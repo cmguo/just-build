@@ -4,7 +4,8 @@
 ## @brief	设定编译参数.
 ## @version	1.0
 ###############################################################################
-ARFLAGS                 := rcs
+
+ARCHIVE_FLAGS		:= rcs
 
 ifeq ($(DEFAULT_FLAGS),)
 	DEFAULT_FLAGS		:= 1
@@ -28,7 +29,11 @@ endif
 
 COMPILE_FLAGS		:= -fPIC $(CONFIG_COMPILE_FLAGS) $(GLOBAL_COMPILE_FLAGS) $(PLATFORM_COMPILE_FLAGS) $(PROJECT_COMPILE_FLAGS)
 
+ifeq ($(CONFIG_LIB),static)
 LINK_FLAGS		:= $(CONFIG_LINK_FLAGS) $(GLOBAL_LINK_FLAGS) $(PLATFORM_LINK_FLAGS) $(PROJECT_LINK_FLAGS)
+else
+LINK_FLAGS		:= $(CONFIG_STATIC_LINK_FLAGS) $(GLOBAL_STATIC_LINK_FLAGS) $(PLATFORM_STATIC_LINK_FLAGS) $(PROJECT_STATIC_LINK_FLAGS)
+endif
 
 COMPILE_FLAGS		:= $(filter-out $(addsuffix %,$(PLATFORM_DISABLE_FLAGS)),$(COMPILE_FLAGS))
 
