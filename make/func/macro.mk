@@ -12,7 +12,7 @@
 
 define get_macro_info
 $(strip \
-        $(shell PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(CC) -E $(1) $(addprefix -I,$(wildcard $(HEADER_DIRECTORYS))) -dM | \
+        $(shell PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(CXX) -E $(1) $(addprefix -I,$(wildcard $(HEADER_DIRECTORYS))) -dM | \
 		awk '$$2 == "$(2)" { gsub("\"","",$$3); print $$3; }') \
 )
 endef
@@ -24,7 +24,7 @@ endef
 
 define macro_is_defined
 $(strip \
-        $(shell PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(CC) -E $(1) $(addprefix -I,$(wildcard $(HEADER_DIRECTORYS))) -dM | \
+        $(shell PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(CXX) -E $(1) $(addprefix -I,$(wildcard $(HEADER_DIRECTORYS))) -dM | \
 		awk '$$2 == "$(2)" { gsub("\"","",$$3); print $(2); }') \
 )
 endef

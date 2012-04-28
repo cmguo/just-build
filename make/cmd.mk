@@ -4,29 +4,44 @@
 ## @brief	设定各种命令.
 ## @version	1.0
 ###############################################################################
-ifeq ($(AR),ar)
-	AR		:= $(PLATFORM_TOOL_PREFIX)ar
-endif
 
-ifeq ($(AS),as)
-	AS		:= $(PLATFORM_TOOL_PREFIX)as
+ifeq ($(AR),)
+	AR		:= ar
 endif
+AR		:= $(PLATFORM_TOOL_PREFIX)$(AR)
 
-ifeq ($(CC),cc)
-	CC		:= $(PLATFORM_TOOL_PREFIX)g++
+ifeq ($(AS),)
+	AS		:= as
 endif
+AS		:= $(PLATFORM_TOOL_PREFIX)$(AS)
 
-ifeq ($(CXX),g++)
-	CXX		:= $(PLATFORM_TOOL_PREFIX)g++
+ifeq ($(CC),)
+	CC		:= gcc
 endif
+CC		:= $(PLATFORM_TOOL_PREFIX)$(CC)
+
+ifeq ($(CXX),)
+	CXX		:= g++
+endif
+CXX		:= $(PLATFORM_TOOL_PREFIX)$(CXX)
 
 ifeq ($(LD),ld)
-	LD		:= $(CC)
+	LD		:= $(CXX)
 endif
+ifeq ($(LD),)
+	LD		:= $(CXX)
+endif
+LD		:= $(PLATFORM_TOOL_PREFIX)$(LD)
+
+ifeq ($(LIBTOOL),)
+	LIBTOOL		:= libtool
+endif
+LIBTOOL		:= $(PLATFORM_TOOL_PREFIX)$(LIBTOOL)
 
 ifeq ($(STRIP),)
-	STRIP		:= $(PLATFORM_TOOL_PREFIX)strip -s
+	STRIP		:= strip -s
 endif
+STRIP		:= $(PLATFORM_TOOL_PREFIX)$(STRIP)
 
 ifeq ($(CD),)
 	CD	        := cd
