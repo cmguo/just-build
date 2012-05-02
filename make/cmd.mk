@@ -8,22 +8,18 @@
 ifeq ($(AR),)
 	AR		:= ar
 endif
-AR		:= $(PLATFORM_TOOL_PREFIX)$(AR)
 
 ifeq ($(AS),)
 	AS		:= as
 endif
-AS		:= $(PLATFORM_TOOL_PREFIX)$(AS)
 
 ifeq ($(CC),)
 	CC		:= gcc
 endif
-CC		:= $(PLATFORM_TOOL_PREFIX)$(CC)
 
 ifeq ($(CXX),)
 	CXX		:= g++
 endif
-CXX		:= $(PLATFORM_TOOL_PREFIX)$(CXX)
 
 ifeq ($(LD),ld)
 	LD		:= $(CXX)
@@ -31,16 +27,21 @@ endif
 ifeq ($(LD),)
 	LD		:= $(CXX)
 endif
-LD		:= $(PLATFORM_TOOL_PREFIX)$(LD)
 
 ifeq ($(LIBTOOL),)
 	LIBTOOL		:= libtool
 endif
-LIBTOOL		:= $(PLATFORM_TOOL_PREFIX)$(LIBTOOL)
 
 ifeq ($(STRIP),)
 	STRIP		:= strip -s
 endif
+
+AR		:= $(PLATFORM_TOOL_PREFIX)$(AR)
+AS		:= $(PLATFORM_TOOL_PREFIX)$(AS)
+CC		:= $(PLATFORM_TOOL_PREFIX)$(CC)
+CXX		:= $(PLATFORM_TOOL_PREFIX)$(CXX)
+LD		:= $(PLATFORM_TOOL_PREFIX)$(LD)
+LIBTOOL		:= $(PLATFORM_TOOL_PREFIX)$(LIBTOOL)
 STRIP		:= $(PLATFORM_TOOL_PREFIX)$(STRIP)
 
 ifeq ($(CD),)
