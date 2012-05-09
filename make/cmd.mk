@@ -28,8 +28,8 @@ ifeq ($(LD),)
 	LD		:= $(CXX)
 endif
 
-ifeq ($(LIBTOOL),)
-	LIBTOOL		:= libtool
+ifeq ($(LT),)
+	LT		:= libtool
 endif
 
 ifeq ($(STRIP),)
@@ -41,7 +41,7 @@ AS		:= $(PLATFORM_TOOL_PREFIX)$(AS)
 CC		:= $(PLATFORM_TOOL_PREFIX)$(CC)
 CXX		:= $(PLATFORM_TOOL_PREFIX)$(CXX)
 LD		:= $(PLATFORM_TOOL_PREFIX)$(LD)
-LIBTOOL		:= $(PLATFORM_TOOL_PREFIX)$(LIBTOOL)
+LT		:= $(PLATFORM_TOOL_PREFIX)$(LT)
 STRIP		:= $(PLATFORM_TOOL_PREFIX)$(STRIP)
 
 ifeq ($(CD),)
