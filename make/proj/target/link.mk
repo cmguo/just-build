@@ -15,7 +15,7 @@ LIB_NAMES               := $(patsubst lib%.a,%,$(LIB_NAMES))
 LIB_NAMES               := $(patsubst lib%.so,%,$(LIB_NAMES))
 LIB_NAMES               := $(addprefix -l,$(LIB_NAMES))
 
-ifeq ($(CONFIG_combine_static_lib),no)
+ifneq ($(CONFIG_LIB)-$(CONFIG_combine_static_lib),static-yes)
 
 LIB_NAMES               := $(LIB_NAMES) $(addprefix -l,$(SYSTEM_LIB))
 LIB_NAMES               := $(LIB_NAMES) $(addprefix -l,$(PLATFORM_DEPEND_LIBRARYS))
@@ -33,7 +33,7 @@ endif
 
 LINK_FLAGS		:= $(LINK_FLAGS) -Wl,-rpath=.
 
-endif # ifeq ($(CONFIG_combine_static_lib),no)
+endif # ifneq ($(CONFIG_LIB)-$(CONFIG_combine_static_lib),static-yes)
 
 LINK_FLAGS		:= $(strip $(LINK_FLAGS))
 
