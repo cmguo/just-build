@@ -9,6 +9,12 @@ include $(PACK_MAKE_DIRECTORY)/depends.mk
 
 MAKE_DIRECTORYS         := $(TARGET_DIRECTORY) $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)
 
+ifneq ($(CONFIG_packet),)
+include $(ROOT_STRATEGY_DIRECTORY)/packet/$(CONFIG_packet).mk
+endif
+
+call_post_action	= $(foreach action,$(2),$(call $(action),$(1)) && )true
+
 .PHONY: target
 target: $(TARGET_FILE_FULL)
 
@@ -25,6 +31,7 @@ $(PACKET_DEPEND_FILES): mkdirs
 $(DEPEND_FILES): mkdirs
 	@$(ECHO) $@
 	@$(STRIP) $@ -o $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $@)
+	@$(call call_post_action,$(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $@),$(PACKET_POST_ACTION))
 
 $(TARGET_FILE_FULL): $(DEPEND_FILES) $(PACKET_DEPEND_FILES) $(MAKEFILE_LIST) 
 	@$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE) $(addprefix $(PLATFORM_STRATEGY_NAME)/,$(notdir $(DEPEND_FILES))) $(notdir $(PACKET_DEPEND_FILES)) 2>&0 > /dev/null
