@@ -33,5 +33,6 @@ $(DEPEND_FILES): mkdirs
 	@$(STRIP) $@ -o $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $@)
 	@$(call call_post_action,$(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $@),$(PACKET_POST_ACTION))
 
+$(info TARGET_FILE_2=$(TARGET_FILE_2))
 $(TARGET_FILE_FULL): $(DEPEND_FILES) $(PACKET_DEPEND_FILES) $(MAKEFILE_LIST) 
-	@$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE) $(addprefix $(PLATFORM_STRATEGY_NAME)/,$(notdir $(DEPEND_FILES))) $(notdir $(PACKET_DEPEND_FILES)) 2>&0 > /dev/null
+	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE_2) $(addprefix $(PLATFORM_STRATEGY_NAME)/,$(notdir $(DEPEND_FILES))) $(notdir $(PACKET_DEPEND_FILES)) 2>&0 > /dev/null

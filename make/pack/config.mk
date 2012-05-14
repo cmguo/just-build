@@ -22,10 +22,12 @@ VERSION_DEPEND          := $(PLATFORM_BUILD_DIRECTORY)$(PACKET_VERSION_DEPEND)/$
 
 VERSION                 := $(strip $(shell $(EV) $(VERSION_DEPEND) $(call get_item_info,$(PACKET_VERSION_DEPEND),Target)))
 
-ifneq ($(CONFIG_packet),)
-TARGET_FILE             := $(PACKET_TARGET)-$(subst .,-,$(PLATFORM_STRATEGY_NAME))-$(CONIFG_COMPILE)($(CONFIG_packet))-$(VERSION).tar.gz
-else
 TARGET_FILE             := $(PACKET_TARGET)-$(subst .,-,$(PLATFORM_STRATEGY_NAME))-$(CONIFG_COMPILE)-$(VERSION).tar.gz
+
+ifneq ($(CONFIG_packet),)
+TARGET_FILE_2		:= $(PACKET_TARGET)-$(subst .,-,$(PLATFORM_STRATEGY_NAME))-$(CONIFG_COMPILE)\($(CONFIG_packet)\)-$(VERSION).tar.gz
+else
+TARGET_FILE_2		:= $(TARGET_FILE)
 endif
 
 TARGET_FILE_FULL        := $(TARGET_DIRECTORY)/$(TARGET_FILE)
