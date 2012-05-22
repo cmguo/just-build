@@ -33,6 +33,8 @@ endif
 
 LINK_FLAGS		:= $(LINK_FLAGS) -Wl,-rpath=.
 
+LINK_FLAGS		:= $(filter-out $(addsuffix %,$(PLATFORM_DISABLE_FLAGS)),$(LINK_FLAGS))
+
 endif # ifneq ($(CONFIG_LIB)-$(CONFIG_combine_static_lib),static-yes)
 
 LINK_FLAGS		:= $(strip $(LINK_FLAGS))
