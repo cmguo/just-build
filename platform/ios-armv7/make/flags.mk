@@ -1,1 +1,5 @@
-PLATFORM_COMPILE_FLAGS	:= -arch armv7 -isysroot /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.3.sdk -gdwarf-2
+PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -arch armv7
+PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -gdwarf-2
+PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -isysroot /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.3.sdk
+
+PLATFORM_DISABLE_FLAGS		:= -Wl,-Os
