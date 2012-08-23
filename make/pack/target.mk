@@ -27,6 +27,12 @@ $(PACKET_DEPEND_FILES): mkdirs
 	@svn up $(ROOT_DIRECTORY)$@ 2>&0 > /dev/null
 	@svn export $(ROOT_DIRECTORY)$@ $(TARGET_DIRECTORY)/$(notdir $@) 2>&0 > /dev/null
 
+.PHONY: $(PACKET_DEPEND_FILES2)
+$(PACKET_DEPEND_FILES2): mkdirs
+	@$(ECHO) $@
+	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
+	$(CP) -r $(PLATFORM_BUILD_DIRECTORY)$@ $(TARGET_DIRECTORY)/$(notdir $@) 2>&0 > /dev/null
+
 .PHONY: $(DEPEND_FILES)
 $(DEPEND_FILES): mkdirs
 	@$(ECHO) $@
@@ -34,5 +40,5 @@ $(DEPEND_FILES): mkdirs
 	@$(call call_post_action,$(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $@),$(PACKET_POST_ACTION))
 
 $(info TARGET_FILE_2=$(TARGET_FILE_2))
-$(TARGET_FILE_FULL): $(DEPEND_FILES) $(PACKET_DEPEND_FILES) $(MAKEFILE_LIST) 
-	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE_2) $(addprefix $(PLATFORM_STRATEGY_NAME)/,$(notdir $(DEPEND_FILES))) $(notdir $(PACKET_DEPEND_FILES)) 2>&0 > /dev/null
+$(TARGET_FILE_FULL): $(DEPEND_FILES) $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2) $(MAKEFILE_LIST) 
+	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE_2) $(addprefix $(PLATFORM_STRATEGY_NAME)/,$(notdir $(DEPEND_FILES))) $(notdir $(PACKET_DEPEND_FILES)) $(notdir $(PACKET_DEPEND_FILES2)) 2>&0 > /dev/null
