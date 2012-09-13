@@ -5,8 +5,6 @@
 ## @version     1.0
 ###############################################################################
 
-include $(PACK_MAKE_DIRECTORY)/depends.mk
-
 MAKE_DIRECTORYS         := $(TARGET_DIRECTORY) $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)
 
 ifneq ($(CONFIG_packet),)
@@ -33,12 +31,23 @@ $(PACKET_DEPEND_FILES2): mkdirs
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
 	$(CP) -r $(PLATFORM_BUILD_DIRECTORY)$@ $(TARGET_DIRECTORY)/$(notdir $@) 2>&0 > /dev/null
 
-.PHONY: $(DEPEND_FILES)
-$(DEPEND_FILES): mkdirs
+define pack_depend
+$(call pack_depend2,$(1),$(call get_item_type,$(1)),$(call get_item_file,$(1)))
+endef
+
+# pack_depend2 name type  file
+define pack_depend2
+$(if $(findstring static,$(2)), \
+    $(CP) $(PLATFORM_BUILD_DIRECTORY)$(1)/$(3) $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $(3)), \
+    $(STRIP) $(PLATFORM_BUILD_DIRECTORY)$(1)/$(3) -o $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $(3))) && \
+$(call call_post_action,$(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $(3)),$(PACKET_POST_ACTION))
+endef
+
+.PHONY: $(PACKET_DEPENDS)
+$(PACKET_DEPENDS): mkdirs
 	@$(ECHO) $@
-	@$(STRIP) $@ -o $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $@)
-	@$(call call_post_action,$(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(notdir $@),$(PACKET_POST_ACTION))
+	$(call pack_depend,$@)
 
 $(info TARGET_FILE_2=$(TARGET_FILE_2))
-$(TARGET_FILE_FULL): $(DEPEND_FILES) $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2) $(MAKEFILE_LIST) 
+$(TARGET_FILE_FULL): $(PACKET_DEPENDS) $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2) $(MAKEFILE_LIST) 
 	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE_2) $(addprefix $(PLATFORM_STRATEGY_NAME)/,$(notdir $(DEPEND_FILES))) $(notdir $(PACKET_DEPEND_FILES)) $(notdir $(PACKET_DEPEND_FILES2)) 2>&0 > /dev/null
