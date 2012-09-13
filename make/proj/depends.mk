@@ -22,7 +22,7 @@ DEPEND_FILES := $(shell echo "$(depends_z)" | awk -f $(ROOT_MAKE_DIRECTORY)/awk/
 
 DEPEND_FILES		:= $(patsubst %.dll,%.a,$(DEPEND_FILES))
 
-SYSTEM_LIB := $(filter-out %.a %.so,$(DEPEND_FILES))
-DEPEND_FILES := $(filter %.a %.so,$(DEPEND_FILES))
+SYSTEM_LIB := $(filter-out %.a %$(DYNAMIC_NAME_SUFFIX),$(DEPEND_FILES))
+DEPEND_FILES := $(filter %.a %$(DYNAMIC_NAME_SUFFIX),$(DEPEND_FILES))
 DEPEND_FILES  := $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(DEPEND_FILES))
 

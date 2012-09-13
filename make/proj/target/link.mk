@@ -12,7 +12,7 @@ include $(PROJ_MAKE_DIRECTORY)/depends.mk
 LIB_PATHS               := $(addprefix -L,$(dir $(DEPEND_FILES)))
 LIB_NAMES               := $(notdir $(DEPEND_FILES))
 LIB_NAMES               := $(patsubst lib%.a,%,$(LIB_NAMES))
-LIB_NAMES               := $(patsubst lib%.so,%,$(LIB_NAMES))
+LIB_NAMES               := $(patsubst lib%$(DYNAMIC_NAME_SUFFIX),%,$(LIB_NAMES))
 LIB_NAMES               := $(addprefix -l,$(LIB_NAMES))
 
 ifneq ($(CONFIG_LIB),static2)
