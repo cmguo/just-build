@@ -29,4 +29,4 @@ endif
 
 include $(ROOT_MAKE_DIRECTORY)/$(TYPE).mk
 
-include $(wildcard $(PLATFORM_DIRECTORY)/make2/*.mk)
+include $(wildcard $(PLATFORM_DIRECTORY)/make3/*.mk)
