@@ -69,3 +69,5 @@ COMMON_MAKE_FILES		:= $(addprefix $(ROOT_PROJECT_DIRECTORY),$(addsuffix /Common.
 ifneq ($(STRATEGY_NAME),)
         include $(ROOT_STRATEGY_DIRECTORY)/$(STRATEGY_NAME).mk
 endif
+
+include $(wildcard $(PLATFORM_DIRECTORY)/make2/*.mk)
