@@ -7,3 +7,5 @@ PLATFORM_TOOL_PREFIX	:= armv6-linux-
 STRIP                   := strip -x
 
 SHELL                   := /bin/bash
+
+CXX                     := g++
