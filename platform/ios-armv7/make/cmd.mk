@@ -4,7 +4,7 @@ PLATFORM_TOOL_NAME	:= gcc42
 
 PLATFORM_TOOL_PREFIX	:= armv7-linux-
 
-CXX := g++
+CXX                     := g++
 
 STRIP                   := strip -x
 
