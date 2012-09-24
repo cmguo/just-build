@@ -26,12 +26,15 @@ directory		= $(patsubst %/,%,$(dir $(1)))
 #   f=join(b,e)
 #   g=patsubst(%.....,%,f)
 #   h=patsubst(%..,,g)
-#   i=patsubst(%.,..,h)
-#   return joinlist(/,i) 
+#   i=revert(h)
+#   j=revert_directory_simple(i)
+#   k=patsubst(%.,..,j)
+#   return joinlist(/,k) 
 
 revert_directory_simple	= $(if \
 	$(findstring ..$(word 2,$(1)).,$(word 1,$(1))), \
-	$(wordlist 3,$(words $(1)),$(1)), \
+	$(call revert_directory_simple, \
+		$(wordlist 3,$(words $(1)),$(1))), \
 	$(1) \
 )
 
