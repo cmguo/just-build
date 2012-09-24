@@ -31,7 +31,6 @@ PLATFORM_TOOL_DIRECTORY		:= $(ROOT_TOOL_DIRECTORY)/$(PLATFORM_NAME)
 include $(wildcard $(PLATFORM_DIRECTORY)/make/*.mk)
 
 PLATFORM_TOOL_PATH		:= $(addprefix $(PLATFORM_TOOL_DIRECTORY),$(PLATFORM_TOOL_PATH))
-PLATFORM_TOOL_PATH		:= $(foreach path,$(PLATFORM_TOOL_PATH),$(shell cd $(path) ; pwd))
 $(foreach path,$(PLATFORM_TOOL_PATH),$(eval PATH:=$(path):$(PATH)))
 export PATH
 
