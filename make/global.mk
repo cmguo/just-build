@@ -10,7 +10,7 @@ include $(ROOT_MAKE_DIRECTORY)/func/dirs.mk
 GLOBAL_COMPILE_FLAGS		:= $(GLOBAL_COMPILE_FLAGS) -DBOOST_USER_CONFIG=\<boost_config.h\>
 GLOBAL_COMPILE_FLAGS		:= $(GLOBAL_COMPILE_FLAGS) -DFRAMEWORK_USER_CONFIG=\<framework_config.h\>
 
-PLATFORM_LOCAL_NAME		:= $(patsubst $(shell cd $(ROOT_BUILD_DIRECTORY) ; pwd)%,%,$(shell pwd))
+PLATFORM_LOCAL_NAME		:= /$(call revert_directory,$(ROOT_BUILD_DIRECTORY))
 
 PLATFORM_STRATEGY_NAME		:= $(firstword $(subst /, ,$(PLATFORM_LOCAL_NAME)))
 
