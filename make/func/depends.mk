@@ -12,27 +12,10 @@ define make_item_depends_pack
 $(2)            := $(strip $($(2)) __$(1)__)
 endef
 
-define get_format_depend
-        $(strip \
-        $(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
-                awk -F : ' 
-                        BEGIN { $(foreach info,$(2),infos["$(info)"]);print "$(1)";} 
-                        { if ($$1 in infos) printf ":%s",$$2; }END{printf "!"}'))
-endef
-
 define enable_item_depends_pack
 $(1)
 $(eval $(call make_item_depends_pack,$(1),$(2)))
 $(foreach item,$(1),$(call enable_item_depends_pack,$(filter-out $(strip $($(2))),$(call get_item_depends,$(item))),$(2)))
-endef
-
-
-
-define fromat_depends
-$(1)
-$(eval $(call make_item_depends_pack,$(1),$(2)))
-$(foreach aaa,$(1),$(eval $(call make_item_depends_pack,$(call get_format_depend,$(aaa),File Depends DependLibs),$(3))))
-$(foreach item,$(1),$(call fromat_depends,$(filter-out $(strip $($(2))),$(call get_item_depends,$(item))),$(2),$(3)))
 endef
 
 # param 1 root 2 handle
@@ -42,7 +25,7 @@ endef
 
 define get_item_info_vaul
 $(eval get_item_info_as_var_ret:=$(strip \
-        $(shell $(MAKE) -C $(PLATFORM_BUILD_DIRECTORY) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
+        $(shell $(MAKE) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
                 awk -F : ' 
                         BEGIN { $(foreach info,$(2),infos["$(info)"];);ii="$(1)"; } 
                         { if ($$1 in infos) printf "$$(eval %s_%s:=%s)", ii, $$1, $$2; } 
