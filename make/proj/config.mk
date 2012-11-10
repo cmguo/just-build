@@ -77,6 +77,11 @@ else
 	CONFIG_COMPILE_FLAGS	:= $(CONFIG_COMPILE_FLAGS) -D_SINGLE
 endif
 
+ifneq ($(CONFIG_extend),)
+	include $(ROOT_STRATEGY_DIRECTORY)/extend/$(CONFIG_extend).mk
+endif
+
+
 DEPEND_DIRECTORY	:= $(TARGET_DIRECTORY)/.deps
 
 OBJECT_DIRECTORY	:= $(TARGET_DIRECTORY)/.objs
