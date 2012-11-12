@@ -11,6 +11,10 @@ ifneq ($(CONFIG_packet),)
 include $(ROOT_STRATEGY_DIRECTORY)/packet/$(CONFIG_packet).mk
 endif
 
+ifneq ($(CONFIG_extend),)
+	include $(ROOT_STRATEGY_DIRECTORY)/extend/$(CONFIG_extend).mk
+endif
+
 call_post_action	= $(foreach action,$(2),$(call $(action),$(1)) && )true
 
 .PHONY: target
