@@ -142,6 +142,7 @@ namespace SystemEmulation
 				return len2;
 			}
 		}
+		++p;
 		return 0;
 	}
 

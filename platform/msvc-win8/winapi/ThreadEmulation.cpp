@@ -441,16 +441,29 @@ namespace ThreadEmulation
 		_In_opt_  LPCSTR lpName
 		)
 	{
+		LPWSTR lpWideCharStr = NULL;
+		if (lpName) {
+			int cchWideChar = strlen(lpName) + 1;
+			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
+				delete [] lpWideCharStr;
+				return NULL;
+			}
+		}
 		DWORD dwFlags = 0;
 		if (bManualReset)
 			dwFlags |= CREATE_EVENT_MANUAL_RESET;
 		if (bInitialState)
 			dwFlags |= CREATE_EVENT_INITIAL_SET;
-		return CreateEventExA(
+		HANDLE hEvent = CreateEventExW(
 			lpEventAttributes, 
-			lpName, 
+			lpWideCharStr, 
 			dwFlags, 
 			EVENT_ALL_ACCESS);
+		if (lpWideCharStr) {
+			delete [] lpWideCharStr;
+		}
+		return hEvent;
 	}
 
 	HANDLE WINAPI CreateMutexA(
@@ -459,14 +472,27 @@ namespace ThreadEmulation
 		_In_opt_  LPCSTR lpName
 		)
 	{
+		LPWSTR lpWideCharStr = NULL;
+		if (lpName) {
+			int cchWideChar = strlen(lpName) + 1;
+			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
+				delete [] lpWideCharStr;
+				return NULL;
+			}
+		}
 		DWORD dwFlags = 0;
 		if (bInitialOwner)
 			dwFlags |= CREATE_MUTEX_INITIAL_OWNER;
-		return CreateMutexExA(
+		HANDLE hMutex = CreateMutexExW(
 			lpMutexAttributes, 
-			lpName, 
+			lpWideCharStr, 
 			dwFlags, 
 			EVENT_ALL_ACCESS);
+		if (lpWideCharStr) {
+			delete [] lpWideCharStr;
+		}
+		return hMutex;
 	}
 
 	HANDLE WINAPI OpenMutexA(

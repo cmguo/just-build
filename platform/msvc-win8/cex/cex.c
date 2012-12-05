@@ -19,6 +19,7 @@ char * __cdecl getenv(
 			return (char *)*p + len + 1;
 		}
 	}
+	++p;
 	return 0;
 }
 
