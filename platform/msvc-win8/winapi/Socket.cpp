@@ -2,6 +2,9 @@
 
 #include <Windows.h>
 
+#undef WINAPI
+#define WINAPI
+
 #include "Socket.h"
 #include "Iocp.h"
 
@@ -22,6 +25,13 @@ namespace SocketEmulation
 			ec_ = ec;
 		}
 
+		void set2(
+			int & ec)
+		{
+			ec_ = ec;
+			ec = 0;
+		}
+
 		~wsa_set_last_error()
 		{
 			WSASetLastError(ec_);
@@ -35,7 +45,6 @@ namespace SocketEmulation
 		: af(AF_UNSPEC)
 		, type(SOCK_RAW)
 		, protocol(IPPROTO_IP)
-		, iocp(NULL)
 		, lpCompletionKey(0)
 		, flags_(0)
 		, status_(0)
@@ -197,7 +206,7 @@ namespace SocketEmulation
 					return ec_ != 0 || !connecting_;
 				});
 				if (ec_) {
-					le.set(ec_);
+					le.set2(ec_);
 					return FALSE;
 				} else {
 					return TRUE;
@@ -207,7 +216,7 @@ namespace SocketEmulation
 			if (lpOverlapped) {
 				iocp->push(ec_, lpOverlapped, 0);
 			}
-			le.set(ec_);
+			le.set2(ec_);
 			return SOCKET_ERROR;
 		} else {
 			if (lpOverlapped) {
@@ -319,7 +328,7 @@ namespace SocketEmulation
 				return ec_ != 0 || read_data_size_ > 0;
 			});
 			if (ec_) {
-				le.set(ec_);
+				le.set2(ec_);
 				return SOCKET_ERROR;
 			} else {
 				read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd);
@@ -382,7 +391,7 @@ namespace SocketEmulation
 				return ec_ != 0 || read_data_size_ < read_data_capacity_;
 			});
 			if (ec_) {
-				le.set(ec_);
+				le.set2(ec_);
 				return SOCKET_ERROR;
 			} else {
 				write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent);
@@ -475,8 +484,8 @@ namespace SocketEmulation
 	int socket_t::close()
 	{
 		std::unique_lock<std::recursive_mutex> lc(mutex_);
-		ec_ = WSAEBADF;
 		status_ = 0;
+
 		if (type == SOCK_STREAM) {
 			if (stream_listener) {
 				delete stream_listener;
@@ -492,6 +501,17 @@ namespace SocketEmulation
 				datagram_socket = nullptr;
 			}
 		}
+
+		for (auto iter = read_tasks.begin(); iter != read_tasks.end(); ++iter) {
+			overlap_task & task = *iter;
+			iocp->push(WSA_OPERATION_ABORTED, task.lpOverlapped, 0);
+		}
+		for (auto iter = write_tasks.begin(); iter != write_tasks.end(); ++iter) {
+			overlap_task & task = *iter;
+			iocp->push(WSA_OPERATION_ABORTED, task.lpOverlapped, 0);
+		}
+		iocp.reset();
+
 		cond_.notify_all();
 
 		return 0;
@@ -501,7 +521,7 @@ namespace SocketEmulation
 		_In_  iocp_t * iocp, 
 		_In_  ULONG_PTR CompletionKey)
 	{
-		this->iocp = iocp;
+		this->iocp = boost::static_pointer_cast<iocp_t>(iocp->shared_from_this());
 		lpCompletionKey = CompletionKey;
 	}
 

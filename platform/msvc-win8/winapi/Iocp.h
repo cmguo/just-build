@@ -25,6 +25,8 @@ namespace SocketEmulation
 			_Out_  LPOVERLAPPED *lpOverlapped,
 			_In_   DWORD dwMilliseconds);
 
+		BOOL close();
+
 		std::mutex mutex_;
 		std::condition_variable cond_;
 		std::deque<OVERLAPPED_ENTRY> overlaps_;

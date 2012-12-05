@@ -10,10 +10,13 @@
 
 #include <..\um\windows.h> // orignal windows.h
 
-#include "winapi\SystemEmulation.h"
-#include "winapi\FileSystemEmulation.h"
-#include "winapi\ThreadEmulation.h"
-#include "winapi\SocketEmulation.h"
+#undef WINAPI
+#define WINAPI
+
+#include "SystemEmulation.h"
+#include "FileSystemEmulation.h"
+#include "ThreadEmulation.h"
+#include "SocketEmulation.h"
 
 using namespace SystemEmulation;
 using namespace FileSystemEmulation;

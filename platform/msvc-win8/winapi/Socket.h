@@ -244,7 +244,7 @@ namespace SocketEmulation
 		Windows::Networking::Sockets::StreamSocketListener ^ stream_listener;
 		Windows::Networking::Sockets::DatagramSocket ^ datagram_socket;
 		std::deque<Windows::Networking::Sockets::StreamSocket ^> accept_sockets;
-		iocp_t * iocp;
+		boost::shared_ptr<iocp_t> iocp;
 		ULONG_PTR lpCompletionKey;
 		std::deque<overlap_task> read_tasks; // or accept tasks
 		std::deque<overlap_task> write_tasks;

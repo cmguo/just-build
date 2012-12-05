@@ -7,6 +7,9 @@
 
 #include <Windows.h>
 
+#undef WINAPI
+#define WINAPI
+
 #include "ThreadEmulation.h"
 
 #include <assert.h>
@@ -450,6 +453,102 @@ namespace ThreadEmulation
 			EVENT_ALL_ACCESS);
 	}
 
+	HANDLE WINAPI CreateMutexA(
+		_In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
+		_In_      BOOL bInitialOwner,
+		_In_opt_  LPCSTR lpName
+		)
+	{
+		DWORD dwFlags = 0;
+		if (bInitialOwner)
+			dwFlags |= CREATE_MUTEX_INITIAL_OWNER;
+		return CreateMutexExA(
+			lpMutexAttributes, 
+			lpName, 
+			dwFlags, 
+			EVENT_ALL_ACCESS);
+	}
+
+	HANDLE WINAPI OpenMutexA(
+		_In_  DWORD dwDesiredAccess,
+		_In_  BOOL bInheritHandle,
+		_In_  LPCSTR lpName
+		)
+	{
+		LPWSTR lpWideCharStr = NULL;
+		if (lpName) {
+			int cchWideChar = strlen(lpName) + 1;
+			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
+				delete [] lpWideCharStr;
+				return NULL;
+			}
+		}
+		HANDLE hMutex = OpenMutexW(
+			dwDesiredAccess, 
+			bInheritHandle, 
+			lpWideCharStr);
+		if (lpWideCharStr) {
+			delete [] lpWideCharStr;
+		}
+		return hMutex;
+	}
+
+	HANDLE WINAPI CreateSemaphoreA(
+		_In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
+		_In_      LONG lInitialCount,
+		_In_      LONG lMaximumCount,
+		_In_opt_  LPCSTR lpName
+		)
+	{
+		LPWSTR lpWideCharStr = NULL;
+		if (lpName) {
+			int cchWideChar = strlen(lpName) + 1;
+			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
+				delete [] lpWideCharStr;
+				return NULL;
+			}
+		}
+		DWORD dwFlags = 0;
+		HANDLE hSemaphore = CreateSemaphoreExW(
+			lpSemaphoreAttributes, 
+			lInitialCount, 
+			lMaximumCount, 
+			lpWideCharStr, 
+			dwFlags, 
+			EVENT_ALL_ACCESS);
+		if (lpWideCharStr) {
+			delete [] lpWideCharStr;
+		}
+		return hSemaphore;
+	}
+
+	HANDLE WINAPI OpenSemaphoreA(
+		_In_  DWORD dwDesiredAccess,
+		_In_  BOOL bInheritHandle,
+		_In_  LPCSTR lpName
+		)
+	{
+		LPWSTR lpWideCharStr = NULL;
+		if (lpName) {
+			int cchWideChar = strlen(lpName) + 1;
+			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
+				delete [] lpWideCharStr;
+				return NULL;
+			}
+		}
+		HANDLE hSemaphore = OpenSemaphoreW(
+			dwDesiredAccess, 
+			bInheritHandle, 
+			lpWideCharStr);
+		if (lpWideCharStr) {
+			delete [] lpWideCharStr;
+		}
+		return hSemaphore;
+	}
+
 	DWORD WINAPI WaitForSingleObject(
 		_In_  HANDLE hHandle,
 		_In_  DWORD dwMilliseconds
@@ -484,7 +583,7 @@ namespace ThreadEmulation
 		ThreadProxyData(func start_address,void* arglist) : start_address_(start_address), arglist_(arglist) {}
 	};
 
-	static DWORD WINAPI ThreadProxy(LPVOID args)
+	static DWORD __stdcall ThreadProxy(LPVOID args)
 	{
 		ThreadProxyData* data=reinterpret_cast<ThreadProxyData*>(args);
 		DWORD ret=data->start_address_(data->arglist_);

@@ -2,6 +2,9 @@
 
 #include <Windows.h>
 
+#undef WINAPI
+#define WINAPI
+
 #include "Iocp.h"
 
 namespace SocketEmulation
@@ -61,6 +64,13 @@ namespace SocketEmulation
 		*lpNumberOfBytes = entry.dwNumberOfBytesTransferred;
 		*lpCompletionKey = entry.lpCompletionKey;
 		*lpOverlapped = entry.lpOverlapped;
+		return TRUE;
+	}
+
+	BOOL iocp_t::close()
+	{
+		std::unique_lock<std::mutex> lc(mutex_);
+		overlaps_.clear();
 		return TRUE;
 	}
 

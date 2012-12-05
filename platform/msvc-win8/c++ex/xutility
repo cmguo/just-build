@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "..\include\xutility"
+#include <..\include\xutility>
 
 namespace stdext
 {
@@ -16,8 +16,6 @@ template<class _InIt,
 		return (_Dest);
 	else
 		{	// worth copying, check then copy
-		_DEBUG_RANGE(_First, _Last);
-		_DEBUG_POINTER(_Dest);
 		return (std::_Copy_impl(_First, _Last, _Dest));
 		}
 	}

@@ -7,6 +7,9 @@
 
 #include <Windows.h>
 
+#undef WINAPI
+#define WINAPI
+
 #include "FileSystemEmulation.h"
 
 #include <memoryapi.h>
@@ -16,15 +19,56 @@
 namespace FileSystemEmulation
 {
 
+	BOOL WINAPI CreateDirectory2A(
+		_In_      LPCSTR lpPathName,
+		_In_opt_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
+		)
+	{
+		int cchWideChar = strlen(lpPathName) + 1;
+		LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+		if (::MultiByteToWideChar(CP_ACP, 0, lpPathName, -1, lpWideCharStr, cchWideChar) == 0) {
+			delete [] lpWideCharStr;
+			return FALSE;
+		}
+		BOOL b = CreateDirectoryW(
+			lpWideCharStr, 
+			lpSecurityAttributes);
+		delete [] lpWideCharStr;
+		return b;
+	}
+
+	BOOL WINAPI RemoveDirectory2A(
+		_In_  LPCSTR lpPathName
+		)
+	{
+		int cchWideChar = strlen(lpPathName) + 1;
+		LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+		if (::MultiByteToWideChar(CP_ACP, 0, lpPathName, -1, lpWideCharStr, cchWideChar) == 0) {
+			delete [] lpWideCharStr;
+			return FALSE;
+		}
+		BOOL b = RemoveDirectoryW(
+			lpWideCharStr);
+		delete [] lpWideCharStr;
+		return b;
+	}
+
 	DWORD WINAPI GetFileAttributesA(
 		_In_  LPCSTR lpFileName
 		)
 	{
+		int cchWideChar = strlen(lpFileName) + 1;
+		LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+		if (::MultiByteToWideChar(CP_ACP, 0, lpFileName, -1, lpWideCharStr, cchWideChar) == 0) {
+			delete [] lpWideCharStr;
+			return INVALID_FILE_ATTRIBUTES;
+		}
 		WIN32_FILE_ATTRIBUTE_DATA fileInformation;
-		BOOL b = GetFileAttributesExA(
-			lpFileName, 
+		BOOL b = GetFileAttributesExW(
+			lpWideCharStr, 
 			GetFileExInfoStandard, 
 			&fileInformation);
+		delete [] lpWideCharStr;
 		return b ? fileInformation.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
 	}
 
@@ -94,6 +138,51 @@ namespace FileSystemEmulation
 		return hFile;
 	}
 
+	BOOL WINAPI DeleteFile2A(
+		_In_  LPCSTR lpFileName
+		)
+	{
+		int cchWideChar = strlen(lpFileName) + 1;
+		LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+		if (::MultiByteToWideChar(CP_ACP, 0, lpFileName, -1, lpWideCharStr, cchWideChar) == 0) {
+			delete [] lpWideCharStr;
+			return FALSE;
+		}
+		BOOL b = DeleteFileW(
+			lpWideCharStr);
+		delete [] lpWideCharStr;
+		return b;
+	}
+
+	BOOL WINAPI MoveFileEx2A(
+		_In_      LPCSTR lpExistingFileName,
+		_In_opt_  LPCSTR lpNewFileName,
+		_In_      DWORD dwFlags
+		)
+	{
+		int cchWideChar1 = strlen(lpExistingFileName) + 1;
+		int cchWideChar2 = strlen(lpNewFileName) + 1;
+		LPWSTR lpWideCharStr1 = (LPWSTR)new WCHAR[cchWideChar1];
+		LPWSTR lpWideCharStr2 = (LPWSTR)new WCHAR[cchWideChar2];
+		if (::MultiByteToWideChar(CP_ACP, 0, lpExistingFileName, -1, lpWideCharStr1, cchWideChar1) == 0) {
+			delete [] lpWideCharStr1;
+			delete [] lpWideCharStr2;
+			return FALSE;
+		}
+		if (::MultiByteToWideChar(CP_ACP, 0, lpNewFileName, -1, lpWideCharStr2, cchWideChar2) == 0) {
+			delete [] lpWideCharStr1;
+			delete [] lpWideCharStr2;
+			return FALSE;
+		}
+		BOOL b = MoveFileExW(
+			lpWideCharStr1, 
+			lpWideCharStr2, 
+			dwFlags);
+		delete [] lpWideCharStr1;
+		delete [] lpWideCharStr2;
+		return b;
+	}
+
 	DWORD WINAPI SetFilePointer(
 		_In_         HANDLE hFile,
 		_In_         LONG lDistanceToMove,
@@ -135,6 +224,46 @@ namespace FileSystemEmulation
 		if (b == FALSE)
 			return INVALID_FILE_SIZE;
 		return standardInfo.EndOfFile.LowPart;	
+	}
+
+	BOOL WINAPI GetFileSizeEx(
+		_In_   HANDLE hFile,
+		_Out_  PLARGE_INTEGER lpFileSize
+		)
+	{
+		FILE_STANDARD_INFO standardInfo;
+		BOOL b = GetFileInformationByHandleEx(
+			hFile, 
+			FileStandardInfo, 
+			&standardInfo, 
+			sizeof(standardInfo));
+		if (b == FALSE)
+			return FALSE;
+		*lpFileSize = standardInfo.EndOfFile;
+		return TRUE;
+	}
+
+	BOOL WINAPI FileTimeToLocalFileTime(
+		_In_   const FILETIME *lpFileTime,
+		_Out_  LPFILETIME lpLocalFileTime
+		)
+	{
+		SYSTEMTIME SystemTime;
+		SYSTEMTIME LocalSystemTime;
+		if (FALSE == FileTimeToSystemTime(
+			lpFileTime, 
+			&SystemTime))
+			return FALSE;
+		if (FALSE == SystemTimeToTzSpecificLocalTime(
+			NULL, 
+			&SystemTime, 
+			&LocalSystemTime))
+			return FALSE;
+		if (FALSE == SystemTimeToFileTime(
+			&LocalSystemTime, 
+			lpLocalFileTime))
+			return FALSE;
+		return TRUE;
 	}
 
 	HANDLE WINAPI CreateFileMappingA(
@@ -538,8 +667,29 @@ namespace FileSystemEmulation
 	  _In_      DWORD nSize
 	)
 	{
-		assert(false);
-		return 0;
+		Platform::String ^ path = 
+			Windows::ApplicationModel::Package::Current->InstalledLocation->Path;
+		Platform::String ^ name = 
+			Windows::ApplicationModel::Package::Current->Id->Name;
+		DWORD nBufferLength = ::WideCharToMultiByte(
+			CP_ACP, 0, 
+			path->Data(), path->Length(), 
+			lpFilename, nSize - 1, 
+			NULL, NULL);
+		if (nBufferLength == 0)
+			return 0;
+		if (nBufferLength + 1 < nSize) {
+			lpFilename[nBufferLength++] = '\\';
+		}
+		nBufferLength += ::WideCharToMultiByte(
+			CP_ACP, 0, 
+			name->Data(), name->Length(), 
+			lpFilename + nBufferLength, nSize - nBufferLength - 1, 
+			NULL, NULL);
+		if (nBufferLength < nSize) {
+			lpFilename[nBufferLength] = '\0';
+		}
+		return nBufferLength;
 	}
 
 	DWORD WINAPI GetTempPathA(

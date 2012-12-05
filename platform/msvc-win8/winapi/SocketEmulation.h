@@ -344,6 +344,18 @@ typedef struct fd_set FD_SET;
 		_In_   int namelen
 		);
 
+	struct adapter {
+		int		len;
+		int		lan_type;
+		GUID	id;
+		//char	addr[];
+	};
+
+	int getadapters(
+		_Out_  char *adapters,
+		_In_   int len
+		);
+
 	struct  hostent {
 		char    FAR * h_name;           /* official name of host */
 		char    FAR * FAR * h_aliases;  /* alias list */
@@ -663,6 +675,10 @@ enum
 		_Out_  LPDWORD lpNumberOfBytesTransferred,
 		_In_   BOOL bWait
 		);
+
+	BOOL WINAPI CloseIoCompletionPort(
+	  _In_  HANDLE hObject
+	);
 
 	BOOL WINAPI GetCommState(
 		_In_     HANDLE hFile,

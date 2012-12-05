@@ -28,6 +28,12 @@ namespace SystemEmulation
 
 #define FormatMessageA FormatMessage2A
 
+	void WINAPI OutputDebugString2A(
+		_In_opt_  LPCSTR lpOutputString
+		);
+
+#define OutputDebugStringA OutputDebugString2A
+
 	DWORD WINAPI GetTickCount(void);
 
 	void WINAPI GetSystemInfo(

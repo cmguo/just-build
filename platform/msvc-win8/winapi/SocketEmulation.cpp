@@ -2,6 +2,9 @@
 
 #include <Windows.h>
 
+#undef WINAPI
+#define WINAPI
+
 #include "SocketEmulation.h"
 #include "WsaContext.h"
 #include "Socket.h"
@@ -229,6 +232,34 @@ namespace SocketEmulation
 		)
 	{
 		return 0;
+	}
+
+	int getadapters(
+		_Out_  char *adapters,
+		_In_   int len
+		)
+	{
+		char *buf = adapters;
+		Windows::Foundation::Collections::IVectorView<Windows::Networking::HostName ^> ^ vec = 
+			Windows::Networking::Connectivity::NetworkInformation::GetHostNames();
+		Platform::String ^ svc = ref new Platform::String(L"0");
+		for (unsigned int i = 0; i < vec->Size; i++) {
+			Windows::Networking::HostName ^ host = vec->GetAt(i);
+			int addrlen = host->RawName->Length() + 1;
+			if (sizeof(adapter) + addrlen <= len) {
+				adapter * a = (adapter *)buf;
+				a->len = sizeof(adapter) + addrlen;
+				if (host->IPInformation && host->IPInformation->NetworkAdapter) {
+					a->lan_type = host->IPInformation->NetworkAdapter->IanaInterfaceType;
+					a->id = host->IPInformation->NetworkAdapter->NetworkAdapterId;
+				}
+				char * addr = (char *)(a + 1);
+				WideCharToMultiByte(CP_ACP, 0, host->RawName->Data(), -1, addr, addrlen, NULL, FALSE);
+				buf += a->len;
+				len -= a->len;
+			}
+		}
+		return buf - adapters;
 	}
 
 	struct hostent* FAR gethostbyname(
@@ -717,6 +748,17 @@ namespace SocketEmulation
 	{
 		SetLastError(ERROR_NOT_SUPPORTED);
 		return FALSE;
+	}
+
+	BOOL WINAPI CloseIoCompletionPort(
+	  _In_  HANDLE hObject
+	)
+	{
+		wsa_context * context = &g_wsa_context();
+		iocp_t * iocp = context->get<iocp_t>((size_t)hObject);
+		BOOL ret = iocp->close();
+		context->free(iocp);
+		return ret;
 	}
 
 }

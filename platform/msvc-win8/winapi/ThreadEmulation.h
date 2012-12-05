@@ -78,6 +78,44 @@ namespace ThreadEmulation
 
 #define CreateEvent CreateEventA
 
+	HANDLE WINAPI CreateMutexA(
+		  _In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
+		  _In_      BOOL bInitialOwner,
+		  _In_opt_  LPCSTR lpName
+		);
+
+	HANDLE WINAPI CreateMutexW(
+		  _In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
+		  _In_      BOOL bInitialOwner,
+		  _In_opt_  LPCWSTR lpName
+		);
+
+	HANDLE WINAPI OpenMutexA(
+		_In_  DWORD dwDesiredAccess,
+		_In_  BOOL bInheritHandle,
+		_In_  LPCSTR lpName
+		);
+
+	HANDLE WINAPI CreateSemaphoreA(
+		_In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
+		_In_      LONG lInitialCount,
+		_In_      LONG lMaximumCount,
+		_In_opt_  LPCSTR lpName
+		);
+
+	HANDLE WINAPI CreateSemaphoreW(
+		_In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
+		_In_      LONG lInitialCount,
+		_In_      LONG lMaximumCount,
+		_In_opt_  LPCWSTR lpName
+		);
+
+	HANDLE WINAPI OpenSemaphoreA(
+		_In_  DWORD dwDesiredAccess,
+		_In_  BOOL bInheritHandle,
+		_In_  LPCSTR lpName
+		);
+
 	DWORD WINAPI WaitForSingleObject(
 		_In_  HANDLE hHandle,
 		_In_  DWORD dwMilliseconds

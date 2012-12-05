@@ -7,6 +7,20 @@
 namespace FileSystemEmulation
 {
 
+	BOOL WINAPI CreateDirectory2A(
+		_In_      LPCSTR lpPathName,
+		_In_opt_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
+		);
+
+#define CreateDirectoryA CreateDirectory2A
+
+	BOOL WINAPI RemoveDirectory2A(
+		_In_  LPCSTR lpPathName
+		);
+
+#define RemoveDirectoryA RemoveDirectory2A
+
+
 	DWORD WINAPI GetFileAttributesA(
 		_In_  LPCSTR lpFileName
 		);
@@ -35,6 +49,20 @@ namespace FileSystemEmulation
 		_In_opt_  HANDLE hTemplateFile
 		);
 
+	BOOL WINAPI DeleteFile2A(
+		_In_  LPCSTR lpFileName
+		);
+
+#define DeleteFileA DeleteFile2A
+
+	BOOL WINAPI MoveFileEx2A(
+		_In_      LPCSTR lpExistingFileName,
+		_In_opt_  LPCSTR lpNewFileName,
+		_In_      DWORD dwFlags
+		);
+
+#define MoveFileExA MoveFileEx2A
+
 	DWORD WINAPI SetFilePointer(
 		_In_         HANDLE hFile,
 		_In_         LONG lDistanceToMove,
@@ -45,6 +73,16 @@ namespace FileSystemEmulation
 	DWORD WINAPI GetFileSize(
 		_In_       HANDLE hFile,
 		_Out_opt_  LPDWORD lpFileSizeHigh
+		);
+
+	BOOL WINAPI GetFileSizeEx(
+		_In_   HANDLE hFile,
+		_Out_  PLARGE_INTEGER lpFileSize
+		);
+
+	BOOL WINAPI FileTimeToLocalFileTime(
+		_In_   const FILETIME *lpFileTime,
+		_Out_  LPFILETIME lpLocalFileTime
 		);
 
 	HANDLE WINAPI CreateFileMappingA(

@@ -7,7 +7,11 @@
 
 #include <Windows.h>
 
+#undef WINAPI
+#define WINAPI
+
 #include "SystemEmulation.h"
+#include "FileSystemEmulation.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -48,17 +52,43 @@ namespace SystemEmulation
 		LPSTR lpBuffer2 = lpBuffer;
 		if (dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) {
 			dwFlags &= ~FORMAT_MESSAGE_ALLOCATE_BUFFER;
-			lpBuffer2 = *(LPSTR *)lpBuffer = (LPSTR)new char [512];
+			lpBuffer2 = (LPSTR)new char [512];
 			nSize = 512;
 		}
-		return ::FormatMessageA(
+		LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[nSize];
+		DWORD dw = ::FormatMessageW(
 			dwFlags, 
 			lpSource, 
 			dwMessageId, 
 			dwLanguageId, 
-			lpBuffer2, 
+			lpWideCharStr, 
 			nSize, 
 			Arguments);
+		if (dw == 0) {
+			delete [] lpBuffer2;
+			delete [] lpWideCharStr;
+			return 0;
+		}
+		dw = ::WideCharToMultiByte(CP_ACP, 0, lpWideCharStr, dw + 1, lpBuffer2, nSize, 0, FALSE);
+		delete [] lpWideCharStr;
+		if (lpBuffer2 != lpBuffer) {
+			*(LPSTR *)lpBuffer = lpBuffer2;
+		}
+		return dw;
+	}
+
+	void WINAPI OutputDebugString2A(
+		_In_opt_  LPCSTR lpOutputString
+		)
+	{
+		int cchWideChar = strlen(lpOutputString) + 1;
+		LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+		if ((cchWideChar = ::MultiByteToWideChar(CP_ACP, 0, lpOutputString, cchWideChar, lpWideCharStr, cchWideChar)) == 0) {
+			delete [] lpWideCharStr;
+			return;
+		}
+		OutputDebugStringW(lpWideCharStr);
+		delete [] lpWideCharStr;
 	}
 
 	DWORD WINAPI GetTickCount(void)
@@ -73,6 +103,22 @@ namespace SystemEmulation
 		GetNativeSystemInfo(lpSystemInfo);
 	}
 
+	extern "C" {
+		char const * environ[32] = {0};
+	}
+
+	static struct init_environ
+	{
+		init_environ()
+		{
+			int n = 0;
+			char * TMP = new char[MAX_PATH + 8];
+			strncpy_s(TMP, MAX_PATH + 8, "TMP=", 4);
+			FileSystemEmulation::GetTempPathA(MAX_PATH, TMP + 4);
+			environ[n++] = TMP;
+		}
+	} init_environ__;
+
 	LPCH WINAPI GetEnvironmentStringsA(void)
 	{
 		return "";
@@ -84,8 +130,18 @@ namespace SystemEmulation
 		_In_       DWORD nSize
 		)
 	{
-		//assert(0);
-		lpBuffer[0] = '0';
+		char const * const * p = environ;
+		size_t len = strlen(lpName);
+		while (*p) {
+			if (strncmp(*p, lpName, len) == 0 && *p[len] == '=') {
+				size_t len2 = strlen(*p + len + 1);
+				if (nSize < len + 1) {
+					return len2 + 1;
+				}
+				strncpy_s(lpBuffer, nSize, *p + len + 1, len2);
+				return len2;
+			}
+		}
 		return 0;
 	}
 
@@ -269,5 +325,4 @@ namespace SystemEmulation
 		return FALSE;
 	}
 
-	char * environ[] = {0};
 }
