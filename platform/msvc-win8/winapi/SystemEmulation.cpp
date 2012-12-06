@@ -141,8 +141,8 @@ namespace SystemEmulation
 				strncpy_s(lpBuffer, nSize, *p + len + 1, len2);
 				return len2;
 			}
+			++p;
 		}
-		++p;
 		return 0;
 	}
 

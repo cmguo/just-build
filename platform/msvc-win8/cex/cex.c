@@ -18,8 +18,8 @@ char * __cdecl getenv(
 		if (strncmp(*p, _VarName, len) == 0 && *p[len] == '=') {
 			return (char *)*p + len + 1;
 		}
+		++p;
 	}
-	++p;
 	return 0;
 }
 

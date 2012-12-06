@@ -98,10 +98,6 @@ namespace SocketEmulation
 		_In_  const struct sockaddr *name,
 		_In_  int namelen)
 	{
-		Windows::Networking::EndpointPair ^ endp = ref new Windows::Networking::EndpointPair(
-			nullptr, nullptr, 
-			sockaddr_to_host_name(name), 
-			sockaddr_to_svc_name(name));
 		if (type == SOCK_STREAM) {
 			stream_socket = nullptr;
 			stream_listener = ref new Windows::Networking::Sockets::StreamSocketListener();
@@ -531,7 +527,11 @@ namespace SocketEmulation
 		WCHAR wstr[256];
 		DWORD len = 256;
 		if (name->sa_family == AF_INET) {
-			WSAAddressToStringW((LPSOCKADDR)name, sizeof(sockaddr_in), NULL, wstr, &len);
+			if (((sockaddr_in *)name)->sin_addr.s_addr == 0) {
+				// bind on 0.0.0.0 will fail, but a null HostName will take effect!!
+				return nullptr;
+			}
+			WSAAddressToStringW((sockaddr *)name, sizeof(sockaddr_in), NULL, wstr, &len);
 		} else {
 			//WSAAddressToStringW(((LPSOCKADDR)name, sizeof(sockaddr_in6), NULL, wstr, &len);
 		}
