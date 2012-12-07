@@ -45,6 +45,12 @@ endef
 .PHONY: EXTEND
 EXTEND:
 	$(call packet_depend3,/ppbox/ppbox)
+	touch $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/$(TARGET_FILE_3)
+
+.PHONY: CLEAN
+CLEAN:
+	$(RM) $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)/*
+	$(RM) $(TARGET_DIRECTORY)/$(FULL_TARGE_DIR)/*
 
 define pack_depend
 $(call pack_depend2,$(1),$(call get_item_type,$(1)),$(call get_item_file,$(1)))
@@ -64,5 +70,5 @@ $(PACKET_DEPENDS): mkdirs
 	$(call pack_depend,$@)
 
 $(info TARGET_FILE_2=$(TARGET_FILE_2))
-$(TARGET_FILE_FULL): $(PACKET_DEPENDS) $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2) $(MAKEFILE_LIST) EXTEND
+$(TARGET_FILE_FULL): CLEAN $(PACKET_DEPENDS) $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2) $(MAKEFILE_LIST) EXTEND
 	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE_3) $(FULL_TARGE_DIR);tar -czv -f $(TARGET_FILE_2) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES)) $(notdir $(PACKET_DEPEND_FILES2)) 2>&0 > /dev/null
