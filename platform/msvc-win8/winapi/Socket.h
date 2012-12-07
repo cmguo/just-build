@@ -6,6 +6,7 @@
 
 #include <deque>
 #include <mutex>
+#include <map>
 #include <condition_variable>
 
 #include <assert.h>
@@ -21,12 +22,30 @@ namespace SocketEmulation
 			_In_   LPWSAOVERLAPPED lpOverlapped)
 			: dwBufferCount(dwBufferCount)
 			, lpOverlapped(lpOverlapped)
+			, lpFrom(NULL)
+			, lpFromlen(NULL)
+		{
+			std::copy(lpBuffers, lpBuffers + dwBufferCount, buffers);
+		}
+
+		overlap_task(
+			_In_   LPWSABUF lpBuffers,
+			_In_   DWORD dwBufferCount,	
+			_Out_    struct sockaddr *lpFrom,
+			_Inout_  LPINT lpFromlen, 
+			_In_   LPWSAOVERLAPPED lpOverlapped)
+			: dwBufferCount(dwBufferCount)
+			, lpFrom(lpFrom)
+			, lpFromlen(lpFromlen)
+			, lpOverlapped(lpOverlapped)
 		{
 			std::copy(lpBuffers, lpBuffers + dwBufferCount, buffers);
 		}
 
 		WSABUF buffers[16];
 		DWORD dwBufferCount;
+		struct sockaddr *lpFrom;
+		LPINT lpFromlen;
 		LPWSAOVERLAPPED lpOverlapped;
 	};
 
@@ -183,6 +202,11 @@ namespace SocketEmulation
 		int wait_action(
 			Windows::Foundation::IAsyncAction ^ action);
 
+		template <typename TResult>
+		int wait_operation(
+			Windows::Foundation::IAsyncOperation<TResult>  ^ operation, 
+			TResult & result);
+
 		template <typename TResult, typename TProgress>
 		int wait_operation2(
 			Windows::Foundation::IAsyncOperationWithProgress<TResult, TProgress>  ^ operation, 
@@ -191,6 +215,16 @@ namespace SocketEmulation
 		void tcp_recv_some();
 
 		void tcp_send_some();
+
+		void udp_recv_from(
+			_Out_    struct sockaddr *lpFrom,
+			_Inout_  LPINT lpFromlen);
+
+		void udp_send();
+
+		void udp_send_to(
+			_In_   const struct sockaddr *lpTo,
+			_In_   int iToLen);
 
 		void handle_overlap_connect();
 
@@ -240,14 +274,16 @@ namespace SocketEmulation
 		int af;
 		int type;
 		int protocol;
-		Windows::Networking::Sockets::StreamSocket ^ stream_socket;
-		Windows::Networking::Sockets::StreamSocketListener ^ stream_listener;
-		Windows::Networking::Sockets::DatagramSocket ^ datagram_socket;
-		std::deque<Windows::Networking::Sockets::StreamSocket ^> accept_sockets;
-		boost::shared_ptr<iocp_t> iocp;
-		ULONG_PTR lpCompletionKey;
-		std::deque<overlap_task> read_tasks; // or accept tasks
-		std::deque<overlap_task> write_tasks;
+		Windows::Networking::Sockets::StreamSocket ^ stream_socket_;
+		Windows::Networking::Sockets::StreamSocketListener ^ stream_listener_;
+		Windows::Networking::Sockets::DatagramSocket ^ datagram_socket_;
+		std::deque<Windows::Networking::Sockets::StreamSocket ^> accept_sockets_;
+		std::deque<std::pair<Windows::Networking::HostName ^, Platform::String ^> > udp_remotes_;
+		std::map<uint64_t, Windows::Storage::Streams::IOutputStream ^> udp_streams_;
+		boost::shared_ptr<iocp_t> iocp_;
+		ULONG_PTR lpCompletionKey_;
+		std::deque<overlap_task> read_tasks_; // or accept tasks
+		std::deque<overlap_task> write_tasks_;
 		std::deque<Windows::Storage::Streams::IBuffer ^> read_datas_;
 		std::deque<Windows::Storage::Streams::IBuffer ^> write_datas_;
 		Windows::Storage::Streams::DataReader ^ reader_;
