@@ -7,8 +7,7 @@
 
 #include <Windows.h>
 
-#undef WINAPI
-#define WINAPI
+#define WINAPI_DECL	 __declspec(dllexport)
 
 #include "ThreadEmulation.h"
 
@@ -139,7 +138,7 @@ namespace ThreadEmulation
         ThreadPool::RunAsync(workItemHandler, GetWorkItemPriority(info->nPriority), WorkItemOptions::TimeSliced);
     }
 
-    HANDLE WINAPI CreateThread(
+    HANDLE WINAPI_DECL CreateThread(
 		LPSECURITY_ATTRIBUTES unusedThreadAttributes, 
 		SIZE_T unusedStackSize, 
 		LPTHREAD_START_ROUTINE lpStartAddress, 
@@ -201,7 +200,7 @@ namespace ThreadEmulation
         }
     }
 
-	DWORD WINAPI ResumeThread(
+	DWORD WINAPI_DECL ResumeThread(
 		HANDLE hThread)
     {
         lock_guard<mutex> lock(thread_data().threadsLock);
@@ -232,7 +231,7 @@ namespace ThreadEmulation
     }
 
 
-    BOOL WINAPI SetThreadPriority(
+    BOOL WINAPI_DECL SetThreadPriority(
 		HANDLE hThread, 
 		int nPriority)
     {
@@ -254,7 +253,7 @@ namespace ThreadEmulation
         return true;
     }
 
-	BOOL WINAPI TerminateThread(
+	BOOL WINAPI_DECL TerminateThread(
 		_Inout_  HANDLE hThread,
 		_In_     DWORD dwExitCode
 		)
@@ -262,7 +261,7 @@ namespace ThreadEmulation
 		return FALSE;
 	}
 
-    _Use_decl_annotations_ VOID WINAPI Sleep(DWORD dwMilliseconds)
+    _Use_decl_annotations_ VOID WINAPI_DECL Sleep(DWORD dwMilliseconds)
     {
         static HANDLE singletonEvent = nullptr;
 
@@ -291,7 +290,7 @@ namespace ThreadEmulation
     }
 
 
-    DWORD WINAPI TlsAlloc()
+    DWORD WINAPI_DECL TlsAlloc()
     {
         lock_guard<mutex> lock(tls_data().tlsAllocationLock);
         
@@ -308,7 +307,7 @@ namespace ThreadEmulation
     }
 
 
-    _Use_decl_annotations_ BOOL WINAPI TlsFree(
+    _Use_decl_annotations_ BOOL WINAPI_DECL TlsFree(
 		DWORD dwTlsIndex)
     {
         lock_guard<mutex> lock(tls_data().tlsAllocationLock);
@@ -339,7 +338,7 @@ namespace ThreadEmulation
     }
 
 
-    _Use_decl_annotations_ LPVOID WINAPI TlsGetValue(DWORD dwTlsIndex)
+    _Use_decl_annotations_ LPVOID WINAPI_DECL TlsGetValue(DWORD dwTlsIndex)
     {
         ThreadLocalData* threadData = currentThreadData;
 
@@ -356,7 +355,7 @@ namespace ThreadEmulation
     }
 
 
-    _Use_decl_annotations_ BOOL WINAPI TlsSetValue(
+    _Use_decl_annotations_ BOOL WINAPI_DECL TlsSetValue(
 		DWORD dwTlsIndex, 
 		LPVOID lpTlsValue)
     {
@@ -406,7 +405,7 @@ namespace ThreadEmulation
 
 
     // Called at thread exit to clean up TLS allocations.
-    void WINAPI TlsShutdown()
+    void WINAPI_DECL TlsShutdown()
     {
         ThreadLocalData* threadData = currentThreadData;
 
@@ -424,7 +423,7 @@ namespace ThreadEmulation
         }
 	}
 
-	void WINAPI InitializeCriticalSection(
+	void WINAPI_DECL InitializeCriticalSection(
 		_Out_  LPCRITICAL_SECTION lpCriticalSection
 		)
 	{
@@ -434,7 +433,7 @@ namespace ThreadEmulation
 			0);
 	}
 
-	HANDLE WINAPI CreateEventA(
+	HANDLE WINAPI_DECL CreateEventA(
 		_In_opt_  LPSECURITY_ATTRIBUTES lpEventAttributes,
 		_In_      BOOL bManualReset,
 		_In_      BOOL bInitialState,
@@ -466,7 +465,7 @@ namespace ThreadEmulation
 		return hEvent;
 	}
 
-	HANDLE WINAPI CreateMutexA(
+	HANDLE WINAPI_DECL CreateMutexA(
 		_In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
 		_In_      BOOL bInitialOwner,
 		_In_opt_  LPCSTR lpName
@@ -495,7 +494,7 @@ namespace ThreadEmulation
 		return hMutex;
 	}
 
-	HANDLE WINAPI OpenMutexA(
+	HANDLE WINAPI_DECL OpenMutexA(
 		_In_  DWORD dwDesiredAccess,
 		_In_  BOOL bInheritHandle,
 		_In_  LPCSTR lpName
@@ -520,7 +519,7 @@ namespace ThreadEmulation
 		return hMutex;
 	}
 
-	HANDLE WINAPI CreateSemaphoreA(
+	HANDLE WINAPI_DECL CreateSemaphoreA(
 		_In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 		_In_      LONG lInitialCount,
 		_In_      LONG lMaximumCount,
@@ -550,7 +549,7 @@ namespace ThreadEmulation
 		return hSemaphore;
 	}
 
-	HANDLE WINAPI OpenSemaphoreA(
+	HANDLE WINAPI_DECL OpenSemaphoreA(
 		_In_  DWORD dwDesiredAccess,
 		_In_  BOOL bInheritHandle,
 		_In_  LPCSTR lpName
@@ -575,7 +574,7 @@ namespace ThreadEmulation
 		return hSemaphore;
 	}
 
-	DWORD WINAPI WaitForSingleObject(
+	DWORD WINAPI_DECL WaitForSingleObject(
 		_In_  HANDLE hHandle,
 		_In_  DWORD dwMilliseconds
 		)
@@ -586,7 +585,7 @@ namespace ThreadEmulation
 			FALSE);
 	}
 
-	DWORD WINAPI WaitForMultipleObjects(
+	DWORD WINAPI_DECL WaitForMultipleObjects(
 		_In_  DWORD nCount,
 		_In_  const HANDLE *lpHandles,
 		_In_  BOOL bWaitAll,
@@ -617,7 +616,7 @@ namespace ThreadEmulation
 		return ret;
 	}
 
-	uintptr_t const _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
+	uintptr_t const WINAPI_DECL _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
 		void* arglist, unsigned initflag, unsigned* thrdaddr)
 	{
 		DWORD threadID;

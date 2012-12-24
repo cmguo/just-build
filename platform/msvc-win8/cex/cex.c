@@ -15,7 +15,7 @@ char * __cdecl getenv(
 	char const * const * p = environ;
 	size_t len = strlen(_VarName);
 	while (*p) {
-		if (strncmp(*p, _VarName, len) == 0 && *p[len] == '=') {
+		if (strncmp(*p, _VarName, len) == 0 && (*p)[len] == '=') {
 			return (char *)*p + len + 1;
 		}
 		++p;

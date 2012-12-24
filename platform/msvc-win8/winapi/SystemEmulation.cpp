@@ -1,14 +1,8 @@
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// SystemEmulation.cpp
 
 #include <Windows.h>
 
-#undef WINAPI
-#define WINAPI
+#define WINAPI_DECL	 __declspec(dllexport)
 
 #include "SystemEmulation.h"
 #include "FileSystemEmulation.h"
@@ -20,7 +14,7 @@
 namespace SystemEmulation
 {
 
-	HLOCAL WINAPI LocalAlloc(
+	HLOCAL WINAPI_DECL LocalAlloc(
 		_In_  UINT uFlags,
 		_In_  SIZE_T uBytes
 		)
@@ -29,7 +23,7 @@ namespace SystemEmulation
 		return new char [uBytes];
 	}
 
-	HLOCAL WINAPI LocalFree(
+	HLOCAL WINAPI_DECL LocalFree(
 		_In_  HLOCAL hMem
 		)
 	{
@@ -39,7 +33,7 @@ namespace SystemEmulation
 
 #undef FormatMessageA
 
-	DWORD WINAPI FormatMessage2A(
+	DWORD WINAPI_DECL FormatMessage2A(
 		_In_      DWORD dwFlags,
 		_In_opt_  LPCVOID lpSource,
 		_In_      DWORD dwMessageId,
@@ -77,7 +71,7 @@ namespace SystemEmulation
 		return dw;
 	}
 
-	void WINAPI OutputDebugString2A(
+	void WINAPI_DECL OutputDebugString2A(
 		_In_opt_  LPCSTR lpOutputString
 		)
 	{
@@ -91,12 +85,12 @@ namespace SystemEmulation
 		delete [] lpWideCharStr;
 	}
 
-	DWORD WINAPI GetTickCount(void)
+	DWORD WINAPI_DECL GetTickCount(void)
 	{
 		return (DWORD)GetTickCount64();
 	}
 
-	void WINAPI GetSystemInfo(
+	void WINAPI_DECL GetSystemInfo(
 		_Out_  LPSYSTEM_INFO lpSystemInfo
 		)
 	{
@@ -104,13 +98,15 @@ namespace SystemEmulation
 	}
 
 	extern "C" {
-		char const * environ[32] = {0};
+		__declspec(dllexport) char ** environ = NULL;
 	}
 
 	static struct init_environ
 	{
 		init_environ()
 		{
+			environ = new char *[32];
+			memset(environ, 0, sizeof(char *) * 32);
 			int n = 0;
 			char * TMP = new char[MAX_PATH + 8];
 			strncpy_s(TMP, MAX_PATH + 8, "TMP=", 4);
@@ -119,12 +115,12 @@ namespace SystemEmulation
 		}
 	} init_environ__;
 
-	LPCH WINAPI GetEnvironmentStringsA(void)
+	LPCH WINAPI_DECL GetEnvironmentStringsA(void)
 	{
 		return "";
 	}
 
-	DWORD WINAPI GetEnvironmentVariableA(
+	DWORD WINAPI_DECL GetEnvironmentVariableA(
 		_In_opt_   LPCSTR lpName,
 		_Out_opt_  LPSTR lpBuffer,
 		_In_       DWORD nSize
@@ -133,7 +129,7 @@ namespace SystemEmulation
 		char const * const * p = environ;
 		size_t len = strlen(lpName);
 		while (*p) {
-			if (strncmp(*p, lpName, len) == 0 && *p[len] == '=') {
+			if (strncmp(*p, lpName, len) == 0 && (*p)[len] == '=') {
 				size_t len2 = strlen(*p + len + 1);
 				if (nSize < len + 1) {
 					return len2 + 1;
@@ -146,7 +142,7 @@ namespace SystemEmulation
 		return 0;
 	}
 
-	BOOL WINAPI SetEnvironmentVariableA(
+	BOOL WINAPI_DECL SetEnvironmentVariableA(
 		_In_      LPCSTR lpName,
 		_In_opt_  LPCSTR lpValue
 		)
@@ -155,12 +151,12 @@ namespace SystemEmulation
 		return FALSE;
 	}
 
-	LCID GetUserDefaultLCID(void)
+	LCID WINAPI_DECL GetUserDefaultLCID(void)
 	{
 		return LOCALE_USER_DEFAULT;
 	}
 
-	int LCMapStringA(
+	int WINAPI_DECL LCMapStringA(
 		_In_       LCID Locale,
 		_In_       DWORD dwMapFlags,
 		_In_       LPCSTR lpSrcStr,
@@ -195,7 +191,7 @@ namespace SystemEmulation
 		return cchDest;
 	}
 
-	int LCMapStringW(
+	int WINAPI_DECL LCMapStringW(
 		_In_       LCID Locale,
 		_In_       DWORD dwMapFlags,
 		_In_       LPCWSTR lpSrcStr,
@@ -216,7 +212,7 @@ namespace SystemEmulation
 			NULL);
 	}
 
-	BOOL GetStringTypeExA(
+	BOOL WINAPI_DECL GetStringTypeExA(
 		_In_   LCID Locale,
 		_In_   DWORD dwInfoType,
 		_In_   LPCSTR lpSrcStr,
@@ -240,7 +236,7 @@ namespace SystemEmulation
 		return b;
 	}
 
-	int WINAPI LoadStringA(
+	int WINAPI_DECL LoadStringA(
 		_In_opt_  HINSTANCE hInstance,
 		_In_      UINT uID,
 		_Out_     LPSTR lpBuffer,
@@ -251,7 +247,7 @@ namespace SystemEmulation
 		return 0;
 	}
 
-	int WINAPI LoadStringW(
+	int WINAPI_DECL LoadStringW(
 		_In_opt_  HINSTANCE hInstance,
 		_In_      UINT uID,
 		_Out_     LPWSTR lpBuffer,
@@ -262,7 +258,7 @@ namespace SystemEmulation
 		return 0;
 	}
 
-	LPVOID WINAPI VirtualAlloc(
+	LPVOID WINAPI_DECL VirtualAlloc(
 		_In_opt_  LPVOID lpAddress,
 		_In_      SIZE_T dwSize,
 		_In_      DWORD flAllocationType,
@@ -288,7 +284,7 @@ namespace SystemEmulation
 		return addr;
 	}
 
-	BOOL WINAPI VirtualFree(
+	BOOL WINAPI_DECL VirtualFree(
 		_In_  LPVOID lpAddress,
 		_In_  SIZE_T dwSize,
 		_In_  DWORD dwFreeType
@@ -300,7 +296,7 @@ namespace SystemEmulation
 			lpAddress);
 	}
 
-	HANDLE WINAPI GetStdHandle(
+	HANDLE WINAPI_DECL GetStdHandle(
 		_In_  DWORD nStdHandle
 		)
 	{
@@ -318,7 +314,7 @@ namespace SystemEmulation
 		}
 	}
 
-	BOOL WINAPI SetConsoleTextAttribute(
+	BOOL WINAPI_DECL SetConsoleTextAttribute(
 		_In_  HANDLE hConsoleOutput,
 		_In_  WORD wAttributes
 		)

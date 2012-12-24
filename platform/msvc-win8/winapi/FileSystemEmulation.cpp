@@ -1,14 +1,8 @@
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// FileSystemEmulation.cpp
 
 #include <Windows.h>
 
-#undef WINAPI
-#define WINAPI
+#define WINAPI_DECL	 __declspec(dllexport)
 
 #include "FileSystemEmulation.h"
 
@@ -19,7 +13,7 @@
 namespace FileSystemEmulation
 {
 
-	BOOL WINAPI CreateDirectory2A(
+	BOOL WINAPI_DECL CreateDirectory2A(
 		_In_      LPCSTR lpPathName,
 		_In_opt_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
 		)
@@ -37,7 +31,7 @@ namespace FileSystemEmulation
 		return b;
 	}
 
-	BOOL WINAPI RemoveDirectory2A(
+	BOOL WINAPI_DECL RemoveDirectory2A(
 		_In_  LPCSTR lpPathName
 		)
 	{
@@ -53,7 +47,7 @@ namespace FileSystemEmulation
 		return b;
 	}
 
-	DWORD WINAPI GetFileAttributesA(
+	DWORD WINAPI_DECL GetFileAttributesA(
 		_In_  LPCSTR lpFileName
 		)
 	{
@@ -72,7 +66,7 @@ namespace FileSystemEmulation
 		return b ? fileInformation.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
 	}
 
-	DWORD WINAPI GetFileAttributesW(
+	DWORD WINAPI_DECL GetFileAttributesW(
 		_In_  LPCWSTR lpFileName
 		)
 	{
@@ -84,7 +78,7 @@ namespace FileSystemEmulation
 		return b ? fileInformation.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
 	}
 
-	HANDLE WINAPI CreateFileA(
+	HANDLE WINAPI_DECL CreateFileA(
 		_In_      LPCSTR lpFileName,
 		_In_      DWORD dwDesiredAccess,
 		_In_      DWORD dwShareMode,
@@ -112,7 +106,7 @@ namespace FileSystemEmulation
 		return hFile;
 	}
 
-	HANDLE WINAPI CreateFileW(
+	HANDLE WINAPI_DECL CreateFileW(
 		_In_      LPCWSTR lpFileName,
 		_In_      DWORD dwDesiredAccess,
 		_In_      DWORD dwShareMode,
@@ -138,7 +132,7 @@ namespace FileSystemEmulation
 		return hFile;
 	}
 
-	BOOL WINAPI DeleteFile2A(
+	BOOL WINAPI_DECL DeleteFile2A(
 		_In_  LPCSTR lpFileName
 		)
 	{
@@ -154,7 +148,7 @@ namespace FileSystemEmulation
 		return b;
 	}
 
-	BOOL WINAPI MoveFileEx2A(
+	BOOL WINAPI_DECL MoveFileEx2A(
 		_In_      LPCSTR lpExistingFileName,
 		_In_opt_  LPCSTR lpNewFileName,
 		_In_      DWORD dwFlags
@@ -183,7 +177,7 @@ namespace FileSystemEmulation
 		return b;
 	}
 
-	DWORD WINAPI SetFilePointer(
+	DWORD WINAPI_DECL SetFilePointer(
 		_In_         HANDLE hFile,
 		_In_         LONG lDistanceToMove,
 		_Inout_opt_  PLONG lpDistanceToMoveHigh,
@@ -210,7 +204,7 @@ namespace FileSystemEmulation
 		return liDistanceToMove.LowPart;
 	}
 
-	DWORD WINAPI GetFileSize(
+	DWORD WINAPI_DECL GetFileSize(
 		_In_       HANDLE hFile,
 		_Out_opt_  LPDWORD lpFileSizeHigh
 		)
@@ -226,7 +220,7 @@ namespace FileSystemEmulation
 		return standardInfo.EndOfFile.LowPart;	
 	}
 
-	BOOL WINAPI GetFileSizeEx(
+	BOOL WINAPI_DECL GetFileSizeEx(
 		_In_   HANDLE hFile,
 		_Out_  PLARGE_INTEGER lpFileSize
 		)
@@ -243,7 +237,7 @@ namespace FileSystemEmulation
 		return TRUE;
 	}
 
-	BOOL WINAPI FileTimeToLocalFileTime(
+	BOOL WINAPI_DECL FileTimeToLocalFileTime(
 		_In_   const FILETIME *lpFileTime,
 		_Out_  LPFILETIME lpLocalFileTime
 		)
@@ -266,7 +260,7 @@ namespace FileSystemEmulation
 		return TRUE;
 	}
 
-	HANDLE WINAPI CreateFileMappingA(
+	HANDLE WINAPI_DECL CreateFileMappingA(
 		_In_      HANDLE hFile,
 		_In_opt_  LPSECURITY_ATTRIBUTES lpAttributes,
 		_In_      DWORD flProtect,
@@ -275,11 +269,14 @@ namespace FileSystemEmulation
 		_In_opt_  LPCSTR lpName
 		)
 	{
-		int cchWideChar = strlen(lpName) + 1;
-		LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
-		if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
-			delete [] lpWideCharStr;
-			return NULL;
+		LPWSTR lpWideCharStr = NULL;
+		if (lpName) {
+			int cchWideChar = strlen(lpName) + 1;
+			lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
+			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
+				delete [] lpWideCharStr;
+				return NULL;
+			}
 		}
 		ULONG64 ulMaximumSize = (ULONG64)dwMaximumSizeHigh << 32 | dwMaximumSizeLow;
 		HANDLE hFileMapping = CreateFileMappingFromApp(
@@ -288,11 +285,12 @@ namespace FileSystemEmulation
 			flProtect, 
 			ulMaximumSize , 
 			lpWideCharStr);
-		delete [] lpWideCharStr;
+		if (lpWideCharStr)
+			delete [] lpWideCharStr;
 		return hFileMapping;
 	}
 
-	HANDLE WINAPI OpenFileMappingA(
+	HANDLE WINAPI_DECL OpenFileMappingA(
 		_In_ DWORD dwDesiredAccess,
 		_In_ BOOL bInheritHandle,
 		_In_ LPCSTR lpName
@@ -311,7 +309,7 @@ namespace FileSystemEmulation
 		return hFileMapping;
 	}
 
-	LPVOID WINAPI MapViewOfFile(
+	LPVOID WINAPI_DECL MapViewOfFile(
 		_In_  HANDLE hFileMappingObject,
 		_In_  DWORD dwDesiredAccess,
 		_In_  DWORD dwFileOffsetHigh,
@@ -327,7 +325,7 @@ namespace FileSystemEmulation
 			dwNumberOfBytesToMap);
 	}
 
-	LPVOID WINAPI MapViewOfFileEx(
+	LPVOID WINAPI_DECL MapViewOfFileEx(
 		_In_      HANDLE hFileMappingObject,
 		_In_      DWORD dwDesiredAccess,
 		_In_      DWORD dwFileOffsetHigh,
@@ -345,7 +343,7 @@ namespace FileSystemEmulation
 			dwNumberOfBytesToMap);
 	}
 
-	DWORD WINAPI GetCurrentDirectoryA(
+	DWORD WINAPI_DECL GetCurrentDirectoryA(
 		_In_   DWORD nBufferLength,
 		_Out_  LPSTR lpBuffer
 		)
@@ -353,7 +351,7 @@ namespace FileSystemEmulation
 		return 0;
 	}
 
-	DWORD WINAPI GetCurrentDirectoryW(
+	DWORD WINAPI_DECL GetCurrentDirectoryW(
 		_In_   DWORD nBufferLength,
 		_Out_  LPWSTR lpBuffer
 		)
@@ -362,7 +360,7 @@ namespace FileSystemEmulation
 		return 0;
 	}
 
-	BOOL WINAPI SetCurrentDirectoryA(
+	BOOL WINAPI_DECL SetCurrentDirectoryA(
 		_In_  LPCSTR lpPathName
 		)
 	{
@@ -370,7 +368,7 @@ namespace FileSystemEmulation
 		return FALSE;
 	}
 
-	BOOL WINAPI SetCurrentDirectoryW(
+	BOOL WINAPI_DECL SetCurrentDirectoryW(
 		_In_  LPCWSTR lpPathName
 		)
 	{
@@ -378,7 +376,7 @@ namespace FileSystemEmulation
 		return FALSE;
 	}
 
-	BOOL WINAPI CreateHardLinkA(
+	BOOL WINAPI_DECL CreateHardLinkA(
 		_In_        LPCSTR lpFileName,
 		_In_        LPCSTR lpExistingFileName,
 		_Reserved_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
@@ -388,7 +386,7 @@ namespace FileSystemEmulation
 		return FALSE;
 	}
 
-	BOOL WINAPI CreateHardLinkW(
+	BOOL WINAPI_DECL CreateHardLinkW(
 		_In_        LPCWSTR lpFileName,
 		_In_        LPCWSTR lpExistingFileName,
 		_Reserved_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
@@ -398,7 +396,7 @@ namespace FileSystemEmulation
 		return FALSE;
 	}
 
-	DWORD WINAPI GetFullPathNameA(
+	DWORD WINAPI_DECL GetFullPathNameA(
 		_In_   LPCSTR lpFileName,
 		_In_   DWORD nBufferLength,
 		_Out_  LPSTR lpBuffer,
@@ -409,7 +407,7 @@ namespace FileSystemEmulation
 		return 0;
 	}
 
-	DWORD WINAPI GetFullPathNameW(
+	DWORD WINAPI_DECL GetFullPathNameW(
 		_In_   LPCWSTR lpFileName,
 		_In_   DWORD nBufferLength,
 		_Out_  LPWSTR lpBuffer,
@@ -420,7 +418,7 @@ namespace FileSystemEmulation
 		return 0;
 	}
 
-	DWORD WINAPI GetShortPathNameA(
+	DWORD WINAPI_DECL GetShortPathNameA(
 		_In_   LPCSTR lpszLongPath,
 		_Out_  LPSTR lpszShortPath,
 		_In_   DWORD cchBuffer
@@ -430,7 +428,7 @@ namespace FileSystemEmulation
 		return 0;
 	}
 
-	DWORD WINAPI GetShortPathNameW(
+	DWORD WINAPI_DECL GetShortPathNameW(
 		_In_   LPCWSTR lpszLongPath,
 		_Out_  LPWSTR lpszShortPath,
 		_In_   DWORD cchBuffer
@@ -440,7 +438,7 @@ namespace FileSystemEmulation
 		return 0;
 	}
 
-	BOOL WINAPI MoveFileA(
+	BOOL WINAPI_DECL MoveFileA(
 		_In_  LPCSTR lpExistingFileName,
 		_In_  LPCSTR lpNewFileName
 		)
@@ -451,7 +449,7 @@ namespace FileSystemEmulation
 			0);
 	}
 
-	BOOL WINAPI MoveFileW(
+	BOOL WINAPI_DECL MoveFileW(
 		_In_  LPCWSTR lpExistingFileName,
 		_In_  LPCWSTR lpNewFileName
 		)
@@ -462,7 +460,7 @@ namespace FileSystemEmulation
 			0);
 	}
 
-	BOOL WINAPI CopyFileA(
+	BOOL WINAPI_DECL CopyFileA(
 		_In_  LPCSTR lpExistingFileName,
 		_In_  LPCSTR lpNewFileName,
 		_In_  BOOL bFailIfExists
@@ -491,7 +489,7 @@ namespace FileSystemEmulation
 		return b;
 	}
 
-	BOOL WINAPI CopyFileW(
+	BOOL WINAPI_DECL CopyFileW(
 		_In_  LPCWSTR lpExistingFileName,
 		_In_  LPCWSTR lpNewFileName,
 		_In_  BOOL bFailIfExists
@@ -510,7 +508,7 @@ namespace FileSystemEmulation
 		return SUCCEEDED(hr);
 	}
 
-	HANDLE WINAPI FindFirstFileA(
+	HANDLE WINAPI_DECL FindFirstFileA(
 		_In_   LPCSTR lpFileName,
 		_Out_  LPWIN32_FIND_DATAA lpFindFileData
 		)
@@ -525,7 +523,7 @@ namespace FileSystemEmulation
 		return hFindFile;
 	}
 
-	HANDLE WINAPI FindFirstFileW(
+	HANDLE WINAPI_DECL FindFirstFileW(
 		_In_   LPCWSTR lpFileName,
 		_Out_  LPWIN32_FIND_DATAW lpFindFileData
 		)
@@ -540,7 +538,7 @@ namespace FileSystemEmulation
 		return hFindFile;
 	}
 
-	BOOL WINAPI GetFileInformationByHandle(
+	BOOL WINAPI_DECL GetFileInformationByHandle(
 		_In_   HANDLE hFile,
 		_Out_  LPBY_HANDLE_FILE_INFORMATION lpFileInformation
 		)
@@ -574,7 +572,7 @@ namespace FileSystemEmulation
 		return TRUE;
 	}
 
-	BOOL WINAPI GetFileTime(
+	BOOL WINAPI_DECL GetFileTime(
 		_In_       HANDLE hFile,
 		_Out_opt_  LPFILETIME lpCreationTime,
 		_Out_opt_  LPFILETIME lpLastAccessTime,
@@ -598,7 +596,7 @@ namespace FileSystemEmulation
 		return TRUE;
 	}
 
-	BOOL WINAPI SetFileTime(
+	BOOL WINAPI_DECL SetFileTime(
 		_In_      HANDLE hFile,
 		_In_opt_  const FILETIME *lpCreationTime,
 		_In_opt_  const FILETIME *lpLastAccessTime,
@@ -627,7 +625,7 @@ namespace FileSystemEmulation
 		return b;
 	}
 
-	HMODULE WINAPI GetModuleHandleA(
+	HMODULE WINAPI_DECL GetModuleHandleA(
 		_In_opt_  LPCSTR lpModuleName
 		)
 	{
@@ -644,7 +642,7 @@ namespace FileSystemEmulation
 		return hModule;
 	}
 
-	HMODULE WINAPI LoadLibraryA(
+	HMODULE WINAPI_DECL LoadLibraryA(
 		_In_  LPCSTR lpFileName
 		)
 	{
@@ -661,7 +659,7 @@ namespace FileSystemEmulation
 		return hModule;
 	}
 
-	DWORD WINAPI GetModuleFileNameA(
+	DWORD WINAPI_DECL GetModuleFileNameA(
 	  _In_opt_  HMODULE hModule,
 	  _Out_     LPSTR lpFilename,
 	  _In_      DWORD nSize
@@ -692,7 +690,7 @@ namespace FileSystemEmulation
 		return nBufferLength;
 	}
 
-	DWORD WINAPI GetTempPathA(
+	DWORD WINAPI_DECL GetTempPathA(
 		_In_   DWORD nBufferLength,
 		_Out_  LPSTR lpBuffer
 		)
@@ -705,13 +703,14 @@ namespace FileSystemEmulation
 		nBufferLength = ::WideCharToMultiByte(
 			CP_ACP, 0, 
 			lpWideCharStr, cchWideChar, 
-			lpBuffer, nBufferLength, 
+			lpBuffer, nBufferLength - 1, 
 			NULL, NULL);
 		delete [] lpWideCharStr;
+		lpBuffer[nBufferLength] = '\0';
 		return nBufferLength;
 	}
 
-	DWORD WINAPI GetTempPathW(
+	DWORD WINAPI_DECL GetTempPathW(
 		_In_   DWORD nBufferLength,
 		_Out_  LPWSTR lpBuffer
 		)

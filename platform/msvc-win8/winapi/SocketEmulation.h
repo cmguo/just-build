@@ -174,100 +174,81 @@ namespace SocketEmulation
 		u_short l_linger;               /* linger time */
 	};
 
-	int const FD_SETSIZE = 64;
+	typedef long int __fd_mask;
+
+#define __NFDBITS       (8 * (int) sizeof (__fd_mask))
+#define __FDELT(d)      ((d) / __NFDBITS)
+#define __FDMASK(d)     ((__fd_mask) 1 << ((d) % __NFDBITS))
+
+	int const FD_SETSIZE = 1024;
 
 	typedef struct fd_set {
-		u_int   fd_count;               /* how many are SET? */
-		SOCKET  fd_array[FD_SETSIZE];   /* an array of SOCKETs */
+		__fd_mask fds_bits[FD_SETSIZE / __NFDBITS];
 	} fd_set;
 
-	extern int PASCAL FAR __WSAFDIsSet(SOCKET fd, fd_set FAR *);
+# define __FDS_BITS(set) ((set)->fds_bits)
 
-#define FD_CLR(fd, set) do { \
-    u_int __i; \
-    for (__i = 0; __i < ((fd_set FAR *)(set))->fd_count ; __i++) { \
-        if (((fd_set FAR *)(set))->fd_array[__i] == fd) { \
-            while (__i < ((fd_set FAR *)(set))->fd_count-1) { \
-                ((fd_set FAR *)(set))->fd_array[__i] = \
-                    ((fd_set FAR *)(set))->fd_array[__i+1]; \
-                __i++; \
-            } \
-            ((fd_set FAR *)(set))->fd_count--; \
-            break; \
-        } \
-    } \
-} while(0, 0)
-
-#define FD_SET(fd, set) do { \
-    u_int __i; \
-    for (__i = 0; __i < ((fd_set FAR *)(set))->fd_count; __i++) { \
-        if (((fd_set FAR *)(set))->fd_array[__i] == (fd)) { \
-            break; \
-        } \
-    } \
-    if (__i == ((fd_set FAR *)(set))->fd_count) { \
-        if (((fd_set FAR *)(set))->fd_count < FD_SETSIZE) { \
-            ((fd_set FAR *)(set))->fd_array[__i] = (fd); \
-            ((fd_set FAR *)(set))->fd_count++; \
-        } \
-    } \
-} while(0, 0)
-
-#define FD_ZERO(set) (((fd_set FAR *)(set))->fd_count=0)
-
-#define FD_ISSET(fd, set) __WSAFDIsSet((SOCKET)(fd), (fd_set FAR *)(set))
+	int WINAPI_DECL __WSAFDIsSet(SOCKET fd, fd_set FAR *);
 
 typedef struct fd_set FD_SET;
 
-	SOCKET socket(
+#define FD_ZERO(set) (memset(__FDS_BITS (set), 0, sizeof(__FDS_BITS (set))))
+
+#define FD_SET(d, set)    (__FDS_BITS (set)[__FDELT (d)] |= __FDMASK (d))
+#define FD_CLR(d, set)    (__FDS_BITS (set)[__FDELT (d)] &= ~__FDMASK (d))
+
+#define FD_ISSET(d, set) \
+  ((__FDS_BITS (set)[__FDELT (d)] & __FDMASK (d)) != 0)
+
+	SOCKET WINAPI_DECL socket(
 		_In_  int af,
 		_In_  int type,
 		_In_  int protocol
 		);
 
-	int bind(
+	int WINAPI_DECL bind(
 		_In_  SOCKET s,
 		_In_  const struct sockaddr *name,
 		_In_  int namelen
 		);
 
-	int connect(
+	int WINAPI_DECL connect(
 		_In_  SOCKET s,
 		_In_  const struct sockaddr *name,
 		_In_  int namelen
 		);
 
-	int listen(
+	int WINAPI_DECL listen(
 		_In_  SOCKET s,
 		_In_  int backlog
 		);
 
-	SOCKET accept(
+	SOCKET WINAPI_DECL accept(
 		_In_     SOCKET s,
 		_Out_    struct sockaddr *addr,
 		_Inout_  int *addrlen
 		);
 
-	int getsockname(
+	int WINAPI_DECL getsockname(
 		_In_     SOCKET s,
 		_Out_    struct sockaddr *name,
 		_Inout_  int *namelen
 		);
 
-	int getpeername(
+	int WINAPI_DECL getpeername(
 		_In_     SOCKET s,
 		_Out_    struct sockaddr *name,
 		_Inout_  int *namelen
 		);
 
-	int recv(
+	int WINAPI_DECL recv(
 		_In_   SOCKET s,
 		_Out_  char *buf,
 		_In_   int len,
 		_In_   int flags
 		);
 
-	int recvfrom(
+	int WINAPI_DECL recvfrom(
 		_In_         SOCKET s,
 		_Out_        char *buf,
 		_In_         int len,
@@ -276,14 +257,14 @@ typedef struct fd_set FD_SET;
 		_Inout_opt_  int *fromlen
 		);
 
-	int send(
+	int WINAPI_DECL send(
 		_In_  SOCKET s,
 		_In_  const char *buf,
 		_In_  int len,
 		_In_  int flags
 		);
 
-	int sendto(
+	int WINAPI_DECL sendto(
 		_In_  SOCKET s,
 		_In_  const char *buf,
 		_In_  int len,
@@ -292,12 +273,12 @@ typedef struct fd_set FD_SET;
 		_In_  int tolen
 		);
 
-	int shutdown(
+	int WINAPI_DECL shutdown(
 		_In_  SOCKET s,
 		_In_  int how
 		);
 
-	int setsockopt(
+	int WINAPI_DECL setsockopt(
 		_In_  SOCKET s,
 		_In_  int level,
 		_In_  int optname,
@@ -305,7 +286,7 @@ typedef struct fd_set FD_SET;
 		_In_  int optlen
 		);
 
-	int getsockopt(
+	int WINAPI_DECL getsockopt(
 		_In_     SOCKET s,
 		_In_     int level,
 		_In_     int optname,
@@ -313,17 +294,17 @@ typedef struct fd_set FD_SET;
 		_Inout_  int *optlen
 		);
 
-	int ioctlsocket(
+	int WINAPI_DECL ioctlsocket(
 		_In_     SOCKET s,
 		_In_     long cmd,
 		_Inout_  u_long *argp
 		);
 
-	int closesocket(
+	int WINAPI_DECL closesocket(
 		_In_  SOCKET s
 		);
 
-	int select(
+	int WINAPI_DECL select(
 		_In_     int nfds,
 		_Inout_  fd_set *readfds,
 		_Inout_  fd_set *writefds,
@@ -339,7 +320,7 @@ typedef struct fd_set FD_SET;
 		NO_DATA, 
 	};
 
-	int gethostname(
+	int WINAPI_DECL gethostname(
 		_Out_  char *name,
 		_In_   int namelen
 		);
@@ -351,7 +332,7 @@ typedef struct fd_set FD_SET;
 		//char	addr[];
 	};
 
-	int getadapters(
+	int WINAPI_DECL getadapters(
 		_Out_  char *adapters,
 		_In_   int len
 		);
@@ -365,11 +346,11 @@ typedef struct fd_set FD_SET;
 #define h_addr  h_addr_list[0]          /* address, for backward compat */
 	};
 
-	struct hostent* FAR gethostbyname(
+	WINAPI_DECL hostent* gethostbyname(
 		_In_  const char *name
 		);
 
-	struct hostent* FAR gethostbyaddr(
+	WINAPI_DECL hostent* gethostbyaddr(
 		_In_  const char *addr,
 		_In_  int len,
 		_In_  int type
@@ -387,22 +368,22 @@ typedef struct fd_set FD_SET;
 #endif
 	};
 
-	struct servent* FAR getservbyname(
+	WINAPI_DECL servent* getservbyname(
 		_In_  const char *name,
 		_In_  const char *proto
 		);
 
-	struct servent* FAR getservbyport(
+	WINAPI_DECL servent* getservbyport(
 		_In_  int port,
 		_In_  const char *proto
 		);
 
-	unsigned long inet_addr(
+	unsigned long WINAPI_DECL inet_addr(
 		_In_  const char *cp
 		);
 
-	char* FAR inet_ntoa(
-		_In_  struct   in_addr in
+	WINAPI_DECL char* inet_ntoa(
+		_In_  struct in_addr in
 		);
 
 
@@ -473,26 +454,26 @@ typedef struct fd_set FD_SET;
 		char FAR       *lpVendorInfo;
 	} WSADATA, *LPWSADATA;
 
-	int WSAStartup(
+	int WINAPI_DECL WSAStartup(
 		_In_   WORD wVersionRequested,
 		_Out_  LPWSADATA lpWSAData
 		);
 
-	int WSACleanup(void);
+	int WINAPI_DECL WSACleanup(void);
 
-	u_short WSAAPI htons(
+	u_short WINAPI_DECL htons(
 		_In_  u_short hostshort
 		);
 
-	u_long WSAAPI htonl(
+	u_long WINAPI_DECL htonl(
 		_In_  u_long hostlong
 		);
 
-	u_short WSAAPI ntohs(
+	u_short WINAPI_DECL ntohs(
 		_In_  u_short netshort
 		);
 
-	u_long WSAAPI ntohl(
+	u_long WINAPI_DECL ntohl(
 		_In_  u_long netlong
 		);
 	/*
@@ -509,7 +490,7 @@ typedef struct fd_set FD_SET;
 	}
 	ADDRINFOA, *PADDRINFOA;
 
-	int WSAAPI getaddrinfo(
+	int WINAPI_DECL getaddrinfo(
 		_In_opt_  PCSTR pNodeName,
 		_In_opt_  PCSTR pServiceName,
 		_In_opt_  const ADDRINFOA *pHints,
@@ -521,7 +502,7 @@ enum
 		WSA_FLAG_OVERLAPPED = 1, 
 	};
 
-	SOCKET WSASocket(
+	SOCKET WINAPI_DECL WSASocket(
 		_In_  int af,
 		_In_  int type,
 		_In_  int protocol,
@@ -532,14 +513,14 @@ enum
 
 #define HAS_ConnectEx
 
-	BOOL ConnectEx(
+	BOOL WINAPI_DECL ConnectEx(
 		_In_   SOCKET s,
 		_In_   const struct sockaddr *lpTo,
 		_In_   int iToLen,
 		_In_   LPOVERLAPPED lpOverlapped
 		);
 
-	BOOL AcceptEx(
+	BOOL WINAPI_DECL AcceptEx(
 		_In_   SOCKET sListenSocket,
 		_In_   SOCKET sAcceptSocket,
 		_In_   PVOID lpOutputBuffer,
@@ -550,7 +531,7 @@ enum
 		_In_   LPOVERLAPPED lpOverlapped
 		);
 
-	void GetAcceptExSockaddrs(
+	void WINAPI_DECL GetAcceptExSockaddrs(
 		_In_   PVOID lpOutputBuffer,
 		_In_   DWORD dwReceiveDataLength,
 		_In_   DWORD dwLocalAddressLength,
@@ -561,7 +542,7 @@ enum
 		_Out_  LPINT RemoteSockaddrLength
 		);
 
-	int WSARecv(
+	int WINAPI_DECL WSARecv(
 		_In_     SOCKET s,
 		_Inout_  LPWSABUF lpBuffers,
 		_In_     DWORD dwBufferCount,
@@ -571,7 +552,7 @@ enum
 		_In_     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 		);
 
-	int WSARecvFrom(
+	int WINAPI_DECL WSARecvFrom(
 		_In_     SOCKET s,
 		_Inout_  LPWSABUF lpBuffers,
 		_In_     DWORD dwBufferCount,
@@ -583,7 +564,7 @@ enum
 		_In_     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 		);
 
-	int WSASend(
+	int WINAPI_DECL WSASend(
 		_In_   SOCKET s,
 		_In_   LPWSABUF lpBuffers,
 		_In_   DWORD dwBufferCount,
@@ -593,7 +574,7 @@ enum
 		_In_   LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 		);
 
-	int WSASendTo(
+	int WINAPI_DECL WSASendTo(
 		_In_   SOCKET s,
 		_In_   LPWSABUF lpBuffers,
 		_In_   DWORD dwBufferCount,
@@ -605,7 +586,7 @@ enum
 		_In_   LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 		);
 
-	INT WSAAPI WSAAddressToStringA(
+	INT WINAPI_DECL WSAAddressToStringA(
 		_In_      LPSOCKADDR lpsaAddress,
 		_In_      DWORD dwAddressLength,
 		_In_opt_  LPWSAPROTOCOL_INFO lpProtocolInfo,
@@ -613,7 +594,7 @@ enum
 		_Inout_   LPDWORD lpdwAddressStringLength
 		);
 
-	INT WSAAPI WSAAddressToStringW(
+	INT WINAPI_DECL WSAAddressToStringW(
 		_In_      LPSOCKADDR lpsaAddress,
 		_In_      DWORD dwAddressLength,
 		_In_opt_  LPWSAPROTOCOL_INFO lpProtocolInfo,
@@ -621,7 +602,7 @@ enum
 		_Inout_   LPDWORD lpdwAddressStringLength
 		);
 
-	INT WSAAPI WSAStringToAddressA(
+	INT WINAPI_DECL WSAStringToAddressA(
 		_In_      LPSTR AddressString,
 		_In_      INT AddressFamily,
 		_In_opt_  LPWSAPROTOCOL_INFO lpProtocolInfo,
@@ -629,7 +610,7 @@ enum
 		_Inout_   LPINT lpAddressLength
 		);
 
-	INT WSAAPI WSAStringToAddressW(
+	INT WINAPI_DECL WSAStringToAddressW(
 		_In_      LPWSTR AddressString,
 		_In_      INT AddressFamily,
 		_In_opt_  LPWSAPROTOCOL_INFO lpProtocolInfo,
@@ -637,20 +618,20 @@ enum
 		_Inout_   LPINT lpAddressLength
 		);
 
-	void WSASetLastError(
+	void WINAPI_DECL WSASetLastError(
 		_In_  int iError
 		);
 
-	int WSAGetLastError(void);
+	int WINAPI_DECL WSAGetLastError(void);
 
-	HANDLE WINAPI CreateIoCompletionPort(
+	HANDLE WINAPI_DECL CreateIoCompletionPort(
 		_In_      HANDLE FileHandle,
 		_In_opt_  HANDLE ExistingCompletionPort,
 		_In_      ULONG_PTR CompletionKey,
 		_In_      DWORD NumberOfConcurrentThreads
 		);
 
-	BOOL WINAPI GetQueuedCompletionStatus(
+	BOOL WINAPI_DECL GetQueuedCompletionStatus(
 		_In_   HANDLE CompletionPort,
 		_Out_  LPDWORD lpNumberOfBytes,
 		_Out_  PULONG_PTR lpCompletionKey,
@@ -658,44 +639,44 @@ enum
 		_In_   DWORD dwMilliseconds
 		);
 
-	BOOL WINAPI CancelIo(
+	BOOL WINAPI_DECL CancelIo(
 		_In_  HANDLE hFile
 		);
 
-	BOOL WINAPI PostQueuedCompletionStatus(
+	BOOL WINAPI_DECL PostQueuedCompletionStatus(
 		_In_      HANDLE CompletionPort,
 		_In_      DWORD dwNumberOfBytesTransferred,
 		_In_      ULONG_PTR dwCompletionKey,
 		_In_opt_  LPOVERLAPPED lpOverlapped
 		);
 
-	BOOL WINAPI GetOverlappedResult(
+	BOOL WINAPI_DECL GetOverlappedResult(
 		_In_   HANDLE hFile,
 		_In_   LPOVERLAPPED lpOverlapped,
 		_Out_  LPDWORD lpNumberOfBytesTransferred,
 		_In_   BOOL bWait
 		);
 
-	BOOL WINAPI CloseIoCompletionPort(
+	BOOL WINAPI_DECL CloseIoCompletionPort(
 	  _In_  HANDLE hObject
-	);
+		);
 
-	BOOL WINAPI GetCommState(
+	BOOL WINAPI_DECL GetCommState(
 		_In_     HANDLE hFile,
 		_Inout_  LPDCB lpDCB
 		);
 
-	BOOL WINAPI SetCommState(
+	BOOL WINAPI_DECL SetCommState(
 		_In_  HANDLE hFile,
 		_In_  LPDCB lpDCB
 		);
 
-	BOOL WINAPI GetCommTimeouts(
+	BOOL WINAPI_DECL GetCommTimeouts(
 		_In_   HANDLE hFile,
 		_Out_  LPCOMMTIMEOUTS lpCommTimeouts
 		);
 
-	BOOL WINAPI SetCommTimeouts(
+	BOOL WINAPI_DECL SetCommTimeouts(
 		_In_  HANDLE hFile,
 		_In_  LPCOMMTIMEOUTS lpCommTimeouts
 		);

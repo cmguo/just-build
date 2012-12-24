@@ -50,6 +50,7 @@ namespace SocketEmulation
 	};
 
 	struct iocp_t;
+	struct select_t;
 
 	struct socket_t
 		: wsa_handle_t<socket_t, 1>
@@ -169,9 +170,19 @@ namespace SocketEmulation
 
 		int close();
 
+	public:
 		void attach_iocp(
 			_In_  iocp_t * iocp, 
 			_In_  ULONG_PTR CompletionKey);
+
+	public:
+		void select_attach(
+			_In_  int t,
+			_In_  select_t * select);
+
+		void select_detach(
+			_In_  int t,
+			_In_  select_t * select);
 
 	public:
 		static Windows::Networking::HostName ^ sockaddr_to_host_name(
@@ -212,19 +223,30 @@ namespace SocketEmulation
 			Windows::Foundation::IAsyncOperationWithProgress<TResult, TProgress>  ^ operation, 
 			TResult & result);
 
+		void on_connect(
+			int ec);
+
 		void tcp_recv_some();
 
 		void tcp_send_some();
 
-		void udp_recv_from(
-			_Out_    struct sockaddr *lpFrom,
-			_Inout_  LPINT lpFromlen);
+		void tcp_on_recv(
+			int ec, 
+			size_t size);
+
+		void tcp_on_send(
+			int ec, 
+			size_t size);
 
 		void udp_send();
 
-		void udp_send_to(
-			_In_   const struct sockaddr *lpTo,
-			_In_   int iToLen);
+		void udp_on_recv(
+			int ec, 
+			size_t size);
+
+		void udp_on_send(
+			int ec, 
+			size_t size);
 
 		void handle_overlap_connect();
 
@@ -234,6 +256,15 @@ namespace SocketEmulation
 
 		void handle_overlap_write();
 
+		void handle_select_read();
+
+		void handle_select_write();
+
+		void handle_select_except();
+
+		void handle_select(
+			_In_  int t);
+
 		void accept_conn(
 			_In_   socket_t * sock,
 			_In_   PVOID lpOutputBuffer,
@@ -242,15 +273,23 @@ namespace SocketEmulation
 			_In_   DWORD dwRemoteAddressLength,
 			_Out_  LPDWORD lpdwBytesReceived);
 
-		void read_data(
+		bool read_data(
 			_Inout_  LPWSABUF lpBuffers,
 			_In_     DWORD dwBufferCount,
-			_Out_    LPDWORD lpNumberOfBytesRecvd);
+			_Out_    LPDWORD lpNumberOfBytesRecvd, 
+			_Out_    struct sockaddr *lpFrom,
+			_Inout_  LPINT iToLen,
+			_In_     LPWSAOVERLAPPED lpOverlapped,
+			_Out_    LPINT ErrorCode);
 
-		void write_data(
+		bool write_data(
 			_In_   LPWSABUF lpBuffers,
 			_In_   DWORD dwBufferCount,
-			_Out_  LPDWORD lpNumberOfBytesSent);
+			_Out_  LPDWORD lpNumberOfBytesSent, 
+			_In_   const struct sockaddr *lpTo,
+			_In_   int iToLen,
+			_In_   LPWSAOVERLAPPED lpOverlapped,
+			_Out_  LPINT ErrorCode);
 
 	private:
 		enum StatusEnum
@@ -267,7 +306,7 @@ namespace SocketEmulation
 
 		enum FlagEnum
 		{
-			f_non_block, 
+			f_non_block = 1, 
 		};
 
 	private:
@@ -278,16 +317,16 @@ namespace SocketEmulation
 		Windows::Networking::Sockets::StreamSocketListener ^ stream_listener_;
 		Windows::Networking::Sockets::DatagramSocket ^ datagram_socket_;
 		std::deque<Windows::Networking::Sockets::StreamSocket ^> accept_sockets_;
-		std::deque<std::pair<Windows::Networking::HostName ^, Platform::String ^> > udp_remotes_;
-		std::map<uint64_t, Windows::Storage::Streams::IOutputStream ^> udp_streams_;
 		boost::shared_ptr<iocp_t> iocp_;
 		ULONG_PTR lpCompletionKey_;
 		std::deque<overlap_task> read_tasks_; // or accept tasks
 		std::deque<overlap_task> write_tasks_;
+		std::deque<select_t *> select_tasks_[3];
 		std::deque<Windows::Storage::Streams::IBuffer ^> read_datas_;
 		std::deque<Windows::Storage::Streams::IBuffer ^> write_datas_;
-		Windows::Storage::Streams::DataReader ^ reader_;
-		Windows::Storage::Streams::DataWriter ^ writer_;
+		std::deque<std::pair<Windows::Networking::HostName ^, Platform::String ^> > udp_read_addrs_;
+		std::deque<Windows::Storage::Streams::IOutputStream ^> udp_write_addrs_;
+		std::map<uint64_t, Windows::Storage::Streams::IOutputStream ^> udp_streams_;
 		int flags_;
 		int status_;
 		size_t read_data_size_;

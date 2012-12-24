@@ -2,11 +2,11 @@
 
 #include <Windows.h>
 
-#undef WINAPI
-#define WINAPI
+#define WINAPI_DECL	 __declspec(dllexport)
 
 #include "Socket.h"
-#include "iocp.h"
+#include "Iocp.h"
+#include "Select.h"
 
 namespace SocketEmulation
 {
@@ -30,6 +30,16 @@ namespace SocketEmulation
 		{
 			ec_ = ec;
 			ec = 0;
+		}
+
+		int & get()
+		{
+			return ec_;
+		}
+
+		int ret() const
+		{
+			return ec_ == 0 ? 0 : SOCKET_ERROR;
 		}
 
 		~wsa_set_last_error()
@@ -86,10 +96,18 @@ namespace SocketEmulation
 			{
 				socket_t * socket = (socket_t *)shared_this.get();
 				std::unique_lock<std::recursive_mutex> lc(socket->mutex_);
-				socket->read_datas_.push_back(arg->GetDataReader()->DetachBuffer());
-				socket->read_data_size_ += socket->read_datas_.back()->Length;
-				socket->udp_remotes_.push_back(std::make_pair(arg->RemoteAddress, arg->RemotePort));
+				try {
+					Windows::Storage::Streams::IBuffer ^ buffer = arg->GetDataReader()->DetachBuffer();
+					socket->read_datas_.push_back(buffer);
+					socket->read_data_size_ += buffer->Length;
+					socket->udp_read_addrs_.push_back(std::make_pair(arg->RemoteAddress, arg->RemotePort));
+				} catch (Platform::Exception ^ e) {
+					socket->ec_ = SCODE_CODE(e->HResult);
+				} catch (...) {
+					socket->ec_ = E_FAIL;
+				}
 				socket->handle_overlap_read();
+				socket->handle_select_read();
 				socket->cond_.notify_all();
 			});
 		}
@@ -109,13 +127,15 @@ namespace SocketEmulation
 				socket_t * socket = (socket_t *)shared_this.get();
 				std::unique_lock<std::recursive_mutex> lc(socket->mutex_);
 				socket->accept_sockets_.push_back(arg->Socket);
+				++socket->read_data_size_;
 				socket->handle_overlap_accept();
+				socket->handle_select_read();
 				socket->cond_.notify_all();
 			});
 			return wait_action(
 				stream_listener_->BindEndpointAsync(sockaddr_to_host_name(name), sockaddr_to_svc_name(name)));
 		} else {
-			status_ |= s_can_read;
+			status_ |= (s_can_read | s_can_write);
 			return wait_action(
 				datagram_socket_->BindEndpointAsync(sockaddr_to_host_name(name), sockaddr_to_svc_name(name)));
 		}
@@ -172,23 +192,22 @@ namespace SocketEmulation
 				sockaddr_to_host_name(name), 
 				sockaddr_to_svc_name(name));
 			connecting_ = true;
-			Windows::Foundation::IAsyncAction ^ action = type == SOCK_STREAM 
-				? stream_socket_->ConnectAsync(endp) 
-				: datagram_socket_->ConnectAsync(endp);
+			write_data_size_ = write_data_capacity_;
+			Windows::Foundation::IAsyncAction ^ action;
+			if (type == SOCK_STREAM) {
+				action = stream_socket_->ConnectAsync(endp);
+			} else {
+				action = datagram_socket_->ConnectAsync(endp);
+			}
 			pointer_t shared_this(shared_from_this());
 			action->Completed = ref new Windows::Foundation::AsyncActionCompletedHandler([shared_this](
 				Windows::Foundation::IAsyncAction^ action, Windows::Foundation::AsyncStatus status) {
 				socket_t * socket = (socket_t *)shared_this.get();
-				std::unique_lock<std::recursive_mutex> lc(socket->mutex_);
-				socket->connecting_ = false;
-				if (status == Windows::Foundation::AsyncStatus::Completed) {
-					socket->status_ = s_establish;
-				} else {
-					socket->ec_ = SCODE_CODE(action->ErrorCode.Value);
-				}
-				socket->handle_overlap_connect();
-				socket->cond_.notify_all();
+				socket->on_connect(SCODE_CODE(action->ErrorCode.Value));
 			});
+		}
+		if (lpOverlapped) {
+			lpOverlapped->Internal = (ULONG_PTR)this;
 		}
 		if (connecting_) {
 			if (lpOverlapped) {
@@ -235,6 +254,10 @@ namespace SocketEmulation
 	{
 		wsa_set_last_error le;
 		std::unique_lock<std::recursive_mutex> lc(mutex_);
+
+		if (lpOverlapped) {
+			lpOverlapped->Internal = (ULONG_PTR)this;
+		}
 
 		if (!accept_sockets_.empty()) {
 			accept_conn(sock, lpOutputBuffer, dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength, lpdwBytesReceived);
@@ -301,16 +324,17 @@ namespace SocketEmulation
 		wsa_set_last_error le;
 		std::unique_lock<std::recursive_mutex> lc(mutex_);
 
+		if (lpOverlapped) {
+			lpOverlapped->Internal = (ULONG_PTR)this;
+		}
+
 		if (type == SOCK_STREAM) {
 			tcp_recv_some();
 		}
 
-		if (read_data_size_ > 0) {
-			read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd);
-			if (lpOverlapped) {
-				iocp_->push(lpCompletionKey_, lpOverlapped, *lpNumberOfBytesRecvd);
-			}
-			return 0;
+		INT * pErrorCode = &le.get();
+		if (read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, NULL, NULL, lpOverlapped, pErrorCode)) {
+			return le.ret();
 		}
 
 		if (lpOverlapped) {
@@ -322,16 +346,10 @@ namespace SocketEmulation
 			le.set(WSAEWOULDBLOCK);
 			return SOCKET_ERROR;
 		} else {
-			cond_.wait(lc, [this](){
-				return ec_ != 0 || read_data_size_ > 0;
+			cond_.wait(lc, [this, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, pErrorCode](){
+				return read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, NULL, NULL, NULL, pErrorCode);
 			});
-			if (ec_) {
-				le.set2(ec_);
-				return SOCKET_ERROR;
-			} else {
-				read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd);
-				return 0;
-			}
+			return le.ret();
 		}
 	}
 
@@ -350,13 +368,13 @@ namespace SocketEmulation
 
 		assert (type == SOCK_DGRAM);
 
-		if (read_data_size_ > 0) {
-			udp_recv_from(lpFrom, lpFromlen);
-			read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd);
-			if (lpOverlapped) {
-				iocp_->push(lpCompletionKey_, lpOverlapped, *lpNumberOfBytesRecvd);
-			}
-			return 0;
+		if (lpOverlapped) {
+			lpOverlapped->Internal = (ULONG_PTR)this;
+		}
+
+		INT * pErrorCode = &le.get();
+		if (read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFrom, lpFromlen, lpOverlapped, pErrorCode)) {
+			return le.ret();
 		}
 
 		if (lpOverlapped) {
@@ -368,17 +386,10 @@ namespace SocketEmulation
 			le.set(WSAEWOULDBLOCK);
 			return SOCKET_ERROR;
 		} else {
-			cond_.wait(lc, [this](){
-				return ec_ != 0 || read_data_size_ > 0;
+			cond_.wait(lc, [this, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFrom, lpFromlen, pErrorCode](){
+				return read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFrom, lpFromlen, NULL, pErrorCode);
 			});
-			if (ec_) {
-				le.set2(ec_);
-				return SOCKET_ERROR;
-			} else {
-				udp_recv_from(lpFrom, lpFromlen);
-				read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd);
-				return 0;
-			}
+			return le.ret();
 		}
 	}
 
@@ -393,23 +404,18 @@ namespace SocketEmulation
 		wsa_set_last_error le;
 		std::unique_lock<std::recursive_mutex> lc(mutex_);
 
-		if (type == SOCK_STREAM) {
-			tcp_send_some();
+		if (lpOverlapped) {
+			lpOverlapped->Internal = (ULONG_PTR)this;
 		}
 
-		if (write_data_size_ < write_data_capacity_) {
-			write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent);
-			if (lpOverlapped) {
-				iocp_->push(lpCompletionKey_, lpOverlapped, *lpNumberOfBytesSent);
-			}
-
+		INT * pErrorCode = &le.get();
+		if (write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent, NULL, NULL, lpOverlapped, pErrorCode)) {
 			if (type == SOCK_STREAM) {
 				tcp_send_some();
 			} else {
 				udp_send();
 			}
-
-			return 0;
+			return le.ret();
 		}
 
 		if (lpOverlapped) {
@@ -421,16 +427,15 @@ namespace SocketEmulation
 			le.set(WSAEWOULDBLOCK);
 			return SOCKET_ERROR;
 		} else {
-			cond_.wait(lc, [this](){
-				return ec_ != 0 || write_data_size_ < write_data_capacity_;
+			cond_.wait(lc, [this, lpBuffers, dwBufferCount, lpNumberOfBytesSent, pErrorCode](){
+				return write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent, NULL, NULL, NULL, pErrorCode);
 			});
-			if (ec_) {
-				le.set2(ec_);
-				return SOCKET_ERROR;
+			if (type == SOCK_STREAM) {
+				tcp_send_some();
 			} else {
-				write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent);
-				return 0;
+				udp_send();
 			}
+			return le.ret();
 		}
 	}
 
@@ -450,14 +455,31 @@ namespace SocketEmulation
 
 		assert (type == SOCK_DGRAM);
 
-		write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent);
-		udp_send_to(lpTo, iToLen);
-
 		if (lpOverlapped) {
-			iocp_->push(lpCompletionKey_, lpOverlapped, *lpNumberOfBytesSent);
+			lpOverlapped->Internal = (ULONG_PTR)this;
 		}
 
-		return 0;
+		INT * pErrorCode = &le.get();
+		if (write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent, lpTo, iToLen, lpOverlapped, pErrorCode)) {
+			udp_send();
+			return le.ret();
+		}
+
+		if (lpOverlapped) {
+			overlap_task task(lpBuffers, dwBufferCount, lpOverlapped);
+			write_tasks_.push_back(task);
+			le.set(WSA_IO_PENDING);
+			return SOCKET_ERROR;
+		} else if (flags_ & f_non_block) {
+			le.set(WSAEWOULDBLOCK);
+			return SOCKET_ERROR;
+		} else {
+			cond_.wait(lc, [this, lpBuffers, dwBufferCount, lpNumberOfBytesSent, pErrorCode](){
+				return write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent, NULL, NULL, NULL, pErrorCode);
+			});
+			udp_send();
+			return le.ret();
+		}
 	}
 
 	int socket_t::getsockname(
@@ -507,7 +529,29 @@ namespace SocketEmulation
 		_Out_    char *optval,
 		_Inout_  int *optlen)
 	{
-		return SOCKET_ERROR;
+		wsa_set_last_error le;
+		std::unique_lock<std::recursive_mutex> lc(mutex_);
+
+		switch (level) {
+		case SOL_SOCKET:
+			switch (optname)
+			{
+			case SO_ERROR:
+				*(int *)optval = ec_;
+				ec_ = 0;
+				break;
+			case SO_CONNECT_TIME:
+				break;
+			default:
+				le.set(WSAEINVAL);
+				break;
+			}
+			break;
+		default:
+			le.set(WSAEINVAL);
+			break;
+		};
+		return le.ret();
 	}
 
 	int socket_t::ioctlsocket(
@@ -554,10 +598,12 @@ namespace SocketEmulation
 			overlap_task & task = *iter;
 			iocp_->push(WSA_OPERATION_ABORTED, task.lpOverlapped, 0);
 		}
+		read_tasks_.clear();
 		for (auto iter = write_tasks_.begin(); iter != write_tasks_.end(); ++iter) {
 			overlap_task & task = *iter;
 			iocp_->push(WSA_OPERATION_ABORTED, task.lpOverlapped, 0);
 		}
+		write_tasks_.clear();
 		iocp_.reset();
 
 		cond_.notify_all();
@@ -569,8 +615,53 @@ namespace SocketEmulation
 		_In_  iocp_t * iocp, 
 		_In_  ULONG_PTR CompletionKey)
 	{
+		std::unique_lock<std::recursive_mutex> lc(mutex_);
 		this->iocp_ = boost::static_pointer_cast<iocp_t>(iocp->shared_from_this());
 		lpCompletionKey_ = CompletionKey;
+	}
+
+	void socket_t::select_attach(
+		_In_  int t,
+		_In_  select_t * select)
+	{
+		std::unique_lock<std::recursive_mutex> lc(mutex_);
+		switch (t) 
+		{
+		case 0: // read
+			if (read_data_size_ > 0) {
+				select->set(t, index);
+				select = NULL;
+			}
+			break;
+		case 1: // write
+			if (write_data_size_ < write_data_capacity_) {
+				select->set(t, index);
+				select = NULL;
+			}
+			break;
+		case 2: // except
+			if (ec_) {
+				select->set(t, index);
+				select = NULL;
+			}
+			break;
+		default:
+			break;
+		}
+		if (select) {
+			select_tasks_[t].push_back(select);
+		}
+	}
+
+	void socket_t::select_detach(
+		_In_  int t,
+		_In_  select_t * select)
+	{
+		std::unique_lock<std::recursive_mutex> lc(mutex_);
+		auto iter = std::find(select_tasks_[t].begin(), select_tasks_[t].end(), select);
+		if (iter != select_tasks_[t].end()) {
+			select_tasks_[t].erase(iter);
+		}
 	}
 
 	Windows::Networking::HostName ^ socket_t::sockaddr_to_host_name(
@@ -715,6 +806,23 @@ namespace SocketEmulation
 		return status == Windows::Foundation::AsyncStatus::Completed ? 0 : SOCKET_ERROR;
 	}
 
+	void socket_t::on_connect(
+		int ec)
+	{
+		std::unique_lock<std::recursive_mutex> lc(mutex_);
+		connecting_ = false;
+		write_data_size_ = 0;
+		if (ec == 0) {
+			status_ = s_establish;
+			handle_select_write();
+		} else {
+			ec_ = ec;
+			handle_select_except();
+		}
+		handle_overlap_connect();
+		cond_.notify_all();
+	}
+
 	void socket_t::tcp_recv_some()
 	{
 		if (read_data_size_ >= read_data_capacity_ || reading_ || !(status_ & s_can_read))
@@ -729,24 +837,14 @@ namespace SocketEmulation
 			stream_socket_->InputStream->ReadAsync(buffer, size, Windows::Storage::Streams::InputStreamOptions::Partial);
 		pointer_t shared_this(shared_from_this());
 		operation->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<Windows::Storage::Streams::IBuffer ^, UINT32>([shared_this](
-			Windows::Foundation::IAsyncOperationWithProgress<Windows::Storage::Streams::IBuffer ^, UINT32>  ^ operation, Windows::Foundation::AsyncStatus status) {
+			Windows::Foundation::IAsyncOperationWithProgress<Windows::Storage::Streams::IBuffer ^, UINT32> ^ operation, Windows::Foundation::AsyncStatus status) {
 				socket_t * socket = (socket_t *)shared_this.get();
-				std::unique_lock<std::recursive_mutex> lc(socket->mutex_);
-				socket->reading_ = false;
 				if (status == Windows::Foundation::AsyncStatus::Completed) {
 					socket->read_datas_.push_back(operation->GetResults());
-					if (socket->read_datas_.back()->Length == 0) {
-						socket->status_ &= ~s_can_read;
-						socket->status_ |= ~s_read_eof;
-					} else {
-						socket->read_data_size_ += socket->read_datas_.back()->Length;
-						socket->tcp_recv_some();
-					}
-					socket->handle_overlap_read();
+					socket->tcp_on_recv(0, operation->GetResults()->Length);
 				} else {
-					socket->ec_ = SCODE_CODE(operation->ErrorCode.Value);
+					socket->tcp_on_recv(SCODE_CODE(operation->ErrorCode.Value), 0);
 				}
-				socket->cond_.notify_all();
 		});
 	}
 
@@ -760,78 +858,102 @@ namespace SocketEmulation
 			stream_socket_->OutputStream->WriteAsync(buffer);
 		pointer_t shared_this(shared_from_this());
 		operation->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<UINT32, UINT32>([shared_this](
-			Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32>  ^ operation, Windows::Foundation::AsyncStatus status) {
+			Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32> ^ operation, Windows::Foundation::AsyncStatus status) {
 				socket_t * socket = (socket_t *)shared_this.get();
-				std::unique_lock<std::recursive_mutex> lc(socket->mutex_);
-				socket->writing_ = false;
 				if (status == Windows::Foundation::AsyncStatus::Completed) {
-					socket->write_data_size_ -= operation->GetResults();
 					socket->write_datas_.pop_front();
-					socket->handle_overlap_write();
-					socket->tcp_send_some();
+					socket->tcp_on_send(0, operation->GetResults());
 				} else {
-					socket->ec_ = SCODE_CODE(operation->ErrorCode.Value);
+					socket->tcp_on_send(SCODE_CODE(operation->ErrorCode.Value), 0);
 				}
-				socket->cond_.notify_all();
 		});
 	}
 
-	void socket_t::udp_recv_from(
-		_Out_    struct sockaddr *lpFrom,
-		_Inout_  LPINT lpFromlen)
+	void socket_t::tcp_on_recv(
+		int ec, 
+		size_t size)
 	{
-		assert(!udp_remotes_.empty());
+		std::unique_lock<std::recursive_mutex> lc(mutex_);
+		reading_ = false;
+		if (ec == 0) {
+			if (size == 0) {
+				status_ &= ~s_can_read;
+				status_ |= s_read_eof;
+			} else {
+				read_data_size_ += size;
+			}
+			handle_overlap_read();
+			handle_select_read();
+			tcp_recv_some();
+		} else {
+			status_ &= ~s_can_read;
+			ec_ = ec;
+			handle_select_except();
+		}
+		cond_.notify_all();
+	}
 
-		host_name_port_to_sockaddr(af, lpFrom, lpFromlen, udp_remotes_.front().first, udp_remotes_.front().second);
+	void socket_t::tcp_on_send(
+		int ec, 
+		size_t size)
+	{
+		std::unique_lock<std::recursive_mutex> lc(mutex_);
+		writing_ = false;
+		if (ec == 0) {
+			write_data_size_ -= size;
+			handle_overlap_write();
+			handle_select_write();
+			tcp_send_some();
+		} else {
+			status_ &= ~s_can_write;
+			ec_ = ec;
+			handle_select_except();
+		}
+		cond_.notify_all();
 	}
 
 	void socket_t::udp_send()
 	{
-		assert(status_ & s_can_write);
-		Windows::Storage::Streams::IBuffer ^ buffer = write_datas_.front();
-		Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32>  ^ operation = 
-			datagram_socket_->OutputStream->WriteAsync(buffer);
-		pointer_t shared_this(shared_from_this());
-		operation->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<UINT32, UINT32>([shared_this](
-			Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32>  ^ operation, Windows::Foundation::AsyncStatus status) {
-				socket_t * socket = (socket_t *)shared_this.get();
-				if (status == Windows::Foundation::AsyncStatus::Error) {
-					socket->ec_ = SCODE_CODE(operation->ErrorCode.Value);
-				}
-			});
-	}
-
-	void socket_t::udp_send_to(
-			_In_   const struct sockaddr *lpTo,
-			_In_   int iToLen)
-	{
+		if (write_data_size_ == 0 || !(status_ & s_can_write))
+			return;
 		assert(write_datas_.size() == 1);
 		Windows::Storage::Streams::IBuffer ^ buffer = write_datas_.front();
 		write_datas_.pop_front();
 		write_data_size_ -= buffer->Length;
-		Windows::Storage::Streams::IOutputStream ^ result;
-		uint64_t key = ((uint64_t)((sockaddr_in *)lpTo)->sin_addr.s_addr << 32) | (((sockaddr_in *)lpTo)->sin_port);
-		auto iter = udp_streams_.find(key);
-		if (iter == udp_streams_.end()) {
-			if (0 != wait_operation(
-				datagram_socket_->GetOutputStreamAsync(sockaddr_to_host_name(lpTo), sockaddr_to_svc_name(lpTo)), result)) {
-					ec_ = WSAGetLastError();
-					return;
-			}
-			udp_streams_[key] = result;
-		} else {
-			result = iter->second;
-		}
+		Windows::Storage::Streams::IOutputStream ^ stream = udp_write_addrs_.front();
+		udp_write_addrs_.pop_front();
+		Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32>  ^ operation = stream->WriteAsync(buffer);
 		pointer_t shared_this(shared_from_this());
-		Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32>  ^ operation2 = 
-			result->WriteAsync(buffer);
-		operation2->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<UINT32, UINT32>([shared_this](
-			Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32>  ^ operation, Windows::Foundation::AsyncStatus status){
+		operation->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<UINT32, UINT32>([shared_this](
+			Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32>  ^ operation, Windows::Foundation::AsyncStatus status) {
 				socket_t * socket = (socket_t *)shared_this.get();
-				if (status == Windows::Foundation::AsyncStatus::Error) {
-					socket->ec_ = SCODE_CODE(operation->ErrorCode.Value);
+				if (status == Windows::Foundation::AsyncStatus::Completed) {
+					socket->udp_on_send(0, operation->GetResults());
+				} else {
+					socket->udp_on_send(SCODE_CODE(operation->ErrorCode.Value), 0);
 				}
-		});
+			});
+	}
+
+	void socket_t::udp_on_recv(
+		int ec, 
+		size_t size)
+	{
+		std::unique_lock<std::recursive_mutex> lc(mutex_);
+		read_data_size_ += size;
+		handle_overlap_read();
+		handle_select_read();
+		cond_.notify_all();
+	}
+
+	void socket_t::udp_on_send(
+		int ec, 
+		size_t size)
+	{
+		if (ec) {
+			std::unique_lock<std::recursive_mutex> lc(mutex_);
+			ec_ = ec;
+		}
 	}
 
 	void socket_t::handle_overlap_connect()
@@ -863,34 +985,58 @@ namespace SocketEmulation
 
 	void socket_t::handle_overlap_read()
 	{
-		while (!read_tasks_.empty() && read_data_size_ > 0) {
+		while (!read_tasks_.empty()) {
 			overlap_task & task = read_tasks_.front();
 			DWORD dwNumberOfBytesRecvd = 0;
-			if (type == SOCK_DGRAM && task.lpFrom) {
-				udp_recv_from(task.lpFrom, task.lpFromlen);
-			}
-			read_data(task.buffers, task.dwBufferCount, &dwNumberOfBytesRecvd);
-			iocp_->push(lpCompletionKey_, task.lpOverlapped, dwNumberOfBytesRecvd);
-			read_tasks_.pop_front();
-		}
-		if (status_ & s_read_eof) {
-			while (!read_tasks_.empty()) {
-				overlap_task & task = read_tasks_.front();
-				iocp_->push(lpCompletionKey_, task.lpOverlapped, 0);
+			if (read_data(task.buffers, task.dwBufferCount, &dwNumberOfBytesRecvd, task.lpFrom, task.lpFromlen, task.lpOverlapped, NULL)) {
 				read_tasks_.pop_front();
+			} else {
+				break;
 			}
 		}
 	}
 
 	void socket_t::handle_overlap_write()
 	{
-		while (!write_tasks_.empty() && write_data_size_ < write_data_capacity_) {
-			overlap_task & task = read_tasks_.front();
+		while (!write_tasks_.empty()) {
+			overlap_task & task = write_tasks_.front();
 			DWORD dwNumberOfBytesSent = 0;
-			write_data(task.buffers, task.dwBufferCount, &dwNumberOfBytesSent);
-			iocp_->push(lpCompletionKey_, task.lpOverlapped, dwNumberOfBytesSent);
-			read_tasks_.pop_front();
+			if (write_data(task.buffers, task.dwBufferCount, &dwNumberOfBytesSent, NULL, 0, task.lpOverlapped, NULL)) {
+				write_tasks_.pop_front();
+			} else {
+				break;
+			}
 		}
+	}
+
+	void socket_t::handle_select_read()
+	{
+		if (read_data_size_ > 0 || (status_ & s_read_eof)) {
+			handle_select(0);
+		}
+	}
+
+	void socket_t::handle_select_write()
+	{
+		if (write_data_size_ < write_data_capacity_ || (status_ & s_read_eof)) {
+			handle_select(1);
+		}
+	}
+
+	void socket_t::handle_select_except()
+	{
+		if (ec_) {
+			handle_select(2);
+		}
+	}
+
+	void socket_t::handle_select(
+		_In_  int t)
+	{
+		for (size_t i = 0; i < select_tasks_[t].size(); ++i) {
+			select_tasks_[t][i]->set(t, index);
+		}
+		select_tasks_[t].clear();
 	}
 
 	void socket_t::accept_conn(
@@ -906,6 +1052,7 @@ namespace SocketEmulation
 		sock->protocol = protocol;
 		sock->stream_socket_ = accept_sockets_.front();
 		accept_sockets_.pop_front();
+		--read_data_size_;
 		sock->status_ = s_established | s_can_read | s_can_write;
 
 		*lpdwBytesReceived = 0;
@@ -920,33 +1067,75 @@ namespace SocketEmulation
 		}
 	}
 
-	void socket_t::read_data(
+	bool socket_t::read_data(
 		_Inout_  LPWSABUF lpBuffers,
 		_In_     DWORD dwBufferCount,
-		_Out_    LPDWORD lpNumberOfBytesRecvd)
+		_Out_    LPDWORD lpNumberOfBytesRecvd, 
+		_Out_    struct sockaddr *lpFrom,
+		_Inout_  LPINT lpFromlen,
+		_In_     LPWSAOVERLAPPED lpOverlapped,
+		_Out_    LPINT ErrorCode)
 	{
+		if (read_data_size_ == 0) {
+			if (status_ & s_read_eof) {
+				status_ &= ~s_read_eof;
+				*lpNumberOfBytesRecvd = 0;
+				if (lpOverlapped) {
+					iocp_->push(lpCompletionKey_, lpOverlapped, 0);
+				}
+				if (ErrorCode)
+					*ErrorCode = 0;
+				return true;
+			} else if (ec_) {
+				if (ErrorCode) {
+					*ErrorCode = ec_;
+				} else if (lpOverlapped) {
+					iocp_->push(ec_, lpOverlapped, 0);
+				}
+				ec_ = 0;
+				return true;
+			} else if (!(status_ & s_can_read)) {
+				if (ErrorCode) {
+					*ErrorCode = WSAECONNABORTED;
+				} else if (lpOverlapped) {
+					iocp_->push(WSAECONNABORTED, lpOverlapped, 0);
+				}
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		DWORD i = 0;
 		*lpNumberOfBytesRecvd = 0;
 		do {
 			Windows::Storage::Streams::IBuffer ^ buffer = read_datas_.front();
 			Windows::Storage::Streams::DataReader ^ reader = Windows::Storage::Streams::DataReader::FromBuffer(buffer);
-			if (buffer->Length < lpBuffers[i].len) {
-				reader->ReadBytes(Platform::ArrayReference<unsigned char>((unsigned char *)lpBuffers[i].buf, buffer->Length));
-				*lpNumberOfBytesRecvd += buffer->Length;
-				lpBuffers[i].len -= buffer->Length;
-				lpBuffers[i].buf += buffer->Length;
+			UINT32 buffer_len = buffer->Length;
+			if (buffer_len < lpBuffers[i].len) {
+				reader->ReadBytes(Platform::ArrayReference<unsigned char>((unsigned char *)lpBuffers[i].buf, buffer_len));
+				*lpNumberOfBytesRecvd += buffer_len;
+				lpBuffers[i].len -= buffer_len;
+				lpBuffers[i].buf += buffer_len;
+				read_data_size_ -= buffer_len;
 				read_datas_.pop_front();
+				buffer_len = buffer->Length;
 				if (type == SOCK_DGRAM) {
-					udp_remotes_.pop_front();
+					if (lpFrom) {
+						host_name_port_to_sockaddr(af, lpFrom, lpFromlen, udp_read_addrs_.front().first, udp_read_addrs_.front().second);
+					}
+					udp_read_addrs_.pop_front();
 					break;
 				}
-			} else if (buffer->Length > lpBuffers[i].len) {
+			} else if (buffer_len > lpBuffers[i].len) {
 				reader->ReadBytes(Platform::ArrayReference<unsigned char>((unsigned char *)lpBuffers[i].buf, lpBuffers[i].len));
 				*lpNumberOfBytesRecvd += lpBuffers[i].len;
+				read_data_size_ -= lpBuffers[i].len;
 				++i;
 			} else {
-				reader->ReadBytes(Platform::ArrayReference<unsigned char>((unsigned char *)lpBuffers[i].buf, buffer->Length));
-				*lpNumberOfBytesRecvd += buffer->Length;
+				reader->ReadBytes(Platform::ArrayReference<unsigned char>((unsigned char *)lpBuffers[i].buf, buffer_len));
+				*lpNumberOfBytesRecvd += buffer_len;
+				read_data_size_ -= buffer_len;
 				read_datas_.pop_front();
 				if (type == SOCK_DGRAM) {
 					break;
@@ -954,16 +1143,74 @@ namespace SocketEmulation
 				++i;
 			}
 			reader->DetachBuffer();
-		} while (i < dwBufferCount && !read_datas_.empty());
-		read_data_size_ -= *lpNumberOfBytesRecvd;
+		} while (i < dwBufferCount && read_data_size_ > 0);
+
+		if (lpOverlapped) {
+			iocp_->push(lpCompletionKey_, lpOverlapped, *lpNumberOfBytesRecvd);
+		}
+		if (ErrorCode)
+			*ErrorCode = 0;
+
+		return true;
 	}
 
-	void socket_t::write_data(
+	bool socket_t::write_data(
 		_In_   LPWSABUF lpBuffers,
 		_In_   DWORD dwBufferCount,
-		_Out_  LPDWORD lpNumberOfBytesSent)
+		_Out_  LPDWORD lpNumberOfBytesSent,
+		_In_   const struct sockaddr *lpTo,
+		_In_   int iToLen,
+		_In_   LPWSAOVERLAPPED lpOverlapped,
+		_Out_  LPINT ErrorCode)
 	{
-		ULONG left = (type == SOCK_STREAM) ? write_data_capacity_ - write_data_size_ : ULONG(-1);
+		if (ec_) {
+			if (ErrorCode) {
+				*ErrorCode = ec_;
+			} else if (lpOverlapped) {
+				iocp_->push(ec_, lpOverlapped, 0);
+			}
+			ec_ = 0;
+			return true;
+		} else if (!(status_ & s_can_write)) {
+			if (ErrorCode) {
+				*ErrorCode = WSAECONNABORTED;
+			} else if (lpOverlapped) {
+				iocp_->push(WSAECONNABORTED, lpOverlapped, 0);
+			}
+			return true;
+		} else if (write_data_capacity_ <= write_data_size_) {
+			return false;
+		}
+
+		ULONG left = write_data_capacity_ - write_data_size_;
+
+		if (type == SOCK_DGRAM) {
+			left = ULONG(-1);
+			Windows::Storage::Streams::IOutputStream ^ stream;
+			if (lpTo) {
+				uint64_t key = ((uint64_t)((sockaddr_in *)lpTo)->sin_addr.s_addr << 32) | (((sockaddr_in *)lpTo)->sin_port);
+				auto iter = udp_streams_.find(key);
+				if (iter == udp_streams_.end()) {
+					if (0 != wait_operation(
+						datagram_socket_->GetOutputStreamAsync(sockaddr_to_host_name(lpTo), sockaddr_to_svc_name(lpTo)), stream)) {
+							int ec = WSAGetLastError();
+							if (ErrorCode) {
+								*ErrorCode = ec;
+							} else if (lpOverlapped) {
+								iocp_->push(ec, lpOverlapped, *lpNumberOfBytesSent);
+							}
+							return true;
+					}
+					udp_streams_[key] = stream;
+				} else {
+					stream = iter->second;
+				}
+			} else {
+				stream = datagram_socket_->OutputStream;
+			}
+			udp_write_addrs_.push_back(stream);
+		}
+
 		Windows::Storage::Streams::DataWriter ^ writer = ref new Windows::Storage::Streams::DataWriter();
 		for (DWORD i = 0; i < dwBufferCount; ++i) {
 			if (lpBuffers[i].len < left) {
@@ -979,6 +1226,14 @@ namespace SocketEmulation
 		Windows::Storage::Streams::IBuffer ^ buffer = writer->DetachBuffer();
 		write_datas_.push_back(buffer);
 		write_data_size_ += *lpNumberOfBytesSent;
+
+		if (lpOverlapped) {
+			iocp_->push(lpCompletionKey_, lpOverlapped, *lpNumberOfBytesSent);
+		}
+		if (ErrorCode)
+			*ErrorCode = 0;
+
+		return true;
 	}
 
 }

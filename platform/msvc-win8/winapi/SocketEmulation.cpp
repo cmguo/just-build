@@ -2,20 +2,20 @@
 
 #include <Windows.h>
 
-#undef WINAPI
-#define WINAPI
+#define WINAPI_DECL	 __declspec(dllexport)
 
 #include "SocketEmulation.h"
 #include "WsaContext.h"
 #include "Socket.h"
 #include "Iocp.h"
+#include "Select.h"
 
 #include <assert.h>
 
 namespace SocketEmulation
 {
 
-	SOCKET socket(
+	SOCKET WINAPI_DECL socket(
 		_In_  int af,
 		_In_  int type,
 		_In_  int protocol
@@ -24,7 +24,7 @@ namespace SocketEmulation
 		return WSASocket(af, type, protocol, NULL, 0, 0);
 	}
 
-	int bind(
+	int WINAPI_DECL bind(
 		_In_  SOCKET s,
 		_In_  const struct sockaddr *name,
 		_In_  int namelen
@@ -35,7 +35,7 @@ namespace SocketEmulation
 		return socket->bind(name, namelen);
 	}
 
-	int connect(
+	int WINAPI_DECL connect(
 		_In_  SOCKET s,
 		_In_  const struct sockaddr *name,
 		_In_  int namelen
@@ -46,7 +46,7 @@ namespace SocketEmulation
 		return socket->connect(name, namelen);
 	}
 
-	int listen(
+	int WINAPI_DECL listen(
 		_In_  SOCKET s,
 		_In_  int backlog
 		)
@@ -56,7 +56,7 @@ namespace SocketEmulation
 		return socket->listen(backlog);
 	}
 
-	SOCKET accept(
+	SOCKET WINAPI_DECL accept(
 		_In_     SOCKET s,
 		_Out_    struct sockaddr *addr,
 		_Inout_  int *addrlen
@@ -74,7 +74,7 @@ namespace SocketEmulation
 		}
 	}
 
-	int getsockname(
+	int WINAPI_DECL getsockname(
 		_In_     SOCKET s,
 		_Out_    struct sockaddr *name,
 		_Inout_  int *namelen
@@ -85,7 +85,7 @@ namespace SocketEmulation
 		return socket->getsockname(name, namelen);
 	}
 
-	int getpeername(
+	int WINAPI_DECL getpeername(
 		_In_     SOCKET s,
 		_Out_    struct sockaddr *name,
 		_Inout_  int *namelen
@@ -96,7 +96,7 @@ namespace SocketEmulation
 		return socket->getpeername(name, namelen);
 	}
 
-	int recv(
+	int WINAPI_DECL recv(
 		_In_   SOCKET s,
 		_Out_  char *buf,
 		_In_   int len,
@@ -110,7 +110,7 @@ namespace SocketEmulation
 		return ret == 0 ? dwRecv : ret;
 	}
 
-	int recvfrom(
+	int WINAPI_DECL recvfrom(
 		_In_         SOCKET s,
 		_Out_        char *buf,
 		_In_         int len,
@@ -126,7 +126,7 @@ namespace SocketEmulation
 		return ret == 0 ? dwRecv : ret;
 	}
 
-	int send(
+	int WINAPI_DECL send(
 		_In_  SOCKET s,
 		_In_  const char *buf,
 		_In_  int len,
@@ -140,7 +140,7 @@ namespace SocketEmulation
 		return ret == 0 ? dwRecv : ret;
 	}
 
-	int sendto(
+	int WINAPI_DECL sendto(
 		_In_  SOCKET s,
 		_In_  const char *buf,
 		_In_  int len,
@@ -156,7 +156,7 @@ namespace SocketEmulation
 		return ret == 0 ? dwRecv : ret;
 	}
 
-	int shutdown(
+	int WINAPI_DECL shutdown(
 		_In_  SOCKET s,
 		_In_  int how
 		)
@@ -166,7 +166,7 @@ namespace SocketEmulation
 		return socket->shutdown(how);
 	}
 
-	int setsockopt(
+	int WINAPI_DECL setsockopt(
 		_In_  SOCKET s,
 		_In_  int level,
 		_In_  int optname,
@@ -179,7 +179,7 @@ namespace SocketEmulation
 		return socket->setsockopt(level, optname, optval, optlen);
 	}
 
-	int getsockopt(
+	int WINAPI_DECL getsockopt(
 		_In_     SOCKET s,
 		_In_     int level,
 		_In_     int optname,
@@ -192,7 +192,7 @@ namespace SocketEmulation
 		return socket->getsockopt(level, optname, optval, optlen);
 	}
 
-	int ioctlsocket(
+	int WINAPI_DECL ioctlsocket(
 		_In_     SOCKET s,
 		_In_     long cmd,
 		_Inout_  u_long *argp
@@ -203,7 +203,7 @@ namespace SocketEmulation
 		return socket->ioctlsocket(cmd, argp);
 	}
 
-	int closesocket(
+	int WINAPI_DECL closesocket(
 		_In_  SOCKET s
 		)
 	{
@@ -214,7 +214,7 @@ namespace SocketEmulation
 		return ret;
 	}
 
-	int select(
+	int WINAPI_DECL select(
 		_In_     int nfds,
 		_Inout_  fd_set *readfds,
 		_Inout_  fd_set *writefds,
@@ -222,11 +222,16 @@ namespace SocketEmulation
 		_In_     const struct timeval *timeout
 		)
 	{
-		assert(false);
-		return -1;
+		select_t selector;
+		return selector.select(
+			nfds, 
+			readfds, 
+			writefds, 
+			exceptfds, 
+			timeout);
 	}
 
-	int gethostname(
+	int WINAPI_DECL gethostname(
 		_Out_  char *name,
 		_In_   int namelen
 		)
@@ -234,7 +239,7 @@ namespace SocketEmulation
 		return 0;
 	}
 
-	int getadapters(
+	int WINAPI_DECL getadapters(
 		_Out_  char *adapters,
 		_In_   int len
 		)
@@ -262,7 +267,7 @@ namespace SocketEmulation
 		return buf - adapters;
 	}
 
-	struct hostent* FAR gethostbyname(
+	WINAPI_DECL struct hostent* gethostbyname(
 		_In_  const char *name
 		)
 	{
@@ -298,7 +303,7 @@ namespace SocketEmulation
 		return hostent;
 	}
 
-	struct hostent* FAR gethostbyaddr(
+	WINAPI_DECL struct hostent* gethostbyaddr(
 		_In_  const char *addr,
 		_In_  int len,
 		_In_  int type
@@ -307,7 +312,7 @@ namespace SocketEmulation
 		return NULL;
 	}
 
-	struct servent* FAR getservbyname(
+	WINAPI_DECL struct servent* getservbyname(
 		_In_  const char *name,
 		_In_  const char *proto
 		)
@@ -315,7 +320,7 @@ namespace SocketEmulation
 		return NULL;
 	}
 
-	struct servent* FAR getservbyport(
+	WINAPI_DECL struct servent* getservbyport(
 		_In_  int port,
 		_In_  const char *proto
 		)
@@ -323,7 +328,7 @@ namespace SocketEmulation
 		return NULL;
 	}
 
-	unsigned long inet_addr(
+	unsigned long WINAPI_DECL inet_addr(
 		_In_  const char *cp
 		)
 	{
@@ -332,7 +337,7 @@ namespace SocketEmulation
 		return WSAStringToAddressA((char *)cp, AF_INET, NULL, (sockaddr *)&addr, &len) == 0 ? addr.sin_addr.s_addr : INADDR_NONE;
 	}
 
-	char* FAR inet_ntoa(
+	WINAPI_DECL char* inet_ntoa(
 		_In_  struct   in_addr in
 		)
 	{
@@ -345,12 +350,14 @@ namespace SocketEmulation
 		return WSAAddressToStringA((sockaddr *)&addr, sizeof(addr), NULL, str, &len) == 0 ? str : NULL;
 	}
 
-	int PASCAL FAR __WSAFDIsSet(SOCKET fd, fd_set FAR *)
+	int WINAPI_DECL __WSAFDIsSet(
+		SOCKET fd, 
+		fd_set FAR * set)
 	{
-		return 0;
+		return FD_ISSET(fd, set);
 	}
 
-	int WSAStartup(
+	int WINAPI_DECL WSAStartup(
 		_In_   WORD wVersionRequested,
 		_Out_  LPWSADATA lpWSAData
 		)
@@ -359,7 +366,7 @@ namespace SocketEmulation
 		return 0;
 	}
 
-	int WSACleanup(void)
+	int WINAPI_DECL WSACleanup(void)
 	{
 		return 0;
 	}
@@ -380,35 +387,35 @@ namespace SocketEmulation
 			| ((v >> 8 | v << 24) & 0xff00ff00));
 	}
 
-	u_short WSAAPI htons(
+	u_short WINAPI_DECL htons(
 		_In_  u_short hostshort
 		)
 	{
 		return rotate(hostshort);
 	}
 
-	u_long WSAAPI htonl(
+	u_long WINAPI_DECL htonl(
 		_In_  u_long hostlong
 		)
 	{
 		return rotate(hostlong);
 	}
 
-	u_short WSAAPI ntohs(
+	u_short WINAPI_DECL ntohs(
 		_In_  u_short netshort
 		)
 	{
 		return rotate(netshort);
 	}
 
-	u_long WSAAPI ntohl(
+	u_long WINAPI_DECL ntohl(
 		_In_  u_long netlong
 		)
 	{
 		return rotate(netlong);
 	}
 
-	SOCKET WSASocket(
+	SOCKET WINAPI_DECL WSASocket(
 		_In_  int af,
 		_In_  int type,
 		_In_  int protocol,
@@ -423,7 +430,7 @@ namespace SocketEmulation
 		return socket->index;
 	}
 
-	BOOL ConnectEx(
+	BOOL WINAPI_DECL ConnectEx(
 		_In_   SOCKET s,
 		_In_   const struct sockaddr *lpTo,
 		_In_   int iToLen,
@@ -435,7 +442,7 @@ namespace SocketEmulation
 		return socket->connect_ex(lpTo, iToLen, lpOverlapped);
 	}
 
-	BOOL AcceptEx(
+	BOOL WINAPI_DECL AcceptEx(
 		_In_   SOCKET sListenSocket,
 		_In_   SOCKET sAcceptSocket,
 		_In_   PVOID lpOutputBuffer,
@@ -454,7 +461,7 @@ namespace SocketEmulation
 			lpOverlapped);
 	}
 
-	void GetAcceptExSockaddrs(
+	void WINAPI_DECL GetAcceptExSockaddrs(
 		_In_   PVOID lpOutputBuffer,
 		_In_   DWORD dwReceiveDataLength,
 		_In_   DWORD dwLocalAddressLength,
@@ -476,7 +483,7 @@ namespace SocketEmulation
 			RemoteSockaddrLength);
 	}
 
-	int WSARecv(
+	int WINAPI_DECL WSARecv(
 		_In_     SOCKET s,
 		_Inout_  LPWSABUF lpBuffers,
 		_In_     DWORD dwBufferCount,
@@ -491,7 +498,7 @@ namespace SocketEmulation
 		return socket->recv_ex(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, lpOverlapped, lpCompletionRoutine);
 	}
 
-	int WSARecvFrom(
+	int WINAPI_DECL WSARecvFrom(
 		_In_     SOCKET s,
 		_Inout_  LPWSABUF lpBuffers,
 		_In_     DWORD dwBufferCount,
@@ -509,7 +516,7 @@ namespace SocketEmulation
 			lpFrom, lpFromlen, lpOverlapped, lpCompletionRoutine);
 	}
 
-	int WSASend(
+	int WINAPI_DECL WSASend(
 		_In_   SOCKET s,
 		_In_   LPWSABUF lpBuffers,
 		_In_   DWORD dwBufferCount,
@@ -524,7 +531,7 @@ namespace SocketEmulation
 		return socket->send_ex(lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, lpOverlapped, lpCompletionRoutine);
 	}
 
-	int WSASendTo(
+	int WINAPI_DECL WSASendTo(
 		_In_   SOCKET s,
 		_In_   LPWSABUF lpBuffers,
 		_In_   DWORD dwBufferCount,
@@ -542,7 +549,7 @@ namespace SocketEmulation
 			lpTo, iToLen, lpOverlapped, lpCompletionRoutine);
 	}
 
-	INT WSAAPI WSAAddressToStringA(
+	INT WINAPI_DECL WSAAddressToStringA(
 		_In_      LPSOCKADDR lpsaAddress,
 		_In_      DWORD dwAddressLength,
 		_In_opt_  LPWSAPROTOCOL_INFO lpProtocolInfo,
@@ -575,7 +582,7 @@ namespace SocketEmulation
 		}
 	}
 
-	INT WSAAPI WSAAddressToStringW(
+	INT WINAPI_DECL WSAAddressToStringW(
 		_In_      LPSOCKADDR lpsaAddress,
 		_In_      DWORD dwAddressLength,
 		_In_opt_  LPWSAPROTOCOL_INFO lpProtocolInfo,
@@ -608,7 +615,7 @@ namespace SocketEmulation
 		}
 	}
 
-	INT WSAAPI WSAStringToAddressA(
+	INT WINAPI_DECL WSAStringToAddressA(
 		_In_      LPSTR AddressString,
 		_In_      INT AddressFamily,
 		_In_opt_  LPWSAPROTOCOL_INFO lpProtocolInfo,
@@ -634,6 +641,8 @@ namespace SocketEmulation
 				if (*p == '.')
 					++p;
 			}
+			if (lpAddressLength)
+				*lpAddressLength = sizeof(sockaddr_in);
 			return 0;
 		} else {
 			WSASetLastError(WSAEINVAL);
@@ -641,7 +650,7 @@ namespace SocketEmulation
 		}
 	}
 
-	INT WSAAPI WSAStringToAddressW(
+	INT WINAPI_DECL WSAStringToAddressW(
 		_In_      LPWSTR AddressString,
 		_In_      INT AddressFamily,
 		_In_opt_  LPWSAPROTOCOL_INFO lpProtocolInfo,
@@ -679,19 +688,19 @@ namespace SocketEmulation
 		}
 	}
 
-	void WSASetLastError(
+	void WINAPI_DECL WSASetLastError(
 		_In_  int iError
 		)
 	{
 		SetLastError(iError);
 	}
 
-	int WSAGetLastError(void)
+	int WINAPI_DECL WSAGetLastError(void)
 	{
 		return GetLastError();
 	}
 
-	HANDLE WINAPI CreateIoCompletionPort(
+	HANDLE WINAPI_DECL CreateIoCompletionPort(
 		_In_      HANDLE FileHandle,
 		_In_opt_  HANDLE ExistingCompletionPort,
 		_In_      ULONG_PTR CompletionKey,
@@ -713,7 +722,7 @@ namespace SocketEmulation
 		}
 	}
 
-	BOOL WINAPI GetQueuedCompletionStatus(
+	BOOL WINAPI_DECL GetQueuedCompletionStatus(
 		_In_   HANDLE CompletionPort,
 		_Out_  LPDWORD lpNumberOfBytes,
 		_Out_  PULONG_PTR lpCompletionKey,
@@ -726,7 +735,7 @@ namespace SocketEmulation
 		return iocp->pop(lpNumberOfBytes, lpCompletionKey, lpOverlapped, dwMilliseconds);
 	}
 
-	BOOL WINAPI PostQueuedCompletionStatus(
+	BOOL WINAPI_DECL PostQueuedCompletionStatus(
 		_In_      HANDLE CompletionPort,
 		_In_      DWORD dwNumberOfBytesTransferred,
 		_In_      ULONG_PTR dwCompletionKey,
@@ -735,11 +744,13 @@ namespace SocketEmulation
 	{
 		wsa_context * context = &g_wsa_context();
 		iocp_t * iocp = context->get<iocp_t>((size_t)CompletionPort);
+		if (lpOverlapped)
+			lpOverlapped->Internal = 1;
 		iocp->push(dwCompletionKey, lpOverlapped, dwNumberOfBytesTransferred);
 		return TRUE;
 	}
 
-	BOOL WINAPI GetOverlappedResult(
+	BOOL WINAPI_DECL GetOverlappedResult(
 		_In_   HANDLE hFile,
 		_In_   LPOVERLAPPED lpOverlapped,
 		_Out_  LPDWORD lpNumberOfBytesTransferred,
@@ -750,7 +761,7 @@ namespace SocketEmulation
 		return FALSE;
 	}
 
-	BOOL WINAPI CloseIoCompletionPort(
+	BOOL WINAPI_DECL CloseIoCompletionPort(
 	  _In_  HANDLE hObject
 	)
 	{

@@ -7,16 +7,16 @@
 namespace SystemEmulation
 {
 
-	HLOCAL WINAPI LocalAlloc(
+	HLOCAL WINAPI_DECL LocalAlloc(
 		_In_  UINT uFlags,
 		_In_  SIZE_T uBytes
 		);
 
-	HLOCAL WINAPI LocalFree(
+	HLOCAL WINAPI_DECL LocalFree(
 		_In_  HLOCAL hMem
 		);
 
-	DWORD WINAPI FormatMessage2A(
+	DWORD WINAPI_DECL FormatMessage2A(
 		_In_      DWORD dwFlags,
 		_In_opt_  LPCVOID lpSource,
 		_In_      DWORD dwMessageId,
@@ -28,23 +28,23 @@ namespace SystemEmulation
 
 #define FormatMessageA FormatMessage2A
 
-	void WINAPI OutputDebugString2A(
+	void WINAPI_DECL OutputDebugString2A(
 		_In_opt_  LPCSTR lpOutputString
 		);
 
 #define OutputDebugStringA OutputDebugString2A
 
-	DWORD WINAPI GetTickCount(void);
+	DWORD WINAPI_DECL GetTickCount(void);
 
-	void WINAPI GetSystemInfo(
+	void WINAPI_DECL GetSystemInfo(
 		_Out_  LPSYSTEM_INFO lpSystemInfo
 		);
 
-	LPCH WINAPI GetEnvironmentStringsA(void);
+	LPCH WINAPI_DECL GetEnvironmentStringsA(void);
 
 #define GetEnvironmentStrings GetEnvironmentStringsA
 
-	DWORD WINAPI GetEnvironmentVariableA(
+	DWORD WINAPI_DECL GetEnvironmentVariableA(
 		_In_opt_   LPCSTR lpName,
 		_Out_opt_  LPSTR lpBuffer,
 		_In_       DWORD nSize
@@ -52,16 +52,16 @@ namespace SystemEmulation
 
 #define GetEnvironmentVariable GetEnvironmentVariableA
 
-	BOOL WINAPI SetEnvironmentVariableA(
+	BOOL WINAPI_DECL SetEnvironmentVariableA(
 		_In_      LPCSTR lpName,
 		_In_opt_  LPCSTR lpValue
 		);
 
 #define SetEnvironmentVariable SetEnvironmentVariableA
 
-	LCID GetUserDefaultLCID(void);
+	LCID WINAPI_DECL GetUserDefaultLCID(void);
 
-	int LCMapStringA(
+	int WINAPI_DECL LCMapStringA(
 		_In_       LCID Locale,
 		_In_       DWORD dwMapFlags,
 		_In_       LPCSTR lpSrcStr,
@@ -70,7 +70,7 @@ namespace SystemEmulation
 		_In_       int cchDest
 		);
 
-	int LCMapStringW(
+	int WINAPI_DECL LCMapStringW(
 		_In_       LCID Locale,
 		_In_       DWORD dwMapFlags,
 		_In_       LPCWSTR lpSrcStr,
@@ -79,7 +79,7 @@ namespace SystemEmulation
 		_In_       int cchDest
 		);
 
-	BOOL GetStringTypeExA(
+	BOOL WINAPI_DECL GetStringTypeExA(
 		_In_   LCID Locale,
 		_In_   DWORD dwInfoType,
 		_In_   LPCSTR lpSrcStr,
@@ -87,38 +87,38 @@ namespace SystemEmulation
 		_Out_  LPWORD lpCharType
 		);
 
-	int WINAPI LoadStringA(
+	int WINAPI_DECL LoadStringA(
 		_In_opt_  HINSTANCE hInstance,
 		_In_      UINT uID,
 		_Out_     LPSTR lpBuffer,
 		_In_      int nBufferMax
 		);
 
-	int WINAPI LoadStringW(
+	int WINAPI_DECL LoadStringW(
 		_In_opt_  HINSTANCE hInstance,
 		_In_      UINT uID,
 		_Out_     LPWSTR lpBuffer,
 		_In_      int nBufferMax
 		);
 
-	LPVOID WINAPI VirtualAlloc(
+	LPVOID WINAPI_DECL VirtualAlloc(
 		_In_opt_  LPVOID lpAddress,
 		_In_      SIZE_T dwSize,
 		_In_      DWORD flAllocationType,
 		_In_      DWORD flProtect
 		);
 
-	BOOL WINAPI VirtualFree(
+	BOOL WINAPI_DECL VirtualFree(
 		_In_  LPVOID lpAddress,
 		_In_  SIZE_T dwSize,
 		_In_  DWORD dwFreeType
 		);
 
-	HANDLE WINAPI GetStdHandle(
+	HANDLE WINAPI_DECL GetStdHandle(
 		_In_  DWORD nStdHandle
 		);
 
-	BOOL WINAPI SetConsoleTextAttribute(
+	BOOL WINAPI_DECL SetConsoleTextAttribute(
 		_In_  HANDLE hConsoleOutput,
 		_In_  WORD wAttributes
 		);

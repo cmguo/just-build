@@ -1,14 +1,14 @@
-// windows.h
+// stdlib.h
 
 #pragma once
 
-#include <..\Include\stdlib.h> // orignal windows.h
+#include <..\Include\stdlib.h> // orignal stdlib.h
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
-extern char * environ[];
+__declspec(dllimport) char ** environ;
 
 char * __cdecl getenv(
 	_In_z_ const char * _VarName

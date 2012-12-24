@@ -40,36 +40,62 @@ namespace ThreadEmulation
     #define CREATE_SUSPENDED 0x00000004
     #endif
 
-    HANDLE WINAPI CreateThread(_In_opt_ LPSECURITY_ATTRIBUTES unusedThreadAttributes, _In_ SIZE_T unusedStackSize, _In_ LPTHREAD_START_ROUTINE lpStartAddress, _In_opt_ LPVOID lpParameter, _In_ DWORD dwCreationFlags, _Out_opt_ LPDWORD unusedThreadId);
-    DWORD WINAPI ResumeThread(_In_ HANDLE hThread);
-    BOOL WINAPI SetThreadPriority(_In_ HANDLE hThread, _In_ int nPriority);
+    HANDLE WINAPI_DECL CreateThread(
+		_In_opt_ LPSECURITY_ATTRIBUTES unusedThreadAttributes, 
+		_In_ SIZE_T unusedStackSize, 
+		_In_ LPTHREAD_START_ROUTINE lpStartAddress, 
+		_In_opt_ LPVOID lpParameter, 
+		_In_ DWORD dwCreationFlags, 
+		_Out_opt_ LPDWORD unusedThreadId
+		);
 
-	BOOL WINAPI TerminateThread(
+    DWORD WINAPI_DECL ResumeThread(
+		_In_ HANDLE hThread
+		);
+
+    BOOL WINAPI_DECL SetThreadPriority(
+		_In_ HANDLE hThread, 
+		_In_ int nPriority
+		);
+
+	BOOL WINAPI_DECL TerminateThread(
 		_Inout_  HANDLE hThread,
 		_In_     DWORD dwExitCode
 		);
 
-    VOID WINAPI Sleep(_In_ DWORD dwMilliseconds);
+    VOID WINAPI_DECL Sleep(
+		_In_ DWORD dwMilliseconds
+		);
 
-    DWORD WINAPI TlsAlloc();
-    BOOL WINAPI TlsFree(_In_ DWORD dwTlsIndex);
-    LPVOID WINAPI TlsGetValue(_In_ DWORD dwTlsIndex);
-    BOOL WINAPI TlsSetValue(_In_ DWORD dwTlsIndex, _In_opt_ LPVOID lpTlsValue);
+    DWORD WINAPI_DECL TlsAlloc();
+
+    BOOL WINAPI_DECL TlsFree(
+		_In_ DWORD dwTlsIndex
+		);
+
+    LPVOID WINAPI_DECL TlsGetValue(
+		_In_ DWORD dwTlsIndex
+		);
+
+    BOOL WINAPI_DECL TlsSetValue(
+		_In_ DWORD dwTlsIndex, 
+		_In_opt_ LPVOID lpTlsValue
+		);
     
-    void WINAPI TlsShutdown();
+    void WINAPI_DECL TlsShutdown();
 
-	void WINAPI InitializeCriticalSection(
+	void WINAPI_DECL InitializeCriticalSection(
 		_Out_  LPCRITICAL_SECTION lpCriticalSection
 		);
 
-	HANDLE WINAPI CreateEventA(
+	HANDLE WINAPI_DECL CreateEventA(
 		_In_opt_  LPSECURITY_ATTRIBUTES lpEventAttributes,
 		_In_      BOOL bManualReset,
 		_In_      BOOL bInitialState,
 		_In_opt_  LPCSTR lpName
 		);
 
-	HANDLE WINAPI CreateEventW(
+	HANDLE WINAPI_DECL CreateEventW(
 		_In_opt_  LPSECURITY_ATTRIBUTES lpEventAttributes,
 		_In_      BOOL bManualReset,
 		_In_      BOOL bInitialState,
@@ -78,57 +104,57 @@ namespace ThreadEmulation
 
 #define CreateEvent CreateEventA
 
-	HANDLE WINAPI CreateMutexA(
+	HANDLE WINAPI_DECL CreateMutexA(
 		  _In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
 		  _In_      BOOL bInitialOwner,
 		  _In_opt_  LPCSTR lpName
 		);
 
-	HANDLE WINAPI CreateMutexW(
+	HANDLE WINAPI_DECL CreateMutexW(
 		  _In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
 		  _In_      BOOL bInitialOwner,
 		  _In_opt_  LPCWSTR lpName
 		);
 
-	HANDLE WINAPI OpenMutexA(
+	HANDLE WINAPI_DECL OpenMutexA(
 		_In_  DWORD dwDesiredAccess,
 		_In_  BOOL bInheritHandle,
 		_In_  LPCSTR lpName
 		);
 
-	HANDLE WINAPI CreateSemaphoreA(
+	HANDLE WINAPI_DECL CreateSemaphoreA(
 		_In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 		_In_      LONG lInitialCount,
 		_In_      LONG lMaximumCount,
 		_In_opt_  LPCSTR lpName
 		);
 
-	HANDLE WINAPI CreateSemaphoreW(
+	HANDLE WINAPI_DECL CreateSemaphoreW(
 		_In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 		_In_      LONG lInitialCount,
 		_In_      LONG lMaximumCount,
 		_In_opt_  LPCWSTR lpName
 		);
 
-	HANDLE WINAPI OpenSemaphoreA(
+	HANDLE WINAPI_DECL OpenSemaphoreA(
 		_In_  DWORD dwDesiredAccess,
 		_In_  BOOL bInheritHandle,
 		_In_  LPCSTR lpName
 		);
 
-	DWORD WINAPI WaitForSingleObject(
+	DWORD WINAPI_DECL WaitForSingleObject(
 		_In_  HANDLE hHandle,
 		_In_  DWORD dwMilliseconds
 		);
 
-	DWORD WINAPI WaitForMultipleObjects(
+	DWORD WINAPI_DECL WaitForMultipleObjects(
 		_In_  DWORD nCount,
 		_In_  const HANDLE *lpHandles,
 		_In_  BOOL bWaitAll,
 		_In_  DWORD dwMilliseconds
 		);
 
-	uintptr_t const _beginthreadex(
+	uintptr_t const WINAPI_DECL _beginthreadex(
 		void* security, 
 		unsigned stack_size, 
 		unsigned (__stdcall* start_address)(void*),

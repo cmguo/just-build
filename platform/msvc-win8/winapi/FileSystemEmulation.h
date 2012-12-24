@@ -7,29 +7,29 @@
 namespace FileSystemEmulation
 {
 
-	BOOL WINAPI CreateDirectory2A(
+	BOOL WINAPI_DECL CreateDirectory2A(
 		_In_      LPCSTR lpPathName,
 		_In_opt_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
 		);
 
 #define CreateDirectoryA CreateDirectory2A
 
-	BOOL WINAPI RemoveDirectory2A(
+	BOOL WINAPI_DECL RemoveDirectory2A(
 		_In_  LPCSTR lpPathName
 		);
 
 #define RemoveDirectoryA RemoveDirectory2A
 
 
-	DWORD WINAPI GetFileAttributesA(
+	DWORD WINAPI_DECL GetFileAttributesA(
 		_In_  LPCSTR lpFileName
 		);
 
-	DWORD WINAPI GetFileAttributesW(
+	DWORD WINAPI_DECL GetFileAttributesW(
 		_In_  LPCWSTR lpFileName
 		);
 
-	HANDLE WINAPI CreateFileA(
+	HANDLE WINAPI_DECL CreateFileA(
 		_In_      LPCSTR lpFileName,
 		_In_      DWORD dwDesiredAccess,
 		_In_      DWORD dwShareMode,
@@ -39,7 +39,7 @@ namespace FileSystemEmulation
 		_In_opt_  HANDLE hTemplateFile
 		);
 
-	HANDLE WINAPI CreateFileW(
+	HANDLE WINAPI_DECL CreateFileW(
 		_In_      LPCWSTR lpFileName,
 		_In_      DWORD dwDesiredAccess,
 		_In_      DWORD dwShareMode,
@@ -49,13 +49,13 @@ namespace FileSystemEmulation
 		_In_opt_  HANDLE hTemplateFile
 		);
 
-	BOOL WINAPI DeleteFile2A(
+	BOOL WINAPI_DECL DeleteFile2A(
 		_In_  LPCSTR lpFileName
 		);
 
 #define DeleteFileA DeleteFile2A
 
-	BOOL WINAPI MoveFileEx2A(
+	BOOL WINAPI_DECL MoveFileEx2A(
 		_In_      LPCSTR lpExistingFileName,
 		_In_opt_  LPCSTR lpNewFileName,
 		_In_      DWORD dwFlags
@@ -63,29 +63,29 @@ namespace FileSystemEmulation
 
 #define MoveFileExA MoveFileEx2A
 
-	DWORD WINAPI SetFilePointer(
+	DWORD WINAPI_DECL SetFilePointer(
 		_In_         HANDLE hFile,
 		_In_         LONG lDistanceToMove,
 		_Inout_opt_  PLONG lpDistanceToMoveHigh,
 		_In_         DWORD dwMoveMethod
 		);
 
-	DWORD WINAPI GetFileSize(
+	DWORD WINAPI_DECL GetFileSize(
 		_In_       HANDLE hFile,
 		_Out_opt_  LPDWORD lpFileSizeHigh
 		);
 
-	BOOL WINAPI GetFileSizeEx(
+	BOOL WINAPI_DECL GetFileSizeEx(
 		_In_   HANDLE hFile,
 		_Out_  PLARGE_INTEGER lpFileSize
 		);
 
-	BOOL WINAPI FileTimeToLocalFileTime(
+	BOOL WINAPI_DECL FileTimeToLocalFileTime(
 		_In_   const FILETIME *lpFileTime,
 		_Out_  LPFILETIME lpLocalFileTime
 		);
 
-	HANDLE WINAPI CreateFileMappingA(
+	HANDLE WINAPI_DECL CreateFileMappingA(
 		_In_      HANDLE hFile,
 		_In_opt_  LPSECURITY_ATTRIBUTES lpAttributes,
 		_In_      DWORD flProtect,
@@ -94,13 +94,13 @@ namespace FileSystemEmulation
 		_In_opt_  LPCSTR lpName
 		);
 
-	HANDLE WINAPI OpenFileMappingA(
+	HANDLE WINAPI_DECL OpenFileMappingA(
 		_In_ DWORD dwDesiredAccess,
 		_In_ BOOL bInheritHandle,
 		_In_ LPCSTR lpName
 		);
 
-	LPVOID WINAPI MapViewOfFile(
+	LPVOID WINAPI_DECL MapViewOfFile(
 		_In_  HANDLE hFileMappingObject,
 		_In_  DWORD dwDesiredAccess,
 		_In_  DWORD dwFileOffsetHigh,
@@ -108,7 +108,7 @@ namespace FileSystemEmulation
 		_In_  SIZE_T dwNumberOfBytesToMap
 		);
 
-	LPVOID WINAPI MapViewOfFileEx(
+	LPVOID WINAPI_DECL MapViewOfFileEx(
 		_In_      HANDLE hFileMappingObject,
 		_In_      DWORD dwDesiredAccess,
 		_In_      DWORD dwFileOffsetHigh,
@@ -117,90 +117,90 @@ namespace FileSystemEmulation
 		_In_opt_  LPVOID lpBaseAddress
 		);
 
-	DWORD WINAPI GetCurrentDirectoryA(
+	DWORD WINAPI_DECL GetCurrentDirectoryA(
 		_In_   DWORD nBufferLength,
 		_Out_  LPSTR lpBuffer
 		);
 
-	DWORD WINAPI GetCurrentDirectoryW(
+	DWORD WINAPI_DECL GetCurrentDirectoryW(
 		_In_   DWORD nBufferLength,
 		_Out_  LPWSTR lpBuffer
 		);
 
-	BOOL WINAPI SetCurrentDirectoryA(
+	BOOL WINAPI_DECL SetCurrentDirectoryA(
 		_In_  LPCSTR lpPathName
 		);
 
-	BOOL WINAPI SetCurrentDirectoryW(
+	BOOL WINAPI_DECL SetCurrentDirectoryW(
 		_In_  LPCWSTR lpPathName
 		);
 
-	BOOL WINAPI CreateHardLinkA(
+	BOOL WINAPI_DECL CreateHardLinkA(
 		_In_        LPCSTR lpFileName,
 		_In_        LPCSTR lpExistingFileName,
 		_Reserved_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
 		);
 
-	BOOL WINAPI CreateHardLinkW(
+	BOOL WINAPI_DECL CreateHardLinkW(
 		_In_        LPCWSTR lpFileName,
 		_In_        LPCWSTR lpExistingFileName,
 		_Reserved_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
 		);
 
-	DWORD WINAPI GetFullPathNameA(
+	DWORD WINAPI_DECL GetFullPathNameA(
 		_In_   LPCSTR lpFileName,
 		_In_   DWORD nBufferLength,
 		_Out_  LPSTR lpBuffer,
 		_Out_  LPSTR *lpFilePart
 		);
 
-	DWORD WINAPI GetFullPathNameW(
+	DWORD WINAPI_DECL GetFullPathNameW(
 		_In_   LPCWSTR lpFileName,
 		_In_   DWORD nBufferLength,
 		_Out_  LPWSTR lpBuffer,
 		_Out_  LPWSTR *lpFilePart
 		);
 
-	DWORD WINAPI GetShortPathNameA(
+	DWORD WINAPI_DECL GetShortPathNameA(
 		_In_   LPCSTR lpszLongPath,
 		_Out_  LPSTR lpszShortPath,
 		_In_   DWORD cchBuffer
 		);
 
-	DWORD WINAPI GetShortPathNameW(
+	DWORD WINAPI_DECL GetShortPathNameW(
 		_In_   LPCWSTR lpszLongPath,
 		_Out_  LPWSTR lpszShortPath,
 		_In_   DWORD cchBuffer
 		);
 
-	BOOL WINAPI MoveFileA(
+	BOOL WINAPI_DECL MoveFileA(
 		_In_  LPCSTR lpExistingFileName,
 		_In_  LPCSTR lpNewFileName
 		);
 
-	BOOL WINAPI MoveFileW(
+	BOOL WINAPI_DECL MoveFileW(
 		_In_  LPCWSTR lpExistingFileName,
 		_In_  LPCWSTR lpNewFileName
 		);
 
-	BOOL WINAPI CopyFileA(
+	BOOL WINAPI_DECL CopyFileA(
 		_In_  LPCSTR lpExistingFileName,
 		_In_  LPCSTR lpNewFileName,
 		_In_  BOOL bFailIfExists
 		);
 
-	BOOL WINAPI CopyFileW(
+	BOOL WINAPI_DECL CopyFileW(
 		_In_  LPCWSTR lpExistingFileName,
 		_In_  LPCWSTR lpNewFileName,
 		_In_  BOOL bFailIfExists
 		);
 
-	HANDLE WINAPI FindFirstFileA(
+	HANDLE WINAPI_DECL FindFirstFileA(
 		_In_   LPCSTR lpFileName,
 		_Out_  LPWIN32_FIND_DATAA lpFindFileData
 		);
 
-	HANDLE WINAPI FindFirstFileW(
+	HANDLE WINAPI_DECL FindFirstFileW(
 		_In_   LPCWSTR lpFileName,
 		_Out_  LPWIN32_FIND_DATAW lpFindFileData
 		);
@@ -218,51 +218,51 @@ namespace FileSystemEmulation
 		DWORD    nFileIndexLow;
 	} BY_HANDLE_FILE_INFORMATION, *LPBY_HANDLE_FILE_INFORMATION;
 
-	BOOL WINAPI GetFileInformationByHandle(
+	BOOL WINAPI_DECL GetFileInformationByHandle(
 		_In_   HANDLE hFile,
 		_Out_  LPBY_HANDLE_FILE_INFORMATION lpFileInformation
 		);
 
-	BOOL WINAPI GetFileTime(
+	BOOL WINAPI_DECL GetFileTime(
 		_In_       HANDLE hFile,
 		_Out_opt_  LPFILETIME lpCreationTime,
 		_Out_opt_  LPFILETIME lpLastAccessTime,
 		_Out_opt_  LPFILETIME lpLastWriteTime
 		);
 
-	BOOL WINAPI SetFileTime(
+	BOOL WINAPI_DECL SetFileTime(
 		_In_      HANDLE hFile,
 		_In_opt_  const FILETIME *lpCreationTime,
 		_In_opt_  const FILETIME *lpLastAccessTime,
 		_In_opt_  const FILETIME *lpLastWriteTime
 		);
 
-	HMODULE WINAPI GetModuleHandleA(
+	HMODULE WINAPI_DECL GetModuleHandleA(
 		_In_opt_  LPCSTR lpModuleName
 		);
 
-	HMODULE WINAPI LoadLibraryA(
+	HMODULE WINAPI_DECL LoadLibraryA(
 		_In_  LPCSTR lpFileName
 		);
 
-	DWORD WINAPI GetModuleFileNameA(
+	DWORD WINAPI_DECL GetModuleFileNameA(
 	  _In_opt_  HMODULE hModule,
 	  _Out_     LPSTR lpFilename,
 	  _In_      DWORD nSize
 	);
 
-	DWORD WINAPI GetModuleFileNameW(
+	DWORD WINAPI_DECL GetModuleFileNameW(
 	  _In_opt_  HMODULE hModule,
 	  _Out_     LPWSTR lpFilename,
 	  _In_      DWORD nSize
 	);
 
-	DWORD WINAPI GetTempPathA(
+	DWORD WINAPI_DECL GetTempPathA(
 		_In_   DWORD nBufferLength,
 		_Out_  LPSTR lpBuffer
 		);
 
-	DWORD WINAPI GetTempPathW(
+	DWORD WINAPI_DECL GetTempPathW(
 		_In_   DWORD nBufferLength,
 		_Out_  LPWSTR lpBuffer
 		);

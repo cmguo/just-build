@@ -2,8 +2,7 @@
 
 #include <Windows.h>
 
-#undef WINAPI
-#define WINAPI
+#define WINAPI_DECL	 __declspec(dllexport)
 
 #include "Iocp.h"
 
@@ -39,6 +38,15 @@ namespace SocketEmulation
 		DWORD dwNumberOfBytesTransferred)
 	{
 		std::unique_lock<std::mutex> lc(mutex_);
+		assert(lpOverlapped == NULL || lpOverlapped->Internal != NULL);
+		if (lpOverlapped) {
+			assert(lpOverlapped->Internal != 0);
+			assert(lpOverlapped->InternalHigh == 0);
+			assert(lpOverlapped->Offset == 0);
+			assert(lpOverlapped->OffsetHigh == 0);
+			assert(lpOverlapped->hEvent == 0);
+			lpOverlapped->Internal = 0;
+		}
 		OVERLAPPED_ENTRY entry = {lpCompletionKey, lpOverlapped, 0, dwNumberOfBytesTransferred};
 		overlaps_.push_back(entry);
 		cond_.notify_one();

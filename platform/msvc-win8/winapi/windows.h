@@ -10,8 +10,7 @@
 
 #include <..\um\windows.h> // orignal windows.h
 
-#undef WINAPI
-#define WINAPI
+#define WINAPI_DECL	 __declspec(dllimport)
 
 #include "SystemEmulation.h"
 #include "FileSystemEmulation.h"
