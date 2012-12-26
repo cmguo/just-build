@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <io.h>
 
+__declspec(dllexport) char ** environ = NULL;
+
 namespace SystemEmulation
 {
 
@@ -97,10 +99,6 @@ namespace SystemEmulation
 		GetNativeSystemInfo(lpSystemInfo);
 	}
 
-	extern "C" {
-		__declspec(dllexport) char ** environ = NULL;
-	}
-
 	static struct init_environ
 	{
 		init_environ()
@@ -108,10 +106,10 @@ namespace SystemEmulation
 			environ = new char *[32];
 			memset(environ, 0, sizeof(char *) * 32);
 			int n = 0;
-			char * TMP = new char[MAX_PATH + 8];
-			strncpy_s(TMP, MAX_PATH + 8, "TMP=", 4);
-			FileSystemEmulation::GetTempPathA(MAX_PATH, TMP + 4);
-			environ[n++] = TMP;
+			//char * TMP = new char[MAX_PATH + 8];
+			//strncpy_s(TMP, MAX_PATH + 8, "TMP=", 4);
+			//FileSystemEmulation::GetTempPathA(MAX_PATH, TMP + 4);
+			//environ[n++] = TMP;
 		}
 	} init_environ__;
 

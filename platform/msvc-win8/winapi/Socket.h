@@ -232,10 +232,12 @@ namespace SocketEmulation
 
 		void tcp_on_recv(
 			int ec, 
+			Windows::Storage::Streams::IBuffer ^ buffer, 
 			size_t size);
 
 		void tcp_on_send(
 			int ec, 
+			Windows::Storage::Streams::IBuffer ^ buffer, 
 			size_t size);
 
 		void udp_send();

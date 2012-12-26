@@ -5,6 +5,7 @@
 #include <..\include\cstdlib>
 
 _STD_BEGIN
-using _CSTD getenv;
+
+using cex::getenv;
 
 _STD_END

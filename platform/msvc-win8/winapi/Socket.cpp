@@ -667,7 +667,7 @@ namespace SocketEmulation
 	Windows::Networking::HostName ^ socket_t::sockaddr_to_host_name(
 		_In_  const struct sockaddr *name)
 	{
-		WCHAR wstr[256];
+		WCHAR wstr[256] = {0};
 		DWORD len = 256;
 		if (name->sa_family == AF_INET) {
 			if (((sockaddr_in *)name)->sin_addr.s_addr == 0) {
@@ -676,7 +676,7 @@ namespace SocketEmulation
 			}
 			WSAAddressToStringW((sockaddr *)name, sizeof(sockaddr_in), NULL, wstr, &len);
 		} else {
-			//WSAAddressToStringW(((LPSOCKADDR)name, sizeof(sockaddr_in6), NULL, wstr, &len);
+			assert(false);
 		}
 		return ref new Windows::Networking::HostName(ref new Platform::String(wstr));
 	}
@@ -689,7 +689,7 @@ namespace SocketEmulation
 		if (name->sa_family == AF_INET) {
 			port = ((sockaddr_in *)name)->sin_port;
 		} else {
-			//WSAAddressToStringW(((LPSOCKADDR)name, sizeof(sockaddr_in6), NULL, wstr, &len);
+			assert(false);
 		}
 		port = ntohs(port);
 		WCHAR * p = wstr + 7;
@@ -836,14 +836,13 @@ namespace SocketEmulation
 		Windows::Foundation::IAsyncOperationWithProgress<Windows::Storage::Streams::IBuffer ^, UINT32>  ^ operation = 
 			stream_socket_->InputStream->ReadAsync(buffer, size, Windows::Storage::Streams::InputStreamOptions::Partial);
 		pointer_t shared_this(shared_from_this());
-		operation->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<Windows::Storage::Streams::IBuffer ^, UINT32>([shared_this](
+		operation->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<Windows::Storage::Streams::IBuffer ^, UINT32>([buffer, shared_this](
 			Windows::Foundation::IAsyncOperationWithProgress<Windows::Storage::Streams::IBuffer ^, UINT32> ^ operation, Windows::Foundation::AsyncStatus status) {
 				socket_t * socket = (socket_t *)shared_this.get();
 				if (status == Windows::Foundation::AsyncStatus::Completed) {
-					socket->read_datas_.push_back(operation->GetResults());
-					socket->tcp_on_recv(0, operation->GetResults()->Length);
+					socket->tcp_on_recv(0, buffer, operation->GetResults()->Length);
 				} else {
-					socket->tcp_on_recv(SCODE_CODE(operation->ErrorCode.Value), 0);
+					socket->tcp_on_recv(SCODE_CODE(operation->ErrorCode.Value), nullptr, 0);
 				}
 		});
 	}
@@ -857,20 +856,20 @@ namespace SocketEmulation
 		Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32>  ^ operation = 
 			stream_socket_->OutputStream->WriteAsync(buffer);
 		pointer_t shared_this(shared_from_this());
-		operation->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<UINT32, UINT32>([shared_this](
+		operation->Completed = ref new Windows::Foundation::AsyncOperationWithProgressCompletedHandler<UINT32, UINT32>([buffer, shared_this](
 			Windows::Foundation::IAsyncOperationWithProgress<UINT32, UINT32> ^ operation, Windows::Foundation::AsyncStatus status) {
 				socket_t * socket = (socket_t *)shared_this.get();
 				if (status == Windows::Foundation::AsyncStatus::Completed) {
-					socket->write_datas_.pop_front();
-					socket->tcp_on_send(0, operation->GetResults());
+					socket->tcp_on_send(0, buffer, operation->GetResults());
 				} else {
-					socket->tcp_on_send(SCODE_CODE(operation->ErrorCode.Value), 0);
+					socket->tcp_on_send(SCODE_CODE(operation->ErrorCode.Value), nullptr, 0);
 				}
 		});
 	}
 
 	void socket_t::tcp_on_recv(
 		int ec, 
+		Windows::Storage::Streams::IBuffer ^ buffer, 
 		size_t size)
 	{
 		std::unique_lock<std::recursive_mutex> lc(mutex_);
@@ -880,6 +879,7 @@ namespace SocketEmulation
 				status_ &= ~s_can_read;
 				status_ |= s_read_eof;
 			} else {
+				read_datas_.push_back(buffer);
 				read_data_size_ += size;
 			}
 			handle_overlap_read();
@@ -895,12 +895,16 @@ namespace SocketEmulation
 
 	void socket_t::tcp_on_send(
 		int ec, 
+		Windows::Storage::Streams::IBuffer ^ buffer, 
 		size_t size)
 	{
 		std::unique_lock<std::recursive_mutex> lc(mutex_);
 		writing_ = false;
 		if (ec == 0) {
+			assert(buffer == write_datas_.front());
+			assert(buffer->Length == size);
 			write_data_size_ -= size;
+			write_datas_.pop_front();
 			handle_overlap_write();
 			handle_select_write();
 			tcp_send_some();
