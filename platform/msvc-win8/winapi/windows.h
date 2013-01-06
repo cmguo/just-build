@@ -6,11 +6,11 @@
 #  undef _WIN32_WINNT
 #endif
 
-#define WINRT	1
+#define WINRT    1
 
 #include <..\um\windows.h> // orignal windows.h
 
-#define WINAPI_DECL	 __declspec(dllimport)
+#define WINAPI_DECL     __declspec(dllimport)
 
 #include "SystemEmulation.h"
 #include "FileSystemEmulation.h"

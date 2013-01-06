@@ -7,9 +7,11 @@
 
 #include <Windows.h>
 
-#define WINAPI_DECL	 __declspec(dllexport)
+#define WINAPI_DECL     __declspec(dllexport)
 
 #include "ThreadEmulation.h"
+#include "Charset.h"
+using namespace SystemEmulation;
 
 #include <assert.h>
 #include <vector>
@@ -31,75 +33,75 @@ namespace ThreadEmulation
 
     static __declspec(thread) ThreadLocalData* currentThreadData = nullptr;
 
-	struct TlsData
-	{
-		TlsData()
-			: nextTlsIndex(0)
-		{
-		}
+    struct TlsData
+    {
+        TlsData()
+            : nextTlsIndex(0)
+        {
+        }
 
-		DWORD nextTlsIndex;
-		vector<DWORD> freeTlsIndices;
-		mutex tlsAllocationLock;
-		set<ThreadLocalData*> allThreadData;
-	};
+        DWORD nextTlsIndex;
+        vector<DWORD> freeTlsIndices;
+        mutex tlsAllocationLock;
+        set<ThreadLocalData*> allThreadData;
+    };
 
-	static TlsData & tls_data()
-	{
-		static TlsData tls;
-		return tls;
-	}
+    static TlsData & tls_data()
+    {
+        static TlsData tls;
+        return tls;
+    }
 
     // Stored data for Thread.
     struct ThreadInfo
     {
-		ThreadInfo(
-			LPTHREAD_START_ROUTINE lpStartAddress, 
-			LPVOID lpParameter, 
-			DWORD dwCreationFlags, 
-			HANDLE threadHandle, 
-			HANDLE completionEvent)
-			: lpStartAddress(lpStartAddress)
-			, lpParameter(lpParameter)
-			, dwCreationFlags(dwCreationFlags)
-			, threadHandle(threadHandle)
-			, completionEvent(completionEvent)
-			, nPriority(0)
-		{
-			static DWORD gid  = 0;
-			dwThreadId = ++gid;
-		}
+        ThreadInfo(
+            LPTHREAD_START_ROUTINE lpStartAddress, 
+            LPVOID lpParameter, 
+            DWORD dwCreationFlags, 
+            HANDLE threadHandle, 
+            HANDLE completionEvent)
+            : lpStartAddress(lpStartAddress)
+            , lpParameter(lpParameter)
+            , dwCreationFlags(dwCreationFlags)
+            , threadHandle(threadHandle)
+            , completionEvent(completionEvent)
+            , nPriority(0)
+        {
+            static DWORD gid  = 0;
+            dwThreadId = ++gid;
+        }
 
         LPTHREAD_START_ROUTINE lpStartAddress;
         LPVOID lpParameter;
-		DWORD dwCreationFlags;
+        DWORD dwCreationFlags;
         HANDLE threadHandle;
         HANDLE completionEvent;
         int nPriority;
-		DWORD dwThreadId;
+        DWORD dwThreadId;
     };
 
-	struct ThreadData
-	{
-		map<HANDLE, ThreadInfo *> threads;
-		mutex threadsLock;
-	};
+    struct ThreadData
+    {
+        map<HANDLE, ThreadInfo *> threads;
+        mutex threadsLock;
+    };
     
-	static ThreadData & thread_data()
-	{
-		static ThreadData th;
-		return th;
-	}
+    static ThreadData & thread_data()
+    {
+        static ThreadData th;
+        return th;
+    }
 
-	static DWORD my_tls()
-	{
-		static DWORD tls = TlsAlloc();
-		return tls;
-	}
+    static DWORD my_tls()
+    {
+        static DWORD tls = TlsAlloc();
+        return tls;
+    }
 
     // Converts a Win32 thread priority to WinRT format.
     static WorkItemPriority GetWorkItemPriority(
-		int nPriority)
+        int nPriority)
     {
         if (nPriority < 0)
             return WorkItemPriority::Low;
@@ -114,7 +116,7 @@ namespace ThreadEmulation
     {
         auto workItemHandler = ref new WorkItemHandler([=](IAsyncAction^)
         {
-			TlsSetValue(my_tls(), info);
+            TlsSetValue(my_tls(), info);
             // Run the user callback.
             try
             {
@@ -129,22 +131,22 @@ namespace ThreadEmulation
             SetEvent(info->completionEvent);
             CloseHandle(info->completionEvent);
 
-			{
-				lock_guard<mutex> lock(thread_data().threadsLock);
-				thread_data().threads.erase(info->threadHandle);
-			}
+            {
+                lock_guard<mutex> lock(thread_data().threadsLock);
+                thread_data().threads.erase(info->threadHandle);
+            }
         }, CallbackContext::Any);
 
         ThreadPool::RunAsync(workItemHandler, GetWorkItemPriority(info->nPriority), WorkItemOptions::TimeSliced);
     }
 
     HANDLE WINAPI_DECL CreateThread(
-		LPSECURITY_ATTRIBUTES unusedThreadAttributes, 
-		SIZE_T unusedStackSize, 
-		LPTHREAD_START_ROUTINE lpStartAddress, 
-		LPVOID lpParameter, 
-		DWORD dwCreationFlags, 
-		LPDWORD pdwThreadId)
+        LPSECURITY_ATTRIBUTES unusedThreadAttributes, 
+        SIZE_T unusedStackSize, 
+        LPTHREAD_START_ROUTINE lpStartAddress, 
+        LPVOID lpParameter, 
+        DWORD dwCreationFlags, 
+        LPDWORD pdwThreadId)
     {
         // Validate parameters.
         assert(unusedThreadAttributes == nullptr);
@@ -168,11 +170,11 @@ namespace ThreadEmulation
             return nullptr;
         }
 
-		ThreadInfo * info = new ThreadInfo(lpStartAddress, lpParameter, dwCreationFlags, threadHandle, completionEvent);
-		{
-			lock_guard<mutex> lock(thread_data().threadsLock);
-			thread_data().threads[threadHandle] = info;
-		}
+        ThreadInfo * info = new ThreadInfo(lpStartAddress, lpParameter, dwCreationFlags, threadHandle, completionEvent);
+        {
+            lock_guard<mutex> lock(thread_data().threadsLock);
+            thread_data().threads[threadHandle] = info;
+        }
 
         try
         {
@@ -185,9 +187,9 @@ namespace ThreadEmulation
                 StartThread(info);
             }
     
-			if (pdwThreadId) {
-				*pdwThreadId = info->dwThreadId;
-			}
+            if (pdwThreadId) {
+                *pdwThreadId = info->dwThreadId;
+            }
             return threadHandle;
         }
         catch (...)
@@ -200,8 +202,8 @@ namespace ThreadEmulation
         }
     }
 
-	DWORD WINAPI_DECL ResumeThread(
-		HANDLE hThread)
+    DWORD WINAPI_DECL ResumeThread(
+        HANDLE hThread)
     {
         lock_guard<mutex> lock(thread_data().threadsLock);
 
@@ -232,8 +234,8 @@ namespace ThreadEmulation
 
 
     BOOL WINAPI_DECL SetThreadPriority(
-		HANDLE hThread, 
-		int nPriority)
+        HANDLE hThread, 
+        int nPriority)
     {
         lock_guard<mutex> lock(thread_data().threadsLock);
 
@@ -253,13 +255,13 @@ namespace ThreadEmulation
         return true;
     }
 
-	BOOL WINAPI_DECL TerminateThread(
-		_Inout_  HANDLE hThread,
-		_In_     DWORD dwExitCode
-		)
-	{
-		return FALSE;
-	}
+    BOOL WINAPI_DECL TerminateThread(
+        _Inout_  HANDLE hThread,
+        _In_     DWORD dwExitCode
+        )
+    {
+        return FALSE;
+    }
 
     _Use_decl_annotations_ VOID WINAPI_DECL Sleep(DWORD dwMilliseconds)
     {
@@ -308,7 +310,7 @@ namespace ThreadEmulation
 
 
     _Use_decl_annotations_ BOOL WINAPI_DECL TlsFree(
-		DWORD dwTlsIndex)
+        DWORD dwTlsIndex)
     {
         lock_guard<mutex> lock(tls_data().tlsAllocationLock);
 
@@ -356,8 +358,8 @@ namespace ThreadEmulation
 
 
     _Use_decl_annotations_ BOOL WINAPI_DECL TlsSetValue(
-		DWORD dwTlsIndex, 
-		LPVOID lpTlsValue)
+        DWORD dwTlsIndex, 
+        LPVOID lpTlsValue)
     {
         ThreadLocalData* threadData = currentThreadData;
 
@@ -421,210 +423,171 @@ namespace ThreadEmulation
 
             delete threadData;
         }
-	}
+    }
 
-	void WINAPI_DECL InitializeCriticalSection(
-		_Out_  LPCRITICAL_SECTION lpCriticalSection
-		)
-	{
-		InitializeCriticalSectionEx(
-			lpCriticalSection, 
-			1000, 
-			0);
-	}
+    void WINAPI_DECL InitializeCriticalSection(
+        _Out_  LPCRITICAL_SECTION lpCriticalSection
+        )
+    {
+        InitializeCriticalSectionEx(
+            lpCriticalSection, 
+            1000, 
+            0);
+    }
 
-	HANDLE WINAPI_DECL CreateEventA(
-		_In_opt_  LPSECURITY_ATTRIBUTES lpEventAttributes,
-		_In_      BOOL bManualReset,
-		_In_      BOOL bInitialState,
-		_In_opt_  LPCSTR lpName
-		)
-	{
-		LPWSTR lpWideCharStr = NULL;
-		if (lpName) {
-			int cchWideChar = strlen(lpName) + 1;
-			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
-			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
-				delete [] lpWideCharStr;
-				return NULL;
-			}
-		}
-		DWORD dwFlags = 0;
-		if (bManualReset)
-			dwFlags |= CREATE_EVENT_MANUAL_RESET;
-		if (bInitialState)
-			dwFlags |= CREATE_EVENT_INITIAL_SET;
-		HANDLE hEvent = CreateEventExW(
-			lpEventAttributes, 
-			lpWideCharStr, 
-			dwFlags, 
-			EVENT_ALL_ACCESS);
-		if (lpWideCharStr) {
-			delete [] lpWideCharStr;
-		}
-		return hEvent;
-	}
+    HANDLE WINAPI_DECL CreateEventA(
+        _In_opt_  LPSECURITY_ATTRIBUTES lpEventAttributes,
+        _In_      BOOL bManualReset,
+        _In_      BOOL bInitialState,
+        _In_opt_  LPCSTR lpName
+        )
+    {
+        charset_t charset(lpName);
+        if (charset.ec()) {
+            return NULL;
+        }
+        DWORD dwFlags = 0;
+        if (bManualReset)
+            dwFlags |= CREATE_EVENT_MANUAL_RESET;
+        if (bInitialState)
+            dwFlags |= CREATE_EVENT_INITIAL_SET;
+        HANDLE hEvent = CreateEventExW(
+            lpEventAttributes, 
+            charset.wstr(), 
+            dwFlags, 
+            EVENT_ALL_ACCESS);
+        return hEvent;
+    }
 
-	HANDLE WINAPI_DECL CreateMutexA(
-		_In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
-		_In_      BOOL bInitialOwner,
-		_In_opt_  LPCSTR lpName
-		)
-	{
-		LPWSTR lpWideCharStr = NULL;
-		if (lpName) {
-			int cchWideChar = strlen(lpName) + 1;
-			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
-			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
-				delete [] lpWideCharStr;
-				return NULL;
-			}
-		}
-		DWORD dwFlags = 0;
-		if (bInitialOwner)
-			dwFlags |= CREATE_MUTEX_INITIAL_OWNER;
-		HANDLE hMutex = CreateMutexExW(
-			lpMutexAttributes, 
-			lpWideCharStr, 
-			dwFlags, 
-			EVENT_ALL_ACCESS);
-		if (lpWideCharStr) {
-			delete [] lpWideCharStr;
-		}
-		return hMutex;
-	}
+    HANDLE WINAPI_DECL CreateMutexA(
+        _In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
+        _In_      BOOL bInitialOwner,
+        _In_opt_  LPCSTR lpName
+        )
+    {
+        charset_t charset(lpName);
+        if (charset.ec()) {
+            assert(false);
+            return NULL;
+        }
+        DWORD dwFlags = 0;
+        if (bInitialOwner)
+            dwFlags |= CREATE_MUTEX_INITIAL_OWNER;
+        HANDLE hMutex = CreateMutexExW(
+            lpMutexAttributes, 
+            charset.wstr(), 
+            dwFlags, 
+            MUTEX_ALL_ACCESS);
+        return hMutex;
+    }
 
-	HANDLE WINAPI_DECL OpenMutexA(
-		_In_  DWORD dwDesiredAccess,
-		_In_  BOOL bInheritHandle,
-		_In_  LPCSTR lpName
-		)
-	{
-		LPWSTR lpWideCharStr = NULL;
-		if (lpName) {
-			int cchWideChar = strlen(lpName) + 1;
-			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
-			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
-				delete [] lpWideCharStr;
-				return NULL;
-			}
-		}
-		HANDLE hMutex = OpenMutexW(
-			dwDesiredAccess, 
-			bInheritHandle, 
-			lpWideCharStr);
-		if (lpWideCharStr) {
-			delete [] lpWideCharStr;
-		}
-		return hMutex;
-	}
+    HANDLE WINAPI_DECL OpenMutexA(
+        _In_  DWORD dwDesiredAccess,
+        _In_  BOOL bInheritHandle,
+        _In_  LPCSTR lpName
+        )
+    {
+        charset_t charset(lpName);
+        if (charset.ec()) {
+            return NULL;
+        }
+        HANDLE hMutex = OpenMutexW(
+            dwDesiredAccess, 
+            bInheritHandle, 
+            charset.wstr());
+        return hMutex;
+    }
 
-	HANDLE WINAPI_DECL CreateSemaphoreA(
-		_In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
-		_In_      LONG lInitialCount,
-		_In_      LONG lMaximumCount,
-		_In_opt_  LPCSTR lpName
-		)
-	{
-		LPWSTR lpWideCharStr = NULL;
-		if (lpName) {
-			int cchWideChar = strlen(lpName) + 1;
-			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
-			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
-				delete [] lpWideCharStr;
-				return NULL;
-			}
-		}
-		DWORD dwFlags = 0;
-		HANDLE hSemaphore = CreateSemaphoreExW(
-			lpSemaphoreAttributes, 
-			lInitialCount, 
-			lMaximumCount, 
-			lpWideCharStr, 
-			dwFlags, 
-			EVENT_ALL_ACCESS);
-		if (lpWideCharStr) {
-			delete [] lpWideCharStr;
-		}
-		return hSemaphore;
-	}
+    HANDLE WINAPI_DECL CreateSemaphoreA(
+        _In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
+        _In_      LONG lInitialCount,
+        _In_      LONG lMaximumCount,
+        _In_opt_  LPCSTR lpName
+        )
+    {
+        charset_t charset(lpName);
+        if (charset.ec()) {
+            return NULL;
+        }
+        DWORD dwFlags = 0;
+        HANDLE hSemaphore = CreateSemaphoreExW(
+            lpSemaphoreAttributes, 
+            lInitialCount, 
+            lMaximumCount, 
+            charset.wstr(), 
+            dwFlags, 
+            SEMAPHORE_ALL_ACCESS);
+        return hSemaphore;
+    }
 
-	HANDLE WINAPI_DECL OpenSemaphoreA(
-		_In_  DWORD dwDesiredAccess,
-		_In_  BOOL bInheritHandle,
-		_In_  LPCSTR lpName
-		)
-	{
-		LPWSTR lpWideCharStr = NULL;
-		if (lpName) {
-			int cchWideChar = strlen(lpName) + 1;
-			LPWSTR lpWideCharStr = (LPWSTR)new WCHAR[cchWideChar];
-			if (::MultiByteToWideChar(CP_ACP, 0, lpName, -1, lpWideCharStr, cchWideChar) == 0) {
-				delete [] lpWideCharStr;
-				return NULL;
-			}
-		}
-		HANDLE hSemaphore = OpenSemaphoreW(
-			dwDesiredAccess, 
-			bInheritHandle, 
-			lpWideCharStr);
-		if (lpWideCharStr) {
-			delete [] lpWideCharStr;
-		}
-		return hSemaphore;
-	}
+    HANDLE WINAPI_DECL OpenSemaphoreA(
+        _In_  DWORD dwDesiredAccess,
+        _In_  BOOL bInheritHandle,
+        _In_  LPCSTR lpName
+        )
+    {
+        charset_t charset(lpName);
+        if (charset.ec()) {
+            return NULL;
+        }
+        HANDLE hSemaphore = OpenSemaphoreW(
+            dwDesiredAccess, 
+            bInheritHandle, 
+            charset.wstr());
+        return hSemaphore;
+    }
 
-	DWORD WINAPI_DECL WaitForSingleObject(
-		_In_  HANDLE hHandle,
-		_In_  DWORD dwMilliseconds
-		)
-	{
-		return WaitForSingleObjectEx(
-			hHandle, 
-			dwMilliseconds, 
-			FALSE);
-	}
+    DWORD WINAPI_DECL WaitForSingleObject(
+        _In_  HANDLE hHandle,
+        _In_  DWORD dwMilliseconds
+        )
+    {
+        return WaitForSingleObjectEx(
+            hHandle, 
+            dwMilliseconds, 
+            FALSE);
+    }
 
-	DWORD WINAPI_DECL WaitForMultipleObjects(
-		_In_  DWORD nCount,
-		_In_  const HANDLE *lpHandles,
-		_In_  BOOL bWaitAll,
-		_In_  DWORD dwMilliseconds
-		)
-	{
-		return WaitForMultipleObjectsEx(
-			nCount, 
-			lpHandles, 
-			bWaitAll, 
-			dwMilliseconds, 
-			FALSE);
-	}
+    DWORD WINAPI_DECL WaitForMultipleObjects(
+        _In_  DWORD nCount,
+        _In_  const HANDLE *lpHandles,
+        _In_  BOOL bWaitAll,
+        _In_  DWORD dwMilliseconds
+        )
+    {
+        return WaitForMultipleObjectsEx(
+            nCount, 
+            lpHandles, 
+            bWaitAll, 
+            dwMilliseconds, 
+            FALSE);
+    }
 
-	struct ThreadProxyData
-	{
-		typedef unsigned (__stdcall* func)(void*);
-		func start_address_;
-		void* arglist_;
-		ThreadProxyData(func start_address,void* arglist) : start_address_(start_address), arglist_(arglist) {}
-	};
+    struct ThreadProxyData
+    {
+        typedef unsigned (__stdcall* func)(void*);
+        func start_address_;
+        void* arglist_;
+        ThreadProxyData(func start_address,void* arglist) : start_address_(start_address), arglist_(arglist) {}
+    };
 
-	static DWORD __stdcall ThreadProxy(LPVOID args)
-	{
-		ThreadProxyData* data=reinterpret_cast<ThreadProxyData*>(args);
-		DWORD ret=data->start_address_(data->arglist_);
-		delete data;
-		return ret;
-	}
+    static DWORD __stdcall ThreadProxy(LPVOID args)
+    {
+        ThreadProxyData* data=reinterpret_cast<ThreadProxyData*>(args);
+        DWORD ret=data->start_address_(data->arglist_);
+        delete data;
+        return ret;
+    }
 
-	uintptr_t const WINAPI_DECL _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
-		void* arglist, unsigned initflag, unsigned* thrdaddr)
-	{
-		DWORD threadID;
-		HANDLE hthread=CreateThread(static_cast<LPSECURITY_ATTRIBUTES>(security),stack_size,ThreadProxy,
-			new ThreadProxyData(start_address,arglist),initflag,&threadID);
-		if (hthread!=0)
-			*thrdaddr=threadID;
-		return reinterpret_cast<uintptr_t const>(hthread);
-	}
+    uintptr_t const WINAPI_DECL _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
+        void* arglist, unsigned initflag, unsigned* thrdaddr)
+    {
+        DWORD threadID;
+        HANDLE hthread=CreateThread(static_cast<LPSECURITY_ATTRIBUTES>(security),stack_size,ThreadProxy,
+            new ThreadProxyData(start_address,arglist),initflag,&threadID);
+        if (hthread!=0)
+            *thrdaddr=threadID;
+        return reinterpret_cast<uintptr_t const>(hthread);
+    }
 
 }

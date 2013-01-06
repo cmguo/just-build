@@ -6,19 +6,15 @@
 
 namespace cex {
 
-	char * __cdecl getenv(
-		_In_z_ const char * _VarName
-		)
-	{
-		char const * const * p = environ;
-		size_t len = strlen(_VarName);
-		while (*p) {
-			if (strncmp(*p, _VarName, len) == 0 && (*p)[len] == '=') {
-				return (char *)*p + len + 1;
-			}
-			++p;
-		}
-		return 0;
-	}
+    char * __cdecl getenv(
+        _In_z_ const char * _VarName
+        )
+    {
+        LPCSTR * p = NULL;
+        if (GetEnvironmentVariableA(_VarName, (LPSTR)&p, 0) > 0) {
+            return (char *)p;
+        }
+        return NULL;
+    }
 
 }

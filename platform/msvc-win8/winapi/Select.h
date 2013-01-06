@@ -11,36 +11,36 @@
 namespace SocketEmulation
 {
 
-	struct select_t
-	{
-		select_t();
+    struct select_t
+    {
+        select_t();
 
-		void set(
-			int t, 
-			int s);
+        void set(
+            int t, 
+            int s);
 
-		int select(
-			_In_     int nfds,
-			_Inout_  fd_set *readfds,
-			_Inout_  fd_set *writefds,
-			_Inout_  fd_set *exceptfds,
-			_In_     const struct timeval *timeout
-		);
+        int select(
+            _In_     int nfds,
+            _Inout_  fd_set *readfds,
+            _Inout_  fd_set *writefds,
+            _Inout_  fd_set *exceptfds,
+            _In_     const struct timeval *timeout
+        );
 
-	private:
-		void attach(
-			_In_  int t, 
-			_In_  fd_set *readfds, 
-			_Out_ int * ec);
+    private:
+        void attach(
+            _In_  int t, 
+            _In_  fd_set *readfds, 
+            _Out_ int * ec);
 
-		void detach(
-			_In_  int t, 
-			_In_  fd_set *readfds);
+        void detach(
+            _In_  int t, 
+            _In_  fd_set *readfds);
 
-	private:
-		fd_set sets_[3];
-		std::atomic_uint32_t count_;
-		HANDLE hEvent_;
-	};
+    private:
+        fd_set sets_[3];
+        std::atomic_uint32_t count_;
+        HANDLE hEvent_;
+    };
 
 }
