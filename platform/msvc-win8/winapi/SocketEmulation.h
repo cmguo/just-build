@@ -640,7 +640,12 @@ enum
         );
 
     BOOL WINAPI_DECL CancelIo(
-        _In_  HANDLE hFile
+        _In_   HANDLE hFile
+        );
+
+    BOOL WINAPI_DECL CancelIoEx(
+        _In_      HANDLE hFile,
+        _In_opt_  LPOVERLAPPED lpOverlapped
         );
 
     BOOL WINAPI_DECL PostQueuedCompletionStatus(

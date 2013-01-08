@@ -14,6 +14,15 @@
 
 __declspec(dllexport) char ** environ = NULL;
 
+namespace FileSystemEmulation
+{
+
+    DWORD WINAPI_DECL GetLocalPathA(
+        _In_   DWORD nBufferLength,
+        _Out_  LPSTR lpBuffer);
+
+}
+
 namespace SystemEmulation
 {
 
@@ -107,10 +116,18 @@ namespace SystemEmulation
         environ = new char *[32];
         memset(environ, 0, sizeof(char *) * 32);
         int n = 0;
+        {
         char * TMP = new char[MAX_PATH + 8];
         strncpy_s(TMP, MAX_PATH + 8, "TMP=", 4);
         FileSystemEmulation::GetTempPathA(MAX_PATH, TMP + 4);
         environ[n++] = TMP;
+        }
+        {
+        char * CFG = new char[MAX_PATH + 16];
+        strncpy_s(CFG, MAX_PATH + 16, "LD_CONFIG_PATH=", 15);
+        FileSystemEmulation::GetLocalPathA(MAX_PATH, CFG + 15);
+        environ[n++] = CFG;
+        }
     }
 
     LPCH WINAPI_DECL GetEnvironmentStringsA(void)
@@ -133,7 +150,7 @@ namespace SystemEmulation
                 if (nSize == 0) {
                     *(LPCSTR *)lpBuffer = *p + len + 1;
                     return len2;
-                } else if (nSize < len + 1) {
+                } else if (nSize < len2 + 1) {
                     return len2 + 1;
                 } else {
                     strncpy_s(lpBuffer, nSize, *p + len + 1, len2);

@@ -11,12 +11,19 @@
 namespace SocketEmulation
 {
 
-    struct iocp_t
-        : wsa_handle_t<iocp_t, 2>
+    class iocp_t
+        : public wsa_handle_t<iocp_t, 2>
     {
+    public:
+        iocp_t();
+
+        ~iocp_t();
+
+    public:
         void push(
             ULONG_PTR lpCompletionKey, 
             LPOVERLAPPED lpOverlapped, 
+            ULONG_PTR Internal, 
             DWORD dwNumberOfBytesTransferred);
 
         BOOL pop(
@@ -27,8 +34,10 @@ namespace SocketEmulation
 
         BOOL close();
 
+    private:
         std::mutex mutex_;
-        std::condition_variable cond_;
+        // std::condition_variable cond_; // there is a bug on wait_for
+        HANDLE event_;
         std::deque<OVERLAPPED_ENTRY> overlaps_;
     };
 

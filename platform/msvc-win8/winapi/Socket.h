@@ -49,16 +49,18 @@ namespace SocketEmulation
         LPWSAOVERLAPPED lpOverlapped;
     };
 
-    struct iocp_t;
-    struct select_t;
+    class iocp_t;
+    class select_t;
 
-    struct socket_t
-        : wsa_handle_t<socket_t, 1>
+    class socket_t
+        : public wsa_handle_t<socket_t, 1>
     {
+    public:
         socket_t();
 
         ~socket_t();
 
+    public:
         void create(
             _In_  int af,
             _In_  int type,
@@ -140,6 +142,9 @@ namespace SocketEmulation
             _In_   int iToLen,
             _In_   LPWSAOVERLAPPED lpOverlapped,
             _In_   LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+
+        BOOL cancel_io(
+            _In_   LPWSAOVERLAPPED lpOverlapped);
 
         int getsockname(
             _Out_    struct sockaddr *name,

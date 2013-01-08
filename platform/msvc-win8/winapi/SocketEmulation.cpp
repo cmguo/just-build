@@ -767,6 +767,23 @@ namespace SocketEmulation
         return iocp->pop(lpNumberOfBytes, lpCompletionKey, lpOverlapped, dwMilliseconds);
     }
 
+    BOOL WINAPI_DECL CancelIo(
+        _In_   HANDLE hFile
+        )
+    {
+        return CancelIoEx(hFile, NULL);
+    }
+
+    BOOL WINAPI_DECL CancelIoEx(
+        _In_      HANDLE hFile,
+        _In_opt_  LPOVERLAPPED lpOverlapped
+        )
+    {
+        wsa_context * context = &g_wsa_context();
+        socket_t * socket = context->get<socket_t>((size_t)hFile);
+        return socket->cancel_io(lpOverlapped);
+    }
+
     BOOL WINAPI_DECL PostQueuedCompletionStatus(
         _In_      HANDLE CompletionPort,
         _In_      DWORD dwNumberOfBytesTransferred,
@@ -778,7 +795,7 @@ namespace SocketEmulation
         iocp_t * iocp = context->get<iocp_t>((size_t)CompletionPort);
         if (lpOverlapped)
             lpOverlapped->Internal = 1;
-        iocp->push(dwCompletionKey, lpOverlapped, dwNumberOfBytesTransferred);
+        iocp->push(dwCompletionKey, lpOverlapped, 0, dwNumberOfBytesTransferred);
         return TRUE;
     }
 

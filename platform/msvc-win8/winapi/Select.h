@@ -11,10 +11,12 @@
 namespace SocketEmulation
 {
 
-    struct select_t
+    class select_t
     {
+    public:
         select_t();
 
+    public:
         void set(
             int t, 
             int s);

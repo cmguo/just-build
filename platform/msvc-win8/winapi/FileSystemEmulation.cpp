@@ -682,8 +682,37 @@ namespace FileSystemEmulation
         _Out_  LPWSTR lpBuffer
         )
     {
+        Platform::String ^ temp = Windows::Storage::ApplicationData::Current->TemporaryFolder->Path;
+        wcsncpy_s(lpBuffer, nBufferLength, temp->Data(), temp->Length());
+        return temp->Length();
+    }
+
+    DWORD WINAPI_DECL GetLocalPathW(
+        _In_   DWORD nBufferLength,
+        _Out_  LPWSTR lpBuffer
+        )
+    {
         Platform::String ^ temp = Windows::Storage::ApplicationData::Current->LocalFolder->Path;
         wcsncpy_s(lpBuffer, nBufferLength, temp->Data(), temp->Length());
         return temp->Length();
     }
+
+    DWORD WINAPI_DECL GetLocalPathA(
+        _In_   DWORD nBufferLength,
+        _Out_  LPSTR lpBuffer
+        )
+    {
+        charset_t charset(lpBuffer, (int)nBufferLength);
+        if (charset.wstr() == NULL) {
+            return 0;
+        }
+        charset.wlen(GetLocalPathW(
+            charset.wlen(), 
+            charset.wstr()));
+        charset.w2a();
+        nBufferLength = charset.len();
+        lpBuffer[nBufferLength] = '\0';
+        return nBufferLength;
+    }
+
 }

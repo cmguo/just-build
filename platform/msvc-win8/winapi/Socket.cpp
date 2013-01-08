@@ -207,9 +207,6 @@ namespace SocketEmulation
                 socket->on_connect(SCODE_CODE(action->ErrorCode.Value));
             });
         }
-        if (lpOverlapped) {
-            lpOverlapped->Internal = (ULONG_PTR)this;
-        }
         if (connecting_) {
             if (lpOverlapped) {
                 overlap_task task(NULL, 0, lpOverlapped);
@@ -232,13 +229,13 @@ namespace SocketEmulation
             }
         } else if (!(status_ & s_established)) {
             if (lpOverlapped) {
-                iocp_->push(ec_, lpOverlapped, 0);
+                iocp_->push(lpCompletionKey_, lpOverlapped, ec_, 0);
             }
             le.set2(ec_);
             return FALSE;
         } else {
             if (lpOverlapped) {
-                iocp_->push(lpCompletionKey_, lpOverlapped, 0);
+                iocp_->push(lpCompletionKey_, lpOverlapped, 0, 0);
             }
             return TRUE;
         } 
@@ -256,14 +253,10 @@ namespace SocketEmulation
         wsa_set_last_error le;
         std::unique_lock<std::recursive_mutex> lc(mutex_);
 
-        if (lpOverlapped) {
-            lpOverlapped->Internal = (ULONG_PTR)this;
-        }
-
         if (!accept_sockets_.empty()) {
             accept_conn(sock, lpOutputBuffer, dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength, lpdwBytesReceived);
             if (lpOverlapped) {
-                iocp_->push(lpCompletionKey_, lpOverlapped, *lpdwBytesReceived);
+                iocp_->push(lpCompletionKey_, lpOverlapped, 0, *lpdwBytesReceived);
             }
             return TRUE;
         }
@@ -325,10 +318,6 @@ namespace SocketEmulation
         wsa_set_last_error le;
         std::unique_lock<std::recursive_mutex> lc(mutex_);
 
-        if (lpOverlapped) {
-            lpOverlapped->Internal = (ULONG_PTR)this;
-        }
-
         if (type == SOCK_STREAM) {
             tcp_recv_some();
         }
@@ -369,10 +358,6 @@ namespace SocketEmulation
 
         assert (type == SOCK_DGRAM);
 
-        if (lpOverlapped) {
-            lpOverlapped->Internal = (ULONG_PTR)this;
-        }
-
         INT * pErrorCode = &le.get();
         if (read_data(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFrom, lpFromlen, lpOverlapped, pErrorCode)) {
             return le.ret();
@@ -404,10 +389,6 @@ namespace SocketEmulation
     {
         wsa_set_last_error le;
         std::unique_lock<std::recursive_mutex> lc(mutex_);
-
-        if (lpOverlapped) {
-            lpOverlapped->Internal = (ULONG_PTR)this;
-        }
 
         INT * pErrorCode = &le.get();
         if (write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent, NULL, NULL, lpOverlapped, pErrorCode)) {
@@ -456,10 +437,6 @@ namespace SocketEmulation
 
         assert (type == SOCK_DGRAM);
 
-        if (lpOverlapped) {
-            lpOverlapped->Internal = (ULONG_PTR)this;
-        }
-
         INT * pErrorCode = &le.get();
         if (write_data(lpBuffers, dwBufferCount, lpNumberOfBytesSent, lpTo, iToLen, lpOverlapped, pErrorCode)) {
             if (le.get() == 0) {
@@ -484,6 +461,46 @@ namespace SocketEmulation
                 udp_send();
             }
             return le.ret();
+        }
+    }
+
+    BOOL socket_t::cancel_io(
+        _In_   LPWSAOVERLAPPED lpOverlapped)
+    {
+        wsa_set_last_error le;
+        std::unique_lock<std::recursive_mutex> lc(mutex_);
+
+        if (lpOverlapped == NULL) {
+            for (auto iter = read_tasks_.begin(); iter != read_tasks_.end(); ++iter) {
+                overlap_task & task = *iter;
+                iocp_->push(lpCompletionKey_, task.lpOverlapped, WSA_OPERATION_ABORTED, 0);
+            }
+            read_tasks_.clear();
+            for (auto iter = write_tasks_.begin(); iter != write_tasks_.end(); ++iter) {
+                overlap_task & task = *iter;
+                iocp_->push(lpCompletionKey_, task.lpOverlapped, WSA_OPERATION_ABORTED, 0);
+            }
+            write_tasks_.clear();
+            return TRUE;
+        } else {
+            auto iter = std::find_if(read_tasks_.begin(), read_tasks_.end(), [lpOverlapped](overlap_task & t){
+                return t.lpOverlapped == lpOverlapped;
+            });
+            if (iter != read_tasks_.end()) {
+                iocp_->push(lpCompletionKey_, lpOverlapped, ERROR_OPERATION_ABORTED, 0);
+                read_tasks_.erase(iter);
+                return TRUE;
+            }
+            iter = std::find_if(write_tasks_.begin(), write_tasks_.end(), [lpOverlapped](overlap_task & t){
+                return t.lpOverlapped == lpOverlapped;
+            });
+            if (iter != write_tasks_.end()) {
+                iocp_->push(lpCompletionKey_, lpOverlapped, ERROR_OPERATION_ABORTED, 0);
+                write_tasks_.erase(iter);
+                return TRUE;
+            }
+            le.set(ERROR_NOT_FOUND);
+            return FALSE;
         }
     }
 
@@ -599,16 +616,7 @@ namespace SocketEmulation
             udp_streams_.clear();
         }
 
-        for (auto iter = read_tasks_.begin(); iter != read_tasks_.end(); ++iter) {
-            overlap_task & task = *iter;
-            iocp_->push(WSA_OPERATION_ABORTED, task.lpOverlapped, 0);
-        }
-        read_tasks_.clear();
-        for (auto iter = write_tasks_.begin(); iter != write_tasks_.end(); ++iter) {
-            overlap_task & task = *iter;
-            iocp_->push(WSA_OPERATION_ABORTED, task.lpOverlapped, 0);
-        }
-        write_tasks_.clear();
+        cancel_io(NULL);
         iocp_.reset();
 
         cond_.notify_all();
@@ -952,8 +960,7 @@ namespace SocketEmulation
     {
         while (!write_tasks_.empty()) {
             overlap_task & task = write_tasks_.front();
-            DWORD dwNumberOfBytesRecvd = 0;
-            iocp_->push(ec_ ? ec_ : lpCompletionKey_, task.lpOverlapped, dwNumberOfBytesRecvd);
+            iocp_->push(lpCompletionKey_, task.lpOverlapped, ec_, 0);
             write_tasks_.pop_front();
         }
     }
@@ -970,7 +977,7 @@ namespace SocketEmulation
                 task.buffers[1].len, 
                 task.buffers[2].len, 
                 &dwNumberOfBytesRecvd);
-            iocp_->push(lpCompletionKey_, task.lpOverlapped, dwNumberOfBytesRecvd);
+            iocp_->push(lpCompletionKey_, task.lpOverlapped, 0, dwNumberOfBytesRecvd);
             read_tasks_.pop_front();
         }
     }
@@ -1073,7 +1080,7 @@ namespace SocketEmulation
                 status_ &= ~s_read_eof;
                 *lpNumberOfBytesRecvd = 0;
                 if (lpOverlapped) {
-                    iocp_->push(lpCompletionKey_, lpOverlapped, 0);
+                    iocp_->push(lpCompletionKey_, lpOverlapped, 0, 0);
                 }
                 if (ErrorCode)
                     *ErrorCode = 0;
@@ -1082,7 +1089,7 @@ namespace SocketEmulation
                 if (ErrorCode) {
                     *ErrorCode = ec_;
                 } else if (lpOverlapped) {
-                    iocp_->push(ec_, lpOverlapped, 0);
+                    iocp_->push(lpCompletionKey_, lpOverlapped, ec_, 0);
                 }
                 ec_ = 0;
                 return true;
@@ -1090,7 +1097,7 @@ namespace SocketEmulation
                 if (ErrorCode) {
                     *ErrorCode = WSAECONNABORTED;
                 } else if (lpOverlapped) {
-                    iocp_->push(WSAECONNABORTED, lpOverlapped, 0);
+                    iocp_->push(lpCompletionKey_, lpOverlapped, WSAECONNABORTED, 0);
                 }
                 return true;
             } else {
@@ -1138,7 +1145,7 @@ namespace SocketEmulation
         } while (i < dwBufferCount && read_data_size_ > 0);
 
         if (lpOverlapped) {
-            iocp_->push(lpCompletionKey_, lpOverlapped, *lpNumberOfBytesRecvd);
+            iocp_->push(lpCompletionKey_, lpOverlapped, 0, *lpNumberOfBytesRecvd);
         }
         if (ErrorCode)
             *ErrorCode = 0;
@@ -1159,7 +1166,7 @@ namespace SocketEmulation
             if (ErrorCode) {
                 *ErrorCode = ec_;
             } else if (lpOverlapped) {
-                iocp_->push(ec_, lpOverlapped, 0);
+                iocp_->push(ec_, lpOverlapped, 0, 0);
             }
             ec_ = 0;
             return true;
@@ -1167,7 +1174,7 @@ namespace SocketEmulation
             if (ErrorCode) {
                 *ErrorCode = WSAECONNABORTED;
             } else if (lpOverlapped) {
-                iocp_->push(WSAECONNABORTED, lpOverlapped, 0);
+                iocp_->push(lpCompletionKey_, lpOverlapped, WSAECONNABORTED, 0);
             }
             return true;
         } else if (write_data_capacity_ <= write_data_size_) {
@@ -1191,7 +1198,7 @@ namespace SocketEmulation
                         if (ErrorCode) {
                             *ErrorCode = ec;
                         } else if (lpOverlapped) {
-                            iocp_->push(ec, lpOverlapped, *lpNumberOfBytesSent);
+                            iocp_->push(lpCompletionKey_, lpOverlapped, ec, *lpNumberOfBytesSent);
                         }
                         return true;
                     }
@@ -1222,7 +1229,7 @@ namespace SocketEmulation
         write_data_size_ += *lpNumberOfBytesSent;
 
         if (lpOverlapped) {
-            iocp_->push(lpCompletionKey_, lpOverlapped, *lpNumberOfBytesSent);
+            iocp_->push(lpCompletionKey_, lpOverlapped, 0, *lpNumberOfBytesSent);
         }
         if (ErrorCode)
             *ErrorCode = 0;

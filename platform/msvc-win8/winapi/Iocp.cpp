@@ -32,24 +32,29 @@ namespace SocketEmulation
         int ec_;
     };
 
+    iocp_t::iocp_t()
+    {
+        event_ = CreateEventExW(NULL, NULL, 0, EVENT_ALL_ACCESS);
+        assert(event_ != NULL);
+    }
+
+    iocp_t::~iocp_t()
+    {
+        CloseHandle(event_);
+    }
+
     void iocp_t::push(
         ULONG_PTR lpCompletionKey, 
         LPOVERLAPPED lpOverlapped, 
+        ULONG_PTR Internal, 
         DWORD dwNumberOfBytesTransferred)
     {
         std::unique_lock<std::mutex> lc(mutex_);
-        assert(lpOverlapped == NULL || lpOverlapped->Internal != NULL);
-        if (lpOverlapped) {
-            assert(lpOverlapped->Internal != 0);
-            assert(lpOverlapped->InternalHigh == 0);
-            assert(lpOverlapped->Offset == 0);
-            assert(lpOverlapped->OffsetHigh == 0);
-            assert(lpOverlapped->hEvent == 0);
-            lpOverlapped->Internal = 0;
-        }
-        OVERLAPPED_ENTRY entry = {lpCompletionKey, lpOverlapped, 0, dwNumberOfBytesTransferred};
+        OVERLAPPED_ENTRY entry = {lpCompletionKey, lpOverlapped, Internal, dwNumberOfBytesTransferred};
         overlaps_.push_back(entry);
-        cond_.notify_one();
+        if (overlaps_.size() == 1) {
+            SetEvent(event_);
+        }
     }
 
     BOOL iocp_t::pop(
@@ -60,19 +65,30 @@ namespace SocketEmulation
     {
         set_last_error le;
         std::unique_lock<std::mutex> lc(mutex_);
-        if (!cond_.wait_for(lc, std::chrono::milliseconds(dwMilliseconds), [this]() {
-            return !overlaps_.empty();
-        })) {
-            le.set(WAIT_TIMEOUT);
+
+        while (overlaps_.empty()) {
+            lc.unlock();
+            DWORD dw = WaitForSingleObjectEx(event_, dwMilliseconds, FALSE);
+            if (dw == WAIT_OBJECT_0) {
+                lc.lock();
+                continue;
+            }
+            if (dw == WAIT_FAILED) {
+                le.set(GetLastError());
+            } else {
+                le.set((int)dw);
+            }
+            *lpOverlapped = NULL;
             return FALSE;
         }
+
         OVERLAPPED_ENTRY entry = overlaps_.front();
         overlaps_.pop_front();
         lc.unlock();
         *lpNumberOfBytes = entry.dwNumberOfBytesTransferred;
-        *lpCompletionKey = entry.lpCompletionKey;
+        *lpCompletionKey = entry.Internal ? entry.Internal : entry.lpCompletionKey;
         *lpOverlapped = entry.lpOverlapped;
-        return TRUE;
+        return entry.Internal ? FALSE : TRUE;
     }
 
     BOOL iocp_t::close()
