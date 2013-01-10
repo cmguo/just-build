@@ -80,43 +80,6 @@ namespace FileSystemEmulation
         _Out_  PLARGE_INTEGER lpFileSize
         );
 
-    BOOL WINAPI_DECL FileTimeToLocalFileTime(
-        _In_   const FILETIME *lpFileTime,
-        _Out_  LPFILETIME lpLocalFileTime
-        );
-
-    HANDLE WINAPI_DECL CreateFileMappingA(
-        _In_      HANDLE hFile,
-        _In_opt_  LPSECURITY_ATTRIBUTES lpAttributes,
-        _In_      DWORD flProtect,
-        _In_      DWORD dwMaximumSizeHigh,
-        _In_      DWORD dwMaximumSizeLow,
-        _In_opt_  LPCSTR lpName
-        );
-
-    HANDLE WINAPI_DECL OpenFileMappingA(
-        _In_ DWORD dwDesiredAccess,
-        _In_ BOOL bInheritHandle,
-        _In_ LPCSTR lpName
-        );
-
-    LPVOID WINAPI_DECL MapViewOfFile(
-        _In_  HANDLE hFileMappingObject,
-        _In_  DWORD dwDesiredAccess,
-        _In_  DWORD dwFileOffsetHigh,
-        _In_  DWORD dwFileOffsetLow,
-        _In_  SIZE_T dwNumberOfBytesToMap
-        );
-
-    LPVOID WINAPI_DECL MapViewOfFileEx(
-        _In_      HANDLE hFileMappingObject,
-        _In_      DWORD dwDesiredAccess,
-        _In_      DWORD dwFileOffsetHigh,
-        _In_      DWORD dwFileOffsetLow,
-        _In_      SIZE_T dwNumberOfBytesToMap,
-        _In_opt_  LPVOID lpBaseAddress
-        );
-
     DWORD WINAPI_DECL GetCurrentDirectoryA(
         _In_   DWORD nBufferLength,
         _Out_  LPSTR lpBuffer
@@ -236,26 +199,6 @@ namespace FileSystemEmulation
         _In_opt_  const FILETIME *lpLastAccessTime,
         _In_opt_  const FILETIME *lpLastWriteTime
         );
-
-    HMODULE WINAPI_DECL GetModuleHandleA(
-        _In_opt_  LPCSTR lpModuleName
-        );
-
-    HMODULE WINAPI_DECL LoadLibraryA(
-        _In_  LPCSTR lpFileName
-        );
-
-    DWORD WINAPI_DECL GetModuleFileNameA(
-      _In_opt_  HMODULE hModule,
-      _Out_     LPSTR lpFilename,
-      _In_      DWORD nSize
-    );
-
-    DWORD WINAPI_DECL GetModuleFileNameW(
-      _In_opt_  HMODULE hModule,
-      _Out_     LPWSTR lpFilename,
-      _In_      DWORD nSize
-    );
 
     DWORD WINAPI_DECL GetTempPathA(
         _In_   DWORD nBufferLength,

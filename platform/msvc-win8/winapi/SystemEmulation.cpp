@@ -26,23 +26,6 @@ namespace FileSystemEmulation
 namespace SystemEmulation
 {
 
-    HLOCAL WINAPI_DECL LocalAlloc(
-        _In_  UINT uFlags,
-        _In_  SIZE_T uBytes
-        )
-    {
-        assert(uFlags == LMEM_FIXED);
-        return new char [uBytes];
-    }
-
-    HLOCAL WINAPI_DECL LocalFree(
-        _In_  HLOCAL hMem
-        )
-    {
-        delete [] (char *)hMem;
-        return NULL;
-    }
-
 #undef FormatMessageA
 
     DWORD WINAPI_DECL FormatMessage2A(
@@ -297,44 +280,6 @@ namespace SystemEmulation
         return 0;
     }
 
-    LPVOID WINAPI_DECL VirtualAlloc(
-        _In_opt_  LPVOID lpAddress,
-        _In_      SIZE_T dwSize,
-        _In_      DWORD flAllocationType,
-        _In_      DWORD flProtect
-        )
-    {
-        assert(lpAddress == NULL);
-        assert(flAllocationType == MEM_COMMIT);
-        HANDLE hFileMapping = CreateFileMappingFromApp(
-            INVALID_HANDLE_VALUE, 
-            NULL, 
-            flProtect, 
-            dwSize, 
-            NULL);
-        if (hFileMapping == NULL)
-            return NULL;
-        PVOID addr = MapViewOfFileFromApp(
-            hFileMapping, 
-            FILE_MAP_ALL_ACCESS, 
-            0, 
-            dwSize);
-        CloseHandle(hFileMapping);
-        return addr;
-    }
-
-    BOOL WINAPI_DECL VirtualFree(
-        _In_  LPVOID lpAddress,
-        _In_  SIZE_T dwSize,
-        _In_  DWORD dwFreeType
-        )
-    {
-        assert(dwSize == 0);
-        assert(dwFreeType == MEM_RELEASE);
-        return UnmapViewOfFile(
-            lpAddress);
-    }
-
     HANDLE WINAPI_DECL GetStdHandle(
         _In_  DWORD nStdHandle
         )
@@ -359,6 +304,88 @@ namespace SystemEmulation
         )
     {
         return FALSE;
+    }
+
+    BOOL WINAPI_DECL FileTimeToLocalFileTime(
+        _In_   const FILETIME *lpFileTime,
+        _Out_  LPFILETIME lpLocalFileTime
+        )
+    {
+        SYSTEMTIME SystemTime;
+        SYSTEMTIME LocalSystemTime;
+        if (FALSE == FileTimeToSystemTime(
+            lpFileTime, 
+            &SystemTime))
+            return FALSE;
+        if (FALSE == SystemTimeToTzSpecificLocalTime(
+            NULL, 
+            &SystemTime, 
+            &LocalSystemTime))
+            return FALSE;
+        if (FALSE == SystemTimeToFileTime(
+            &LocalSystemTime, 
+            lpLocalFileTime))
+            return FALSE;
+        return TRUE;
+    }
+
+    HMODULE WINAPI_DECL GetModuleHandleA(
+        _In_opt_  LPCSTR lpModuleName
+        )
+    {
+        charset_t charset(lpModuleName);
+        if (charset.wstr() == NULL) {
+            return (HMODULE)GetCurrentProcess();
+        }
+        HMODULE hModule = LoadPackagedLibrary(
+            charset.wstr(), 
+            0);
+        return hModule;
+    }
+
+    HMODULE WINAPI_DECL LoadLibraryA(
+        _In_  LPCSTR lpFileName
+        )
+    {
+        charset_t charset(lpFileName);
+        if (charset.wstr() == NULL) {
+            return NULL;
+        }
+        HMODULE hModule = LoadPackagedLibrary(
+            charset.wstr(), 
+            0);
+        return hModule;
+    }
+
+    DWORD WINAPI_DECL GetModuleFileNameA(
+      _In_opt_  HMODULE hModule,
+      _Out_     LPSTR lpFilename,
+      _In_      DWORD nSize
+    )
+    {
+		if (hModule != NULL) {
+			SetLastError(ERROR_NOT_SUPPORTED);
+			return 0;
+		}
+        Platform::String ^ path = 
+            Windows::ApplicationModel::Package::Current->InstalledLocation->Path;
+        Platform::String ^ name = 
+            Windows::ApplicationModel::Package::Current->Id->Name;
+        DWORD nBufferLength = charset_t::w2a(
+            path->Data(), path->Length(), 
+            lpFilename, nSize - 1);
+        if (nBufferLength == 0)
+            return 0;
+        if (nBufferLength + 1 < nSize) {
+            lpFilename[nBufferLength++] = '\\';
+        }
+        nBufferLength += charset_t::w2a(
+            name->Data(), name->Length(), 
+            lpFilename + nBufferLength, nSize - nBufferLength - 1);
+        if (nBufferLength < nSize) {
+            lpFilename[nBufferLength] = '\0';
+        }
+        return nBufferLength;
     }
 
 }

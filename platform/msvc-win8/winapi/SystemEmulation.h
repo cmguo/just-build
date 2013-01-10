@@ -7,15 +7,6 @@
 namespace SystemEmulation
 {
 
-    HLOCAL WINAPI_DECL LocalAlloc(
-        _In_  UINT uFlags,
-        _In_  SIZE_T uBytes
-        );
-
-    HLOCAL WINAPI_DECL LocalFree(
-        _In_  HLOCAL hMem
-        );
-
     DWORD WINAPI_DECL FormatMessage2A(
         _In_      DWORD dwFlags,
         _In_opt_  LPCVOID lpSource,
@@ -101,19 +92,6 @@ namespace SystemEmulation
         _In_      int nBufferMax
         );
 
-    LPVOID WINAPI_DECL VirtualAlloc(
-        _In_opt_  LPVOID lpAddress,
-        _In_      SIZE_T dwSize,
-        _In_      DWORD flAllocationType,
-        _In_      DWORD flProtect
-        );
-
-    BOOL WINAPI_DECL VirtualFree(
-        _In_  LPVOID lpAddress,
-        _In_  SIZE_T dwSize,
-        _In_  DWORD dwFreeType
-        );
-
     HANDLE WINAPI_DECL GetStdHandle(
         _In_  DWORD nStdHandle
         );
@@ -122,5 +100,30 @@ namespace SystemEmulation
         _In_  HANDLE hConsoleOutput,
         _In_  WORD wAttributes
         );
+
+    BOOL WINAPI_DECL FileTimeToLocalFileTime(
+        _In_   const FILETIME *lpFileTime,
+        _Out_  LPFILETIME lpLocalFileTime
+        );
+
+    HMODULE WINAPI_DECL GetModuleHandleA(
+        _In_opt_  LPCSTR lpModuleName
+        );
+
+    HMODULE WINAPI_DECL LoadLibraryA(
+        _In_  LPCSTR lpFileName
+        );
+
+    DWORD WINAPI_DECL GetModuleFileNameA(
+      _In_opt_  HMODULE hModule,
+      _Out_     LPSTR lpFilename,
+      _In_      DWORD nSize
+    );
+
+    DWORD WINAPI_DECL GetModuleFileNameW(
+      _In_opt_  HMODULE hModule,
+      _Out_     LPWSTR lpFilename,
+      _In_      DWORD nSize
+    );
 
 }
