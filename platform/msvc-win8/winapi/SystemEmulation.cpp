@@ -157,7 +157,7 @@ namespace SystemEmulation
 
     LCID WINAPI_DECL GetUserDefaultLCID(void)
     {
-        return (LCID)LOCALE_NAME_SYSTEM_DEFAULT;
+        return (LCID)LOCALE_SYSTEM_DEFAULT;
     }
 
     int WINAPI_DECL LCMapStringA(
@@ -169,9 +169,10 @@ namespace SystemEmulation
         _In_       int cchDest
         )
     {
+		assert(Locale == LOCALE_SYSTEM_DEFAULT);
         WCHAR wszCodePage[7];
         if (::GetLocaleInfoEx(
-            (LPCWSTR)Locale, 
+            LOCALE_NAME_SYSTEM_DEFAULT, 
             LOCALE_IDEFAULTANSICODEPAGE, 
             wszCodePage, 
             7) == 0) {
@@ -187,7 +188,7 @@ namespace SystemEmulation
             return 0;
         }
         int cchWideChar2 = LCMapStringEx(
-            (LPCWSTR)Locale, 
+            LOCALE_NAME_SYSTEM_DEFAULT, 
             dwMapFlags, 
             charset1.wstr(), 
             charset1.wlen(), 
@@ -213,8 +214,9 @@ namespace SystemEmulation
         _In_       int cchDest
         )
     {
+		assert(Locale == LOCALE_SYSTEM_DEFAULT);
         return LCMapStringEx(
-            (LPCWSTR)Locale, 
+            LOCALE_NAME_SYSTEM_DEFAULT, 
             dwMapFlags, 
             lpSrcStr, 
             cchSrc, 
@@ -233,9 +235,10 @@ namespace SystemEmulation
         _Out_  LPWORD lpCharType
         )
     {
+		assert(Locale == LOCALE_SYSTEM_DEFAULT);
         WCHAR wszCodePage[7];
         if (::GetLocaleInfoEx(
-            (LPCWSTR)Locale, 
+            LOCALE_NAME_SYSTEM_DEFAULT, 
             LOCALE_IDEFAULTANSICODEPAGE, 
             wszCodePage, 
             7) == 0) {
@@ -246,9 +249,6 @@ namespace SystemEmulation
         if (charset.wstr() == NULL) {
             return FALSE;
         }
-        Locale = LocaleNameToLCID(
-            (LPCWSTR)Locale, 
-            LOCALE_ALLOW_NEUTRAL_NAMES);
         BOOL b = GetStringTypeExW(
             Locale, 
             dwInfoType, 
