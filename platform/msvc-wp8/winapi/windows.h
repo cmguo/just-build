@@ -6,9 +6,9 @@
 #  undef _WIN32_WINNT
 #endif
 
-#define WINRT    1
+#define WIN_PHONE    1
 
-#include <..\um\windows.h> // orignal windows.h
+#include <..\Include\windows.h> // orignal windows.h
 
 #define WINAPI_DECL     __declspec(dllimport)
 
@@ -16,10 +16,10 @@
 #include "SystemEmulation.h"
 #include "FileSystemEmulation.h"
 #include "ThreadEmulation.h"
-#include "SocketEmulation.h"
+#include "NetworkEmulation.h"
 
 using namespace MemoryEmulation;
 using namespace SystemEmulation;
 using namespace FileSystemEmulation;
 using namespace ThreadEmulation;
-using namespace SocketEmulation;
+using namespace NetworkEmulation;

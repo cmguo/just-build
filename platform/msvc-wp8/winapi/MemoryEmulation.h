@@ -59,6 +59,21 @@ namespace MemoryEmulation
         _In_      DWORD dwFileOffsetLow,
         _In_      SIZE_T dwNumberOfBytesToMap,
         _In_opt_  LPVOID lpBaseAddress
-        );
+		);
+
+	BOOL WINAPI_DECL FlushViewOfFile(
+		_In_  LPCVOID lpBaseAddress,
+		_In_  SIZE_T dwNumberOfBytesToFlush
+		);
+
+	BOOL WINAPI_DECL UnmapViewOfFile(
+		_In_  LPCVOID lpBaseAddress
+		);
+
+#define CloseHandle CloseHandle2
+
+	BOOL WINAPI_DECL CloseHandle2(
+		_In_  HANDLE hObject
+		);
 
 }

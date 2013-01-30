@@ -155,6 +155,13 @@ namespace SystemEmulation
         return FALSE;
     }
 
+	int _wtol(
+        _In_       LPCWSTR lpStr
+		)
+	{
+		return 0;
+	}
+
     LCID WINAPI_DECL GetUserDefaultLCID(void)
     {
         return (LCID)LOCALE_SYSTEM_DEFAULT;
@@ -187,16 +194,7 @@ namespace SystemEmulation
         if (charset2.wstr() == NULL) {
             return 0;
         }
-        int cchWideChar2 = LCMapStringEx(
-            LOCALE_NAME_SYSTEM_DEFAULT, 
-            dwMapFlags, 
-            charset1.wstr(), 
-            charset1.wlen(), 
-            charset2.wstr(), 
-            charset2.wlen(), 
-            NULL, 
-            NULL, 
-            NULL);
+        int cchWideChar2 = 0;
         if (cchWideChar2 == 0) {
             return 0;
         }
@@ -215,16 +213,7 @@ namespace SystemEmulation
         )
     {
 		assert(Locale == LOCALE_SYSTEM_DEFAULT);
-        return LCMapStringEx(
-            LOCALE_NAME_SYSTEM_DEFAULT, 
-            dwMapFlags, 
-            lpSrcStr, 
-            cchSrc, 
-            lpDestStr, 
-            cchDest, 
-            NULL, 
-            NULL, 
-            NULL);
+        return 0;
     }
 
     BOOL WINAPI_DECL GetStringTypeExA(

@@ -6,6 +6,12 @@
 
 #include "Charset.h"
 using namespace SystemEmulation;
+#include "FileSystemEmulation.h"
+using namespace FileSystemEmulation;
+
+#include <mutex>
+#include <vector>
+#include <algorithm>
 
 #include <assert.h>
 
@@ -38,21 +44,7 @@ namespace MemoryEmulation
     {
         assert(lpAddress == NULL);
         assert(flAllocationType == MEM_COMMIT);
-        HANDLE hFileMapping = CreateFileMappingFromApp(
-            INVALID_HANDLE_VALUE, 
-            NULL, 
-            flProtect, 
-            dwSize, 
-            NULL);
-        if (hFileMapping == NULL)
-            return NULL;
-        PVOID addr = MapViewOfFileFromApp(
-            hFileMapping, 
-            FILE_MAP_ALL_ACCESS, 
-            0, 
-            dwSize);
-        CloseHandle(hFileMapping);
-        return addr;
+        return new char [dwSize];
     }
 
     BOOL WINAPI_DECL VirtualFree(
@@ -63,9 +55,71 @@ namespace MemoryEmulation
     {
         assert(dwSize == 0);
         assert(dwFreeType == MEM_RELEASE);
-        return UnmapViewOfFile(
-            lpAddress);
+		delete [] (char *)lpAddress;
+		return TRUE;
     }
+
+	struct FileMap
+	{
+		CHAR lpName[MAX_PATH];
+		LPVOID lpAddress;
+		HANDLE hEvent;
+		DWORD dwRefCount;
+
+		struct find_by_name
+		{
+			find_by_name(
+				LPCSTR lpName)
+				: lpName_(lpName)
+			{
+			}
+
+			bool operator()(
+				FileMap * m)
+			{
+				return strcmp(lpName_, m->lpName) == 0;
+			}
+
+			LPCSTR lpName_;
+		};
+
+		struct find_by_addr
+		{
+			find_by_addr(
+				LPCVOID lpAddr)
+				: lpAddr_(lpAddr)
+			{
+			}
+
+			bool operator()(
+				FileMap * m)
+			{
+				return lpAddr_ == m->lpAddress;
+			}
+
+			LPCVOID lpAddr_;
+		};
+
+		struct find_by_event
+		{
+			find_by_event(
+				HANDLE hEvent)
+				: hEvent_(hEvent)
+			{
+			}
+
+			bool operator()(
+				FileMap * m)
+			{
+				return hEvent_ == m->hEvent;
+			}
+
+			HANDLE hEvent_;
+		};
+	};
+
+	static std::mutex mutex_file_map_;
+	static std::vector<FileMap *> file_maps_;
 
     HANDLE WINAPI_DECL CreateFileMappingA(
         _In_      HANDLE hFile,
@@ -76,18 +130,33 @@ namespace MemoryEmulation
         _In_opt_  LPCSTR lpName
         )
     {
-        charset_t charset(lpName);
-        if (charset.ec()) {
-            return NULL;
-        }
-        ULONG64 ulMaximumSize = (ULONG64)dwMaximumSizeHigh << 32 | dwMaximumSizeLow;
-        HANDLE hFileMapping = CreateFileMappingFromApp(
-            hFile, 
-            lpAttributes, 
-            flProtect, 
-            ulMaximumSize , 
-            charset.wstr());
-        return hFileMapping;
+        std::vector<FileMap *>::iterator iter = 
+			std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_name(lpName));
+		FileMap * map = NULL;
+		if (iter == file_maps_.end()) {
+			DWORD dwSize = dwMaximumSizeLow;
+			if (hFile != INVALID_HANDLE_VALUE) {
+				DWORD dwSize = GetFileSize(hFile, NULL);
+				if (dwMaximumSizeLow < dwSize) {
+					dwSize = dwMaximumSizeLow;
+				}
+			}
+			map = new FileMap;
+			strcpy_s(map->lpName, lpName);
+			map->lpAddress = new char[dwSize];
+			map->hEvent = CreateEventExW(
+				NULL, 
+				NULL, 
+				0, 
+				EVENT_ALL_ACCESS);
+			map->dwRefCount = 1;
+			file_maps_.insert(file_maps_.end(), map);
+		} else {
+			map = *iter;
+			++map->dwRefCount;
+			SetLastError(ERROR_ALREADY_EXISTS);
+		}
+		return map->hEvent;
     }
 
     HANDLE WINAPI_DECL OpenFileMappingA(
@@ -96,17 +165,15 @@ namespace MemoryEmulation
         _In_ LPCSTR lpName
         )
     {
-        HANDLE hFileMapping = CreateFileMappingA(
-            INVALID_HANDLE_VALUE, 
-            NULL, 
-            dwDesiredAccess, 
-            0, 
-            0, 
-            lpName);
-        if (hFileMapping != NULL && GetLastError() == ERROR_ALREADY_EXISTS) {
-            SetLastError(0);
-        }
-        return hFileMapping;
+        std::vector<FileMap *>::iterator iter = 
+			std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_name(lpName));
+		if (iter == file_maps_.end()) {
+            SetLastError(ERROR_NOT_FOUND);
+			return NULL;
+		}
+		FileMap * map = *iter;
+		++map->dwRefCount;
+		return map->hEvent;
     }
 
     LPVOID WINAPI_DECL MapViewOfFile(
@@ -117,12 +184,15 @@ namespace MemoryEmulation
         _In_  SIZE_T dwNumberOfBytesToMap
         )
     {
-        ULONG64 ulFileOffset = (ULONG64)dwFileOffsetHigh << 32 | dwFileOffsetLow;
-        return MapViewOfFileFromApp(
-            hFileMappingObject, 
-            dwDesiredAccess, 
-            ulFileOffset, 
-            dwNumberOfBytesToMap);
+        std::vector<FileMap *>::iterator iter = 
+			std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_event(hFileMappingObject));
+		if (iter == file_maps_.end()) {
+            SetLastError(ERROR_INVALID_HANDLE);
+			return NULL;
+		}
+		FileMap * map = *iter;
+		++map->dwRefCount;
+        return map->lpAddress;
     }
 
     LPVOID WINAPI_DECL MapViewOfFileEx(
@@ -135,12 +205,59 @@ namespace MemoryEmulation
         )
     {
         assert(lpBaseAddress == NULL);
-        ULONG64 ulFileOffset = (ULONG64)dwFileOffsetHigh << 32 | dwFileOffsetLow;
-        return MapViewOfFileFromApp(
+        return MapViewOfFile(
             hFileMappingObject, 
             dwDesiredAccess, 
-            ulFileOffset, 
+            dwFileOffsetHigh, 
+			dwFileOffsetLow, 
             dwNumberOfBytesToMap);
     }
+
+	BOOL WINAPI_DECL FlushViewOfFile(
+		_In_  LPCVOID lpBaseAddress,
+		_In_  SIZE_T dwNumberOfBytesToFlush
+		)
+	{
+		return TRUE;
+	}
+
+	BOOL WINAPI_DECL UnmapViewOfFile(
+		_In_  LPCVOID lpBaseAddress
+		)
+	{
+        std::vector<FileMap *>::iterator iter = 
+			std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_addr(lpBaseAddress));
+		if (iter == file_maps_.end()) {
+            SetLastError(ERROR_INVALID_HANDLE);
+			return FALSE;
+		}
+		FileMap * map = *iter;
+		if (--map->dwRefCount == 0) {
+			delete [] (char *)map->lpAddress;
+			file_maps_.erase(iter);
+			delete map;
+		}
+        return TRUE;
+	}
+
+#undef CloseHandle
+
+	BOOL WINAPI_DECL CloseHandle2(
+		_In_  HANDLE hObject
+		)
+	{
+        std::vector<FileMap *>::iterator iter = 
+			std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_event(hObject));
+		if (iter != file_maps_.end()) {
+			FileMap * map = *iter;
+			map->hEvent = NULL;
+			if (--map->dwRefCount == 0) {
+				delete [] (char *)map->lpAddress;
+				file_maps_.erase(iter);
+				delete map;
+			}
+		}
+		return ::CloseHandle(hObject);
+	}
 
 }
