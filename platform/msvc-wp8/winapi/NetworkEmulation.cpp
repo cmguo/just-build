@@ -26,7 +26,7 @@ namespace NetworkEmulation
                 a->len = sizeof(adapter) + addrlen;
                 if (host->IPInformation && host->IPInformation->NetworkAdapter) {
                     a->lan_type = host->IPInformation->NetworkAdapter->IanaInterfaceType;
-                    a->id = host->IPInformation->NetworkAdapter->NetworkAdapterId;
+                    //a->id = host->IPInformation->NetworkAdapter->NetworkAdapterId;
                 }
                 char * addr = (char *)(a + 1);
                 WideCharToMultiByte(CP_ACP, 0, host->RawName->Data(), -1, addr, addrlen, NULL, FALSE);

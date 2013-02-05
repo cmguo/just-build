@@ -528,7 +528,7 @@ namespace FileSystemEmulation
         _Out_  LPWSTR lpBuffer
         )
     {
-        Platform::String ^ temp = Windows::Storage::ApplicationData::Current->TemporaryFolder->Path;
+        Platform::String ^ temp = Windows::Storage::ApplicationData::Current->LocalFolder->Path;
         wcsncpy_s(lpBuffer, nBufferLength, temp->Data(), temp->Length());
         return temp->Length();
     }

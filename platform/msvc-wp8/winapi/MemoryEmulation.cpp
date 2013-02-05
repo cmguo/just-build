@@ -130,8 +130,10 @@ namespace MemoryEmulation
         _In_opt_  LPCSTR lpName
         )
     {
-        std::vector<FileMap *>::iterator iter = 
-			std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_name(lpName));
+        std::vector<FileMap *>::iterator iter = file_maps_.end();
+        if (lpName) {
+			iter = std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_name(lpName));
+        }
 		FileMap * map = NULL;
 		if (iter == file_maps_.end()) {
 			DWORD dwSize = dwMaximumSizeLow;
@@ -142,7 +144,11 @@ namespace MemoryEmulation
 				}
 			}
 			map = new FileMap;
-			strcpy_s(map->lpName, lpName);
+            if (lpName) {
+                strcpy_s(map->lpName, lpName);
+            } else {
+                map->lpName[0] = 0;
+            }
 			map->lpAddress = new char[dwSize];
 			map->hEvent = CreateEventExW(
 				NULL, 

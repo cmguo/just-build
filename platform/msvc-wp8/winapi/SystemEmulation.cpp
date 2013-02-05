@@ -8,6 +8,9 @@
 #include "FileSystemEmulation.h"
 #include "Charset.h"
 
+#include <algorithm>
+#include <string>
+
 #include <assert.h>
 #include <stdio.h>
 #include <io.h>
@@ -194,7 +197,13 @@ namespace SystemEmulation
         if (charset2.wstr() == NULL) {
             return 0;
         }
-        int cchWideChar2 = 0;
+        int cchWideChar2 = LCMapStringW(
+            Locale, 
+            dwMapFlags, 
+            charset1.wstr(), 
+            charset1.wlen(), 
+            charset2.wstr(), 
+            charset2.wlen());
         if (cchWideChar2 == 0) {
             return 0;
         }
@@ -213,7 +222,17 @@ namespace SystemEmulation
         )
     {
 		assert(Locale == LOCALE_SYSTEM_DEFAULT);
-        return 0;
+		if (dwMapFlags == LCMAP_LOWERCASE) {
+			LPWSTR out = std::transform(lpSrcStr, lpSrcStr + cchSrc, lpDestStr, towlower);
+			return out - lpDestStr;
+		} else if (dwMapFlags == LCMAP_SORTKEY)  {
+			if (lpDestStr != NULL) {
+				memcpy(lpDestStr, lpSrcStr, cchSrc);
+			}
+			return cchSrc;
+		} else {
+			assert(false);
+		}
     }
 
     BOOL WINAPI_DECL GetStringTypeExA(
@@ -359,7 +378,8 @@ namespace SystemEmulation
         Platform::String ^ path = 
             Windows::ApplicationModel::Package::Current->InstalledLocation->Path;
         Platform::String ^ name = 
-            Windows::ApplicationModel::Package::Current->Id->Name;
+            //Windows::ApplicationModel::Package::Current->Id->Name;
+            ref new Platform::String(L"Daemon.exe");
         DWORD nBufferLength = charset_t::w2a(
             path->Data(), path->Length(), 
             lpFilename, nSize - 1);
