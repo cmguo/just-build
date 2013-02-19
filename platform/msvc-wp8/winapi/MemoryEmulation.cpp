@@ -62,6 +62,7 @@ namespace MemoryEmulation
 	struct FileMap
 	{
 		CHAR lpName[MAX_PATH];
+		CHAR lpFileName[MAX_PATH];
 		LPVOID lpAddress;
 		HANDLE hEvent;
 		DWORD dwRefCount;
@@ -81,6 +82,23 @@ namespace MemoryEmulation
 			}
 
 			LPCSTR lpName_;
+		};
+
+		struct find_by_file_name
+		{
+			find_by_file_name(
+				LPCSTR lpFileName)
+				: lpFileName_(lpFileName)
+			{
+			}
+
+			bool operator()(
+				FileMap * m)
+			{
+				return strcmp(lpFileName_, m->lpFileName) == 0;
+			}
+
+			LPCSTR lpFileName_;
 		};
 
 		struct find_by_addr
@@ -131,15 +149,32 @@ namespace MemoryEmulation
         )
     {
         std::vector<FileMap *>::iterator iter = file_maps_.end();
+        LPCSTR pFileName = NULL;
         if (lpName) {
 			iter = std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_name(lpName));
+        } else if (hFile != INVALID_HANDLE_VALUE) {
+            CHAR * buf = new CHAR[MAX_PATH + 2];
+            charset_t charset(buf, MAX_PATH + 2);
+            FILE_NAME_INFO * pFileNameInfo = (FILE_NAME_INFO *)charset.wstr();
+            GetFileInformationByHandleEx(
+                hFile, 
+                FILE_INFO_BY_HANDLE_CLASS::FileNameInfo, 
+                pFileNameInfo, 
+                charset.wlen() * sizeof(WCHAR));
+            pFileNameInfo->FileNameLength /= 2;
+            pFileNameInfo->FileName[pFileNameInfo->FileNameLength++] = 0;
+            charset.wlen(pFileNameInfo->FileNameLength + 2);
+            pFileNameInfo->FileNameLength = 0;
+            charset.w2a();
+			iter = std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_file_name(buf + 2));
+            pFileName = buf + 2;
         }
 		FileMap * map = NULL;
 		if (iter == file_maps_.end()) {
 			DWORD dwSize = dwMaximumSizeLow;
 			if (hFile != INVALID_HANDLE_VALUE) {
-				DWORD dwSize = GetFileSize(hFile, NULL);
-				if (dwMaximumSizeLow < dwSize) {
+				dwSize = GetFileSize(hFile, NULL);
+				if (dwMaximumSizeLow > 0 && dwMaximumSizeLow < dwSize) {
 					dwSize = dwMaximumSizeLow;
 				}
 			}
@@ -148,6 +183,11 @@ namespace MemoryEmulation
                 strcpy_s(map->lpName, lpName);
             } else {
                 map->lpName[0] = 0;
+            }
+            if (pFileName) {
+                strcpy_s(map->lpFileName, pFileName);
+            } else {
+                map->lpFileName[0] = 0;
             }
 			map->lpAddress = new char[dwSize];
 			map->hEvent = CreateEventExW(
@@ -162,6 +202,9 @@ namespace MemoryEmulation
 			++map->dwRefCount;
 			SetLastError(ERROR_ALREADY_EXISTS);
 		}
+        if (pFileName) {
+            delete [] (pFileName - 2);
+        }
 		return map->hEvent;
     }
 
@@ -256,12 +299,13 @@ namespace MemoryEmulation
 			std::find_if(file_maps_.begin(), file_maps_.end(), FileMap::find_by_event(hObject));
 		if (iter != file_maps_.end()) {
 			FileMap * map = *iter;
-			map->hEvent = NULL;
 			if (--map->dwRefCount == 0) {
 				delete [] (char *)map->lpAddress;
 				file_maps_.erase(iter);
+                ::CloseHandle(map->hEvent);
 				delete map;
 			}
+            return TRUE;
 		}
 		return ::CloseHandle(hObject);
 	}
