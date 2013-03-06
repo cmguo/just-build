@@ -179,8 +179,8 @@ namespace FileSystemEmulation
             return  INVALID_SET_FILE_POINTER;
         }
         if (lpDistanceToMoveHigh)
-            *lpDistanceToMoveHigh = liDistanceToMove.HighPart;
-        return liDistanceToMove.LowPart;
+            *lpDistanceToMoveHigh = liNewFilePointer.HighPart;
+        return liNewFilePointer.LowPart;
     }
 
     DWORD WINAPI_DECL GetFileSize(
