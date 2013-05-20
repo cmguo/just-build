@@ -949,11 +949,20 @@ namespace SocketEmulation
         memset(&addr, 0, sizeof(addr));
         int len = sizeof(addr);
         getsockname((sockaddr *)&addr, &len);
+        Windows::Networking::HostName ^ host_name = datagram_socket_->Information->RemoteAddress;
+        Platform::String ^ port = datagram_socket_->Information->RemotePort;
         udp_streams_.clear();
         delete datagram_socket_;
         datagram_socket_ = ref new Windows::Networking::Sockets::DatagramSocket();
         create(af, type, protocol);
         bind((sockaddr const *)&addr, len);
+        if (host_name) {
+            Windows::Networking::EndpointPair ^ endp = ref new Windows::Networking::EndpointPair(
+                nullptr, nullptr, 
+                host_name, 
+                port);
+            wait_action(datagram_socket_->ConnectAsync(endp));
+        }
     }
 
     void socket_t::handle_overlap_connect()
