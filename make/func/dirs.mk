@@ -72,7 +72,7 @@ revert_directory        = $(strip $(call joinlist,/, \
 
 reletive_directory	= $(subst //,/,$(foreach path,$(1),$(call reletive_directory2,$(call split,/,$(path)),$(if $(2),$(patsubst %/,%,$(2)),$(shell pwd)))))
 
-reletive_directory1	= $(if $(1),$(if $(findstring ..,$(1)),$(call directory,$(2)),$(if $(findstring .,$(1)),$(2),$(2)/$(1))),$(2))
+reletive_directory1	= $(if $(1),$(if $(call equal,..,$(1)),$(call directory,$(2)),$(if $(call equal,.,$(1)),$(2),$(2)/$(1))),$(2))
 
 reletive_directory2	= $(if $(1),$(call reletive_directory2,$(wordlist 2,$(words $(1)),$(1)),$(call reletive_directory1,$(word 1,$(1)),$(2))),$(2))
 

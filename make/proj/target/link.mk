@@ -9,16 +9,17 @@ ifneq ($(CONFIG_LIB),static)
 
 include $(PROJ_MAKE_DIRECTORY)/depends.mk
 
-LIB_PATHS               := $(addprefix -L,$(dir $(DEPEND_FILES)))
-LIB_NAMES               := $(notdir $(DEPEND_FILES))
-LIB_NAMES               := $(patsubst lib%.a,%,$(LIB_NAMES))
-LIB_NAMES               := $(patsubst lib%$(DYNAMIC_NAME_SUFFIX),%,$(LIB_NAMES))
-LIB_NAMES               := $(addprefix -l,$(LIB_NAMES))
+LIB_PATHS		:= $(addprefix -L,$(dir $(DEPEND_FILES)))
+LIB_NAMES		:= $(notdir $(DEPEND_FILES))
+LIB_NAMES		:= $(patsubst lib%.a,%,$(LIB_NAMES))
+LIB_NAMES		:= $(patsubst lib%$(DYNAMIC_NAME_SUFFIX),%,$(LIB_NAMES))
+LIB_NAMES		:= $(addprefix -l,$(LIB_NAMES))
 
 ifneq ($(CONFIG_LIB),static2)
 
-LIB_NAMES               := $(LIB_NAMES) $(addprefix -l,$(SYSTEM_LIB))
-LIB_NAMES               := $(LIB_NAMES) $(addprefix -l,$(PLATFORM_DEPEND_LIBRARYS))
+LIB_PATHS		:= $(LIB_PATHS) $(addprefix -L,$(PLATFORM_LIBRARY_DIRECTORYS))
+LIB_NAMES		:= $(LIB_NAMES) $(addprefix -l,$(SYSTEM_LIB))
+LIB_NAMES		:= $(LIB_NAMES) $(addprefix -l,$(PLATFORM_DEPEND_LIBRARYS))
 
 ifeq ($(CONFIG_COMPILE),release)
         ifneq ($(PROJECT_VERSION_SCRIPT),)

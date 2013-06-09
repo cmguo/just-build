@@ -24,3 +24,11 @@ joinlist		= $(if $(word 2,$(2)),$(join $(firstword $(2))$(1),$(call joinlist,$(1
 # return:	切割后的列表
 
 split			= $(subst $(1), ,$(2))
+
+
+# 判断两个值是否完全相等
+# argment1:	值1
+# argment2:	值2
+# return:	如果相等：OK，否则：空
+
+equal			= $(shell if [ \"$(1)\" = \"$(2)\" ] ; then echo \"OK\" ; fi)
