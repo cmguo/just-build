@@ -7,6 +7,7 @@
 
 include $(ROOT_MAKE_DIRECTORY)/cmd.mk
 include $(ROOT_MAKE_DIRECTORY)/func/config.mk
+include $(ROOT_MAKE_DIRECTORY)/auto/func/info.mk
 
 CONFIG_COMPILE_LIST	:= debug release
 CONFIG_COMPILE		:= $(call get_config,$(CONFIG),$(CONFIG_COMPILE_LIST),debug)
@@ -22,6 +23,7 @@ COMPILE_FLAGS		:= $(COMPILE_FLAGS) $(addprefix -I,$(PLATFORM_INCLUDE_DIRECTORYS)
 PLATFORM_LIBRARY_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_LIBRARY_DIRECTORYS))
 LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -L,$(PLATFORM_LIBRARY_DIRECTORYS))
 LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -l,$(PROJECT_DEPEND_LIBRARYS))
+LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -l,$(PLATFORM_DEPEND_LIBRARYS))
 
 SOURCE_DIRECTORY	:= $(ROOT_SOURCE_DIRECTORY)$(LOCAL_NAME)
 
@@ -35,16 +37,46 @@ ifeq ($(BUILD_TARGET),)
 	BUILD_TARGET	:= $(strip $(shell PATH=$(PATH) LANG=C $(PLATFORM_TOOL_PREFIX)gcc -v 2>&1 | awk -F : '$$1 == "Target" { print $$2 }'))
 endif
 
+ENVIRONMENT		:= 
+
 CONFIGURE		:=
 
 # Standard options:
 CONFIGURE		:= $(CONFIGURE) --prefix=$(shell pwd)/$(TARGET_DIRECTORY)
 
+ifneq ($(call get_auto_configure_info,extra-cflags),)
+CONFIGURE		:= $(CONFIGURE) --extra-cflags="$(COMPILE_FLAGS)"
+else
+ENVIRONMENT		:= $(ENVIRONMENT) CFLAGS="$(COMPILE_FLAGS)"
+endif
+ifneq ($(call get_auto_configure_info,extra-cxxflags),)
+CONFIGURE		:= $(CONFIGURE) --extra-cxxflags="$(COMPILE_FLAGS)"
+else
+ENVIRONMENT		:= $(ENVIRONMENT) CXXFLAGS="$(COMPILE_FLAGS)"
+endif
+ifneq ($(call get_auto_configure_info,extra-ldflags),)
+CONFIGURE		:= $(CONFIGURE) --extra-ldflags="$(LINK_FLAGS)"
+else
+ENVIRONMENT		:= $(ENVIRONMENT) LDFLAGS="$(COMPILE_FLAGS)"
+endif
+
 # Cross-compilation:
+ifneq ($(PLATFORM_TOOL_PREFIX),)
+ifneq ($(call get_auto_configure_info,host),)
 CONFIGURE		:= $(CONFIGURE) --host=$(BUILD_TARGET)
+endif
+ifneq ($(call get_auto_configure_info,cross-prefix),)
+CONFIGURE		:= $(CONFIGURE) --cross-prefix=$(PLATFORM_TOOL_PREFIX)
+else
+ENVIRONMENT		:= $(ENVIRONMENT) CC=$(CC)
+ENVIRONMENT		:= $(ENVIRONMENT) CXX=$(CXX)
+endif
+endif
 
 ifneq ($(CONFIG_COMPILE),release)
+ifneq ($(call get_auto_configure_info,enable-debug),)
 	LOCAL_CONFIGURE		:= $(LOCAL_CONFIGURE) --enable-debug
+endif
 endif
 
 CONFIGURE		:= $(CONFIGURE) $(LOCAL_CONFIGURE)
@@ -73,8 +105,8 @@ FILE_MAKEFILE_AM	:= $(SOURCE_DIRECTORY)/Makefile.am
 FILE_MAKEFILE_IN	:= $(SOURCE_DIRECTORY)/Makefile.in
 FILE_MAKEFILE		:= $(SOURCE_DIRECTORY)/Makefile
 
-ifneq ($(LOCAL_HAVE_CONIFG_H),no)
-	FILE_CONIFG_H		:= $(SOURCE_DIRECTORY)/config.h
+ifneq ($(LOCAL_CONFIG_H),)
+	FILE_CONFIG_H		:= $(SOURCE_DIRECTORY)/$(LOCAL_CONFIG_H)
 endif
 
 $(FILE_ACLOCAL):
@@ -93,20 +125,20 @@ $(FILE_MAKEFILE_IN): $(FILE_MAKEFILE_AM) $(FILE_CONFIGURE_AC) $(FILE_ACLOCAL)
 	$(CD) $(SOURCE_DIRECTORY) && automake -a
 endif
 
-ifneq ($(FILE_CONIFG_H),)
-$(FILE_CONIFG_H): $(FILE_CONFIGURE)
+ifneq ($(FILE_CONFIG_H),)
+$(FILE_CONFIG_H): $(FILE_CONFIGURE)
 	@echo $@
-	$(CD) $(SOURCE_DIRECTORY) && CC=$(CC) CXX=$(CXX) CFLAGS="$(COMPILE_FLAGS)" CXXFLAGS="$(COMPILE_FLAGS)" LDFLAGS="$(LINK_FLAGS)" ./configure $(CONFIGURE)
+	$(CD) $(SOURCE_DIRECTORY) && $(ENVIRONMENT) ./configure $(CONFIGURE)
 endif
 
 ifeq ($(wildcard $(FILE_MAKEFILE)),)
 $(FILE_MAKEFILE): $(FILE_MAKEFILE_IN) $(FILE_CONFIGURE)
 	@echo $@
-	$(CD) $(SOURCE_DIRECTORY) && CC=$(CC) CXX=$(CXX) CFLAGS="$(COMPILE_FLAGS)" CXXFLAGS="$(COMPILE_FLAGS)" LDFLAGS="$(LINK_FLAGS)" ./configure $(CONFIGURE)
+	$(CD) $(SOURCE_DIRECTORY) && $(ENVIRONMENT) ./configure $(CONFIGURE)
 endif
 
 ifeq ($(wildcard $(TARGET_FILE_FULL)),)
-$(TARGET_FILE_FULL): $(FILE_MAKEFILE) $(FILE_CONIFG_H)
+$(TARGET_FILE_FULL): $(FILE_MAKEFILE) $(FILE_CONFIG_H)
 	@echo $@
 	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) install && $(MAKE) distclean
 endif

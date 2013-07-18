@@ -35,6 +35,7 @@ END {
     idx[root] = 0;
     i = 0;
     n = 1;
+    nl = 0; #syslib
     while (i < n) {
         if (!(i in result)) {
             i++;
@@ -62,15 +63,16 @@ END {
                 }
             }
             ii = GetArray(syslib[item], syslibs);
-            for (s in syslibs) {
-                si = syslibs[s];
-                if (si in libadd) {
-#                    print "skip lib "si;
-                } else {
-#                    print "add lib "si;
-                    libadd[si] = length(result_lib);
-                    result_lib[length(result_lib)] = si;
-                }
+            for (j = 1; j <= ii; ++j) {
+                si = syslibs[j];
+                ++nl;
+                if (si in idxl) {
+#                    print "del lib "idxl[si]"-"si;
+                    delete result_lib[ idxl[si]];
+                } 
+#                print "add lib "nl"-"si;
+                idxl[si] = nl;
+                result_lib[nl] = si;
             }
         }
     }
@@ -80,7 +82,10 @@ END {
             print result[i]"/"file[result[i]];
         }
     }
-    for (i = 1; i < length(result_lib); i++) {
-        print result_lib[i];
+    for (i = 1; i <= nl; i++) {
+        if (i in result_lib) {
+#            print i;
+            print result_lib[i];
+        }
     }
 }

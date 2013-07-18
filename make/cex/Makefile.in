@@ -53,3 +53,8 @@ PROJECT_DEPENDS			:=
 ## 该项目特定的引用库
 
 PROJECT_DEPEND_LIBRARYS		:= 
+
+CXX				:= gcc
+
+SOURCE_SUFFIX			:= .c
+
