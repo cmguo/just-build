@@ -27,7 +27,6 @@ include $(ROOT_MAKE_DIRECTORY)/mkdirs.mk
 $(PACKET_DEPEND_FILES): mkdirs
 	@$(ECHO) $@
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
-	@svn up $(ROOT_DIRECTORY)$@ 2>&0 > /dev/null
 	@svn export $(ROOT_DIRECTORY)$@ $(TARGET_DIRECTORY)/$(notdir $@) 2>&0 > /dev/null
 
 .PHONY: $(PACKET_DEPEND_FILES2)
