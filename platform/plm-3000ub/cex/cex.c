@@ -19,7 +19,7 @@ int get_nprocs(void) __THROW
 
 iconv_t iconv_open(__const char *__tocode, __const char *__fromcode)
 {
-    return iconv_t(-1);
+    return (iconv_t)(-1);
 }
 
 size_t iconv(

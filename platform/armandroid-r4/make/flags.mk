@@ -40,6 +40,7 @@ PLATFORM_CRTEND_DYNAMICBIN	:= $(wildcard $(addsuffix /crtend_android.o,$(PLATFOR
 #PLATFORM_CRTBEGIN_DYNAMIC	:= $(wildcard $(addsuffix /crtbegin_so.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
 #PLATFORM_CRTEND_DYNAMIC		:= $(wildcard $(addsuffix /crtend_so.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
 	
-PROJECT_DEPEND_LIBRARYS	:= $(PROJECT_DEPEND_LIBRARYS) stdc++ supc++ c m gcc c dl
+PLATFORM_DEPEND_LIBRARYS	:= $(PLATFORM_DEPEND_LIBRARYS) stdc++ supc++
+PLATFORM_DEPEND_LIBRARYS	:= $(PLATFORM_DEPEND_LIBRARYS) c m gcc c dl
 
 PLATFORM_DISABLE_FLAGS		:= -pthread
