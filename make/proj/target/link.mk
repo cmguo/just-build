@@ -9,17 +9,17 @@ ifneq ($(CONFIG_LIB),static)
 
 include $(PROJ_MAKE_DIRECTORY)/depends.mk
 
-LIB_PATHS		:= $(addprefix -L,$(dir $(DEPEND_FILES)))
+LIB_PATHS		:= $(dir $(DEPEND_FILES))
 LIB_NAMES		:= $(notdir $(DEPEND_FILES))
 LIB_NAMES		:= $(patsubst lib%.a,%,$(LIB_NAMES))
 LIB_NAMES		:= $(patsubst lib%$(DYNAMIC_NAME_SUFFIX),%,$(LIB_NAMES))
-LIB_NAMES		:= $(addprefix -l,$(LIB_NAMES))
 
 ifneq ($(CONFIG_LIB),static2)
 
-LIB_PATHS		:= $(LIB_PATHS) $(addprefix -L,$(PLATFORM_LIBRARY_DIRECTORYS))
-LIB_NAMES		:= $(LIB_NAMES) $(addprefix -l,$(SYSTEM_LIB))
-LIB_NAMES		:= $(LIB_NAMES) $(addprefix -l,$(PLATFORM_DEPEND_LIBRARYS))
+LIB_PATHS		:= $(LIB_PATHS) $(PLATFORM_LIBRARY_DIRECTORYS)
+LIB_NAMES		:= $(LIB_NAMES) $(SYSTEM_LIB)
+LIB_NAMES		:= $(filter-out $(PLATFORM_DEPEND_LIBRARYS),$(LIB_NAMES))
+LIB_NAMES		:= $(LIB_NAMES) $(PLATFORM_DEPEND_LIBRARYS)
 
 ifeq ($(CONFIG_COMPILE),release)
         ifneq ($(PROJECT_VERSION_SCRIPT),)
@@ -39,6 +39,9 @@ LINK_FLAGS		:= $(filter-out $(addsuffix %,$(PLATFORM_DISABLE_FLAGS)),$(LINK_FLAG
 endif # ifneq ($(CONFIG_LIB),static2)
 
 LINK_FLAGS		:= $(strip $(LINK_FLAGS))
+
+LIB_PATHS		:= $(addprefix -L,$(LIB_PATHS))
+LIB_NAMES		:= $(addprefix -l,$(LIB_NAMES))
 
 endif # ifneq ($(CONFIG_LIB),static)
 
