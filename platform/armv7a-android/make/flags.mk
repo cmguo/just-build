@@ -1,5 +1,6 @@
-PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_TOOL_DIRECTORY)/android-ndk-r4-crystax/build/platforms/android-8/arch-arm/usr/include
-PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_TOOL_DIRECTORY)/android-ndk-r4-crystax/build/platforms/android-8/arch-arm/usr/lib
+PLATFORM_SYS_ROOT		:= /android-ndk-r4-crystax/build/platforms/android-8/arch-arm
+PLATFORM_INCLUDE_DIRECTORYS	:= /android-ndk-r4-crystax/build/platforms/android-8/arch-arm/usr/include
+PLATFORM_LIBRARY_DIRECTORYS	:= /android-ndk-r4-crystax/build/platforms/android-8/arch-arm/usr/lib
 
 PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -fpic
 PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -mthumb-interwork

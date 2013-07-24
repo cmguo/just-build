@@ -1,9 +1,10 @@
-PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-ndk-r7m/sources/cxx-stl/gnu-libstdc++/include
-PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-ndk-r7m/sources/cxx-stl/gnu-libstdc++/libs/mips-r2-sf/include
-PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-ndk-r7m/platforms/android-8/arch-mips/usr/include
+PLATFORM_SYS_ROOT		:= /android-ndk-r7m/platforms/android-8/arch-mips/mips-r2/sf
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-ndk-r7m/sources/cxx-stl/gnu-libstdc++/include
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-ndk-r7m/sources/cxx-stl/gnu-libstdc++/libs/mips-r2-sf/include
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-ndk-r7m/platforms/android-8/arch-mips/usr/include
 
-PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-ndk-r7m/sources/cxx-stl/gnu-libstdc++/libs/mips-r2-sf
-PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-ndk-r7m/platforms/android-8/arch-mips/usr/lib
+PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) /android-ndk-r7m/sources/cxx-stl/gnu-libstdc++/libs/mips-r2-sf
+PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) /android-ndk-r7m/platforms/android-8/arch-mips/usr/lib
 
 PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -fpic
 PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -fno-strict-aliasing
@@ -32,7 +33,6 @@ PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -frtti
 
 PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) -Wl,--gc-sections
 PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) -Wl,-z,nocopyreloc
-PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) --sysroot=$(PLATFORM_TOOL_DIRECTORY)/android-ndk-r7m/platforms/android-8/arch-mips/mips-r2/sf
 PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) -EL
 PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) -mips32r2
 PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) -msoft-float

@@ -1,4 +1,4 @@
-PLATFORM_LIB_DIRECTORY          := $(PLATFORM_TOOL_DIRECTORY)/usr/lib
+PLATFORM_LIB_DIRECTORY          := /usr/lib
 
 PLATFORM_COMPILE_FLAGS          := -fpermissive
 

@@ -15,19 +15,28 @@ CONFIG_COMPILE		:= $(call get_config,$(CONFIG),$(CONFIG_COMPILE_LIST),debug)
 CONFIG_THREAD_LIST	:= multi single
 CONFIG_THREAD		:= $(call get_config,$(CONFIG),$(CONFIG_THREAD_LIST),multi)
 
+CONFIG_LIB_LIST		:= dynamic static
+CONFIG_LIB		:= $(call get_config,$(CONFIG),$(CONFIG_LIB_LIST),static)
+
+
+PLATFORM_DISABLE_FLAGS	:= $(PLATFORM_DISABLE_FLAGS) -fvisibility
+
+# we need update sysroot to absolute path
+PLATFORM_SYS_ROOT	:= $(call reletive_directory,$(PLATFORM_SYS_ROOT))
+PLATFORM_INCLUDE_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_INCLUDE_DIRECTORYS))
+PLATFORM_LIBRARY_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_LIBRARY_DIRECTORYS))
+
 include $(ROOT_MAKE_DIRECTORY)/proj/target/flags.mk
 
-PLATFORM_INCLUDE_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_INCLUDE_DIRECTORYS))
 COMPILE_FLAGS		:= $(COMPILE_FLAGS) $(addprefix -I,$(PLATFORM_INCLUDE_DIRECTORYS))
 
-PLATFORM_LIBRARY_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_LIBRARY_DIRECTORYS))
 LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -L,$(PLATFORM_LIBRARY_DIRECTORYS))
-LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -l,$(PROJECT_DEPEND_LIBRARYS))
+LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -l,$(LOCAL_DEPEND_LIBRARYS))
 LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -l,$(PLATFORM_DEPEND_LIBRARYS))
 
 SOURCE_DIRECTORY	:= $(ROOT_SOURCE_DIRECTORY)$(LOCAL_NAME)
 
-TARGET_DIRECTORY	:= $(CONFIG_COMPILE)/$(CONFIG_THREAD)
+TARGET_DIRECTORY	:= $(CONFIG_COMPILE)/$(CONFIG_LIB)/$(CONFIG_THREAD)
 TARGET_FILE_FULL	:= $(TARGET_DIRECTORY)/$(LOCAL_TARGET)
 
 BUILDABLE		:= $(if $(wildcard $(SOURCE_DIRECTORY)),yes,no)
@@ -60,6 +69,12 @@ else
 ENVIRONMENT		:= $(ENVIRONMENT) LDFLAGS="$(COMPILE_FLAGS)"
 endif
 
+ifeq ($(CONFIG_LIB),static)
+CONFIGURE		:= $(CONFIGURE) --enable-static --disable-shared
+else
+CONFIGURE		:= $(CONFIGURE) --disable-static --enable-shared
+endif
+
 # Cross-compilation:
 ifneq ($(PLATFORM_TOOL_PREFIX),)
 ifneq ($(call get_auto_configure_info,host),)
@@ -83,7 +98,7 @@ CONFIGURE		:= $(CONFIGURE) $(LOCAL_CONFIGURE)
 
 .PHONY: target
 target: $(TARGET_FILE_FULL)
-	
+
 .PHONY: info
 info:
 	@$(ECHO) "Name: $(LOCAL_NAME)"
@@ -137,10 +152,11 @@ $(FILE_MAKEFILE): $(FILE_MAKEFILE_IN) $(FILE_CONFIGURE)
 	$(CD) $(SOURCE_DIRECTORY) && $(ENVIRONMENT) ./configure $(CONFIGURE)
 endif
 
-ifeq ($(wildcard $(TARGET_FILE_FULL)),)
-$(TARGET_FILE_FULL): $(FILE_MAKEFILE) $(FILE_CONFIG_H)
+ifeq ($(wildcard $(TARGET_DIRECTORY)),)
+.PHONY: make_install
+make_install: $(FILE_MAKEFILE) $(FILE_CONFIG_H)
 	@echo $@
 	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) install && $(MAKE) distclean
+
+$(TARGET_FILE_FULL): make_install
 endif
-
-

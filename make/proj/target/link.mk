@@ -5,7 +5,7 @@
 ## @version     1.0
 ###############################################################################
 
-ifneq ($(CONFIG_LIB),static)
+ifneq ($(CONFIG_LIB),static) # dynamic static2
 
 include $(PROJ_MAKE_DIRECTORY)/depends.mk
 
@@ -14,7 +14,7 @@ LIB_NAMES		:= $(notdir $(DEPEND_FILES))
 LIB_NAMES		:= $(patsubst lib%.a,%,$(LIB_NAMES))
 LIB_NAMES		:= $(patsubst lib%$(DYNAMIC_NAME_SUFFIX),%,$(LIB_NAMES))
 
-ifneq ($(CONFIG_LIB),static2)
+ifneq ($(CONFIG_LIB),static2) # dynamic
 
 LIB_PATHS		:= $(LIB_PATHS) $(PLATFORM_LIBRARY_DIRECTORYS)
 LIB_NAMES		:= $(LIB_NAMES) $(SYSTEM_LIB)

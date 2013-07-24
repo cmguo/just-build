@@ -1,15 +1,15 @@
-PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/sources/cxx-stl/gnu-libstdc++/include
-PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/sources/cxx-stl/gnu-libstdc++/libs/x86/include
-PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/platforms/android-9/arch-x86/usr/include
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-froyo/sources/cxx-stl/gnu-libstdc++/include
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-froyo/sources/cxx-stl/gnu-libstdc++/libs/x86/include
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-froyo/platforms/android-9/arch-x86/usr/include
 
-#PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/external/stlport/stlport
-#PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/bionic
-#PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/ndk/build/platforms/android-8/arch-x86/usr/include
+#PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-froyo/external/stlport/stlport
+#PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-froyo/bionic
+#PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-froyo/ndk/build/platforms/android-8/arch-x86/usr/include
 
-PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/platforms/android-9/arch-x86/usr/lib
-PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) $(PLATFORM_TOOL_DIRECTORY)/android-froyo/sources/cxx-stl/gnu-libstdc++/libs/x86
+PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) /android-froyo/sources/cxx-stl/gnu-libstdc++/libs/x86
+PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) /android-froyo/platforms/android-9/arch-x86/usr/lib
 
-#PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_TOOL_DIRECTORY)/android-froyo/ndk/build/platforms/android-8/arch-x86/usr/lib
+#PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) /android-froyo/ndk/build/platforms/android-8/arch-x86/usr/lib
 
 PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -fpic
 PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -ffunction-sections
