@@ -33,13 +33,13 @@ PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) -Wl,-z,nocopyreloc
 PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) -Wl,--no-undefined
 PLATFORM_LINK_FLAGS		:= $(PLATFORM_LINK_FLAGS) -Wl,-z,noexecstack
 
-PLATFORM_CRTBEGIN_STATICBIN	:= $(wildcard $(addsuffix /crtbegin_static.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
-PLATFORM_CRTEND_STATICBIN	:= $(wildcard $(addsuffix /crtend_android.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
-PLATFORM_CRTBEGIN_DYNAMICBIN	:= $(wildcard $(addsuffix /crtbegin_dynamic.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
-PLATFORM_CRTEND_DYNAMICBIN	:= $(wildcard $(addsuffix /crtend_android.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
+PLATFORM_CRTBEGIN_STATICBIN	:= crtbegin_static.o
+PLATFORM_CRTEND_STATICBIN	:= crtend_android.o
+PLATFORM_CRTBEGIN_DYNAMICBIN	:= crtbegin_dynamic.o
+PLATFORM_CRTEND_DYNAMICBIN	:= crtend_android.o
 # 暂不用
-#PLATFORM_CRTBEGIN_DYNAMIC	:= $(wildcard $(addsuffix /crtbegin_so.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
-#PLATFORM_CRTEND_DYNAMIC		:= $(wildcard $(addsuffix /crtend_so.o,$(PLATFORM_LIBRARY_DIRECTORYS)))
+#PLATFORM_CRTBEGIN_DYNAMIC	:= crtbegin_so.o
+#PLATFORM_CRTEND_DYNAMIC		:= crtend_so.o
 	
 PLATFORM_DEPEND_LIBRARYS	:= $(PLATFORM_DEPEND_LIBRARYS) stdc++
 PLATFORM_DEPEND_LIBRARYS	:= $(PLATFORM_DEPEND_LIBRARYS) m rt pthread c dl gcc

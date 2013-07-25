@@ -18,7 +18,6 @@ CONFIG_THREAD		:= $(call get_config,$(CONFIG),$(CONFIG_THREAD_LIST),multi)
 CONFIG_LIB_LIST		:= dynamic static
 CONFIG_LIB		:= $(call get_config,$(CONFIG),$(CONFIG_LIB_LIST),static)
 
-
 PLATFORM_DISABLE_FLAGS	:= $(PLATFORM_DISABLE_FLAGS) -fvisibility
 
 # we need update sysroot to absolute path
@@ -26,7 +25,10 @@ PLATFORM_SYS_ROOT	:= $(call reletive_directory,$(PLATFORM_SYS_ROOT))
 PLATFORM_INCLUDE_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_INCLUDE_DIRECTORYS))
 PLATFORM_LIBRARY_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_LIBRARY_DIRECTORYS))
 
+CONFIG_LIB2		:= $(CONFIG_LIB)
+CONFIG_LIB		:= dynamic # force flags.mk to generate dynamic link flags
 include $(ROOT_MAKE_DIRECTORY)/proj/target/flags.mk
+CONFIG_LIB		:= $(CONFIG_LIB2)
 
 COMPILE_FLAGS		:= $(COMPILE_FLAGS) $(addprefix -I,$(PLATFORM_INCLUDE_DIRECTORYS))
 
