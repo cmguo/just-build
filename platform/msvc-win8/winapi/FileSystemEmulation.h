@@ -80,6 +80,35 @@ namespace FileSystemEmulation
         _Out_  PLARGE_INTEGER lpFileSize
         );
 
+#define SetFilePointerEx SetFilePointerEx2
+
+    BOOL WINAPI_DECL SetFilePointerEx2(
+        _In_       HANDLE hFile,
+        _In_       LARGE_INTEGER liDistanceToMove,
+        _Out_opt_  PLARGE_INTEGER lpNewFilePointer,
+        _In_       DWORD dwMoveMethod
+        );
+
+#define ReadFile ReadFile2
+
+    BOOL WINAPI_DECL ReadFile2(
+        _In_         HANDLE hFile,
+        _Out_        LPVOID lpBuffer,
+        _In_         DWORD nNumberOfBytesToRead,
+        _Out_opt_    LPDWORD lpNumberOfBytesRead,
+        _Inout_opt_  LPOVERLAPPED lpOverlapped
+        );
+
+#define WriteFile WriteFile2
+
+    BOOL WINAPI_DECL WriteFile2(
+        _In_         HANDLE hFile,
+        _In_         LPCVOID lpBuffer,
+        _In_         DWORD nNumberOfBytesToWrite,
+        _Out_opt_    LPDWORD lpNumberOfBytesWritten,
+        _Inout_opt_  LPOVERLAPPED lpOverlapped
+        );
+
     DWORD WINAPI_DECL GetCurrentDirectoryA(
         _In_   DWORD nBufferLength,
         _Out_  LPSTR lpBuffer
@@ -208,6 +237,12 @@ namespace FileSystemEmulation
     DWORD WINAPI_DECL GetTempPathW(
         _In_   DWORD nBufferLength,
         _Out_  LPWSTR lpBuffer
+        );
+
+#define CloseHandle CloseHandle2
+
+    BOOL WINAPI_DECL CloseHandle2(
+        _In_  HANDLE hObject
         );
 
 }
