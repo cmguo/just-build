@@ -87,6 +87,7 @@ namespace SocketEmulation
         SO_RCVBUP, 
         SO_REUSEADDR, 
         SO_RCVTIMEO, 
+		SO_SNDTIMEO, 
         SO_ERROR, 
         SO_LINGER, 
         SO_SNDBUF, 

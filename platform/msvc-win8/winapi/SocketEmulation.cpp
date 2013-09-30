@@ -33,7 +33,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->bind(name, namelen);
     }
 
@@ -44,7 +44,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->connect(name, namelen);
     }
 
@@ -54,7 +54,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->listen(backlog);
     }
 
@@ -65,9 +65,9 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
-        socket_t * socket2 = context->alloc<socket_t>();
-        BOOL ret = socket->accept(socket2, addr, addrlen);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket2 = context->alloc<socket_t>();
+        BOOL ret = socket->accept(socket2.get(), addr, addrlen);
         if (ret == TRUE) {
             return socket2->index;
         } else {
@@ -83,7 +83,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->getsockname(name, namelen);
     }
 
@@ -94,7 +94,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->getpeername(name, namelen);
     }
 
@@ -164,7 +164,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->shutdown(how);
     }
 
@@ -177,7 +177,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->setsockopt(level, optname, optval, optlen);
     }
 
@@ -190,7 +190,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->getsockopt(level, optname, optval, optlen);
     }
 
@@ -201,7 +201,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->ioctlsocket(cmd, argp);
     }
 
@@ -210,9 +210,12 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
-        int ret = socket->close();
-        context->free(socket);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
+		int ret = WSAENOTSOCK;
+		if (socket) {
+			ret = socket->close();
+			context->free(socket);
+		}
         return ret;
     }
 
@@ -310,6 +313,10 @@ namespace SocketEmulation
             Windows::Foundation::Collections::IVectorView<Windows::Networking::EndpointPair ^> ^ vec;
             int ec = wait_operation(Windows::Networking::Sockets::DatagramSocket::GetEndpointPairsAsync(
                 ref new Windows::Networking::HostName(ref new Platform::String(wstr)), ref new Platform::String(L"80")), vec);
+            if (ec) {
+                WSASetLastError(ec);
+                return NULL;
+            }
             unsigned int j = 0;
             unsigned long * in_addr = (unsigned long *)tls_data->hostent_addr_chars;
             for (unsigned int i = 0; i < vec->Size && j < 3; ++i) {
@@ -449,7 +456,7 @@ namespace SocketEmulation
         )
     {
         wsa_context & context = g_wsa_context();
-        socket_t * socket = context.alloc<socket_t>();
+        socket_t::pointer_t socket = context.alloc<socket_t>();
         socket->create(af, type, protocol);
         return socket->index;
     }
@@ -462,7 +469,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->connect_ex(lpTo, iToLen, lpOverlapped);
     }
 
@@ -478,9 +485,9 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(sListenSocket);
-        socket_t * socket2 = context->get<socket_t>(sAcceptSocket);
-        return socket->accept_ex(socket2, 
+        socket_t::pointer_t socket = context->get<socket_t>(sListenSocket);
+        socket_t::pointer_t socket2 = context->get<socket_t>(sAcceptSocket);
+        return socket->accept_ex(socket2.get(), 
             lpOutputBuffer, dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength, lpdwBytesReceived, 
             lpOverlapped);
     }
@@ -518,7 +525,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->recv_ex(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, lpOverlapped, lpCompletionRoutine);
     }
 
@@ -535,7 +542,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->recv_from_ex(lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
             lpFrom, lpFromlen, lpOverlapped, lpCompletionRoutine);
     }
@@ -551,7 +558,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->send_ex(lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, lpOverlapped, lpCompletionRoutine);
     }
 
@@ -568,7 +575,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>(s);
+        socket_t::pointer_t socket = context->get<socket_t>(s);
         return socket->send_to_ex(lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, 
             lpTo, iToLen, lpOverlapped, lpCompletionRoutine);
     }
@@ -742,14 +749,14 @@ namespace SocketEmulation
         if (FileHandle == INVALID_HANDLE_VALUE) {
             assert(ExistingCompletionPort == NULL);
             wsa_context * context = &g_wsa_context();
-            iocp_t * iocp = context->alloc<iocp_t>();
+            iocp_t::pointer_t iocp = context->alloc<iocp_t>();
             (void)NumberOfConcurrentThreads; // no use
             return (HANDLE)iocp->index;
         } else {
             wsa_context * context = &g_wsa_context();
-            iocp_t * iocp = context->get<iocp_t>((size_t)ExistingCompletionPort);
-            socket_t * socket = context->get<socket_t>((size_t)FileHandle);
-            socket->attach_iocp(iocp, CompletionKey);
+            iocp_t::pointer_t iocp = context->get<iocp_t>((size_t)ExistingCompletionPort);
+            socket_t::pointer_t socket = context->get<socket_t>((size_t)FileHandle);
+            socket->attach_iocp(iocp.get(), CompletionKey);
             return ExistingCompletionPort;
         }
     }
@@ -763,7 +770,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        iocp_t * iocp = context->get<iocp_t>((size_t)CompletionPort);
+        iocp_t::pointer_t iocp = context->get<iocp_t>((size_t)CompletionPort);
         return iocp->pop(lpNumberOfBytes, lpCompletionKey, lpOverlapped, dwMilliseconds);
     }
 
@@ -780,7 +787,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        socket_t * socket = context->get<socket_t>((size_t)hFile);
+        socket_t::pointer_t socket = context->get<socket_t>((size_t)hFile);
         return socket->cancel_io(lpOverlapped);
     }
 
@@ -792,7 +799,7 @@ namespace SocketEmulation
         )
     {
         wsa_context * context = &g_wsa_context();
-        iocp_t * iocp = context->get<iocp_t>((size_t)CompletionPort);
+        iocp_t::pointer_t iocp = context->get<iocp_t>((size_t)CompletionPort);
         if (lpOverlapped)
             lpOverlapped->Internal = 1;
         iocp->push(dwCompletionKey, lpOverlapped, 0, dwNumberOfBytesTransferred);
@@ -815,7 +822,7 @@ namespace SocketEmulation
     )
     {
         wsa_context * context = &g_wsa_context();
-        iocp_t * iocp = context->get<iocp_t>((size_t)hObject);
+        iocp_t::pointer_t iocp = context->get<iocp_t>((size_t)hObject);
         BOOL ret = iocp->close();
         context->free(iocp);
         return ret;

@@ -85,7 +85,7 @@ namespace SocketEmulation
         wsa_context * context = &g_wsa_context();
         for (int i = 0; i < FD_SETSIZE; ++i) {
             if (FD_ISSET(i, fds)) {
-                socket_t * socket = context->get<socket_t>(i);
+                socket_t::pointer_t socket = context->get<socket_t>(i);
                 if (socket == NULL) {
                     *ec = WSAENOTSOCK;
                     break;
@@ -102,7 +102,7 @@ namespace SocketEmulation
         wsa_context * context = &g_wsa_context();
         for (int i = 0; i < FD_SETSIZE; ++i) {
             if (FD_ISSET(i, fds)) {
-                socket_t * socket = context->get<socket_t>(i);
+                socket_t::pointer_t socket = context->get<socket_t>(i);
                 if (socket != NULL) {
                     socket->select_detach(t, this);
                 }

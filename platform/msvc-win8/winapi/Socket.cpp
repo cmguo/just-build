@@ -487,7 +487,7 @@ namespace SocketEmulation
                 return t.lpOverlapped == lpOverlapped;
             });
             if (iter != read_tasks_.end()) {
-                iocp_->push(lpCompletionKey_, lpOverlapped, ERROR_OPERATION_ABORTED, 0);
+                iocp_->push(lpCompletionKey_, lpOverlapped, WSA_OPERATION_ABORTED, 0);
                 read_tasks_.erase(iter);
                 return TRUE;
             }
@@ -495,7 +495,7 @@ namespace SocketEmulation
                 return t.lpOverlapped == lpOverlapped;
             });
             if (iter != write_tasks_.end()) {
-                iocp_->push(lpCompletionKey_, lpOverlapped, ERROR_OPERATION_ABORTED, 0);
+                iocp_->push(lpCompletionKey_, lpOverlapped, WSA_OPERATION_ABORTED, 0);
                 write_tasks_.erase(iter);
                 return TRUE;
             }
@@ -508,12 +508,18 @@ namespace SocketEmulation
         _Out_    struct sockaddr *name,
         _Inout_  int *namelen)
     {
+		if (stream_listener_) {
+			return WSAEINVAL;
+		}
         Windows::Networking::HostName ^ host_name = type == SOCK_STREAM 
             ? stream_socket_->Information->LocalAddress 
             : datagram_socket_->Information->LocalAddress;
         Platform::String ^ port = type == SOCK_STREAM 
             ? stream_socket_->Information->LocalPort 
             : datagram_socket_->Information->LocalPort;
+		if (host_name == nullptr || port == nullptr) {
+			return WSAEINVAL;
+		}
         return host_name_port_to_sockaddr(af, name, namelen, host_name, port);
     }
 
@@ -521,19 +527,52 @@ namespace SocketEmulation
         _Out_    struct sockaddr *name,
         _Inout_  int *namelen)
     {
+		if (stream_listener_) {
+			return WSAENOTCONN;
+		}
         Windows::Networking::HostName ^ host_name = type == SOCK_STREAM 
             ? stream_socket_->Information->RemoteAddress 
             : datagram_socket_->Information->RemoteAddress;
         Platform::String ^ port = type == SOCK_STREAM 
             ? stream_socket_->Information->RemotePort 
             : datagram_socket_->Information->RemotePort;
+		if (host_name == nullptr || port == nullptr) {
+			return WSAENOTCONN;
+		}
         return host_name_port_to_sockaddr(af, name, namelen, host_name, port);
     }
 
     int socket_t::shutdown(
         _In_  int how)
     {
-        return SOCKET_ERROR;
+        std::unique_lock<std::recursive_mutex> lc(mutex_);
+        status_ = 0;
+
+        if (type == SOCK_STREAM) {
+            if (stream_listener_) {
+                delete stream_listener_;
+                stream_listener_ = nullptr;
+                accept_sockets_.clear();
+            }
+            if (stream_socket_) {
+                delete stream_socket_;
+                stream_socket_ = nullptr;
+            }
+        } else {
+            if (datagram_socket_) {
+                delete datagram_socket_;
+                datagram_socket_ = nullptr;
+            }
+            udp_streams_.clear();
+        }
+
+        cancel_io(NULL);
+        iocp_.reset();
+		ec_ = WSAESHUTDOWN;
+		handle_select_except();
+        cond_.notify_all();
+
+        return 0;
     }
 
     int socket_t::setsockopt(
@@ -542,7 +581,45 @@ namespace SocketEmulation
         _In_  const char *optval,
         _In_  int optlen)
     {
-        return SOCKET_ERROR;
+        wsa_set_last_error le;
+        std::unique_lock<std::recursive_mutex> lc(mutex_);
+
+        switch (level) {
+        case IPPROTO_IP:
+            switch (optname)
+            {
+            case IP_MULTICAST_LOOP:
+                break;
+			case IP_ADD_MEMBERSHIP:
+				{
+					struct ip_mreq * mreq = (struct ip_mreq *)optval;
+					sockaddr_in addr;
+					addr.sin_family = AF_INET;
+					addr.sin_addr = mreq->imr_multiaddr;
+					datagram_socket_->JoinMulticastGroup(sockaddr_to_host_name((sockaddr*)&addr));
+				}
+                break;
+			case IP_DROP_MEMBERSHIP:
+			case IP_MULTICAST_IF:
+			case IP_MULTICAST_TTL:
+                break;
+            default:
+                le.set(WSAEINVAL);
+                break;
+            }
+            break;
+        case SOL_SOCKET:
+            switch (optname)
+            {
+            case SO_BROADCAST:
+                break;
+			}
+            break;
+        default:
+            le.set(WSAEINVAL);
+            break;
+        };
+        return le.ret();
     }
 
     int socket_t::getsockopt(
@@ -563,6 +640,17 @@ namespace SocketEmulation
                 ec_ = 0;
                 break;
             case SO_CONNECT_TIME:
+                break;
+            default:
+                le.set(WSAEINVAL);
+                break;
+            }
+            break;
+        case IPPROTO_TCP:
+            switch (optname)
+            {
+            case TCP_NODELAY:
+                *(int *)optval = 1;
                 break;
             default:
                 le.set(WSAEINVAL);
@@ -595,33 +683,7 @@ namespace SocketEmulation
 
     int socket_t::close()
     {
-        std::unique_lock<std::recursive_mutex> lc(mutex_);
-        status_ = 0;
-
-        if (type == SOCK_STREAM) {
-            if (stream_listener_) {
-                delete stream_listener_;
-                stream_listener_ = nullptr;
-                accept_sockets_.clear();
-            }
-            if (stream_socket_) {
-                delete stream_socket_;
-                stream_socket_ = nullptr;
-            }
-        } else {
-            if (datagram_socket_) {
-                delete datagram_socket_;
-                datagram_socket_ = nullptr;
-            }
-            udp_streams_.clear();
-        }
-
-        cancel_io(NULL);
-        iocp_.reset();
-
-        cond_.notify_all();
-
-        return 0;
+        return shutdown(SD_BOTH);
     }
 
     void socket_t::attach_iocp(
@@ -644,7 +706,9 @@ namespace SocketEmulation
             if (read_data_size_ > 0) {
                 select->set(t, index);
                 select = NULL;
-            }
+            } else if (stream_socket_) {
+				tcp_recv_some();
+			}
             break;
         case 1: // write
             if (write_data_size_ < write_data_capacity_) {

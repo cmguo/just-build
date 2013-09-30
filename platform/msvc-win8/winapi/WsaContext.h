@@ -31,7 +31,19 @@ namespace SocketEmulation
     struct wsa_handle_t
         : wsa_handle
     {
+        typedef boost::shared_ptr<T> pointer_t;
+
         static size_t const CLS = C;
+
+        boost::shared_ptr<T> shared_from_this()
+        {
+            return boost::static_pointer_cast<T>(wsa_handle::shared_from_this());
+        }
+
+        boost::shared_ptr<T const> shared_from_this() const
+        {
+            return boost::static_pointer_cast<T const>(wsa_handle::shared_from_this());
+        }
     };
 
     struct wsa_context
@@ -46,7 +58,7 @@ namespace SocketEmulation
         }
 
         template <typename handle_t>
-        handle_t * alloc()
+        boost::shared_ptr<handle_t> alloc()
         {
             std::unique_lock<std::mutex> lc(mutex_);
             wsa_handle::pointer_t handle(new handle_t);
@@ -60,12 +72,12 @@ namespace SocketEmulation
                 assert(handles_[handle->index] == NULL);
                 handles_[handle->index] = handle;
             }
-            return (handle_t *)handle.get();
+            return boost::static_pointer_cast<handle_t>(handle);
         }
 
         template <typename handle_t>
         void free(
-            handle_t * handle)
+            boost::shared_ptr<handle_t> handle)
         {
             std::unique_lock<std::mutex> lc(mutex_);
             assert(handles_[handle->index]);
@@ -74,14 +86,14 @@ namespace SocketEmulation
         }
 
         template <typename handle_t>
-        handle_t * get(
+        boost::shared_ptr<handle_t> get(
             size_t index)
         {
             std::unique_lock<std::mutex> lc(mutex_);
             assert(handles_[index]);
-            handle_t * handle = (handle_t *)handles_[index].get();
+            wsa_handle::pointer_t handle = handles_[index];
             assert(handle->cls == handle_t::CLS);
-            return handle;
+            return boost::static_pointer_cast<handle_t>(handle);
         }
 
     private:
