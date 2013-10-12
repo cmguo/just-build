@@ -11,7 +11,7 @@
 
 #include <assert.h>
 
-namespace SocketEmulation
+namespace winapi
 {
 
     struct overlap_task

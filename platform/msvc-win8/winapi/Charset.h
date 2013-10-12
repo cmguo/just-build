@@ -2,7 +2,7 @@
 
 #pragma once
 
-namespace SystemEmulation
+namespace winapi
 {
 	class charset_t2
 	{

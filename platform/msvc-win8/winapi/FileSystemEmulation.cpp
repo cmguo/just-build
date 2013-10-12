@@ -11,7 +11,7 @@
 #undef CloseHandle
 #include "AsyncHelper.h"
 #include "Charset.h"
-using namespace SystemEmulation;
+using namespace winapi;
 
 #include <mutex>
 #include <vector>
@@ -21,7 +21,7 @@ using namespace SystemEmulation;
 
 #include <assert.h>
 
-namespace FileSystemEmulation
+extern "C"
 {
 
     BOOL WINAPI_DECL CreateDirectory2A(
@@ -145,12 +145,12 @@ namespace FileSystemEmulation
         Windows::Storage::StorageFolder ^ folder;
         Windows::Storage::StorageFile ^ file;
         Windows::Storage::Streams::IRandomAccessStream ^ stream;
-        int ec = SocketEmulation::wait_operation(
+        int ec = wait_operation(
             Windows::Storage::AccessCache::StorageApplicationPermissions::FutureAccessList->GetFolderAsync(token), 
             folder);
         if (ec == 0) {
             if (dwCreationDisposition == OPEN_EXISTING || dwCreationDisposition == TRUNCATE_EXISTING) {
-                ec = SocketEmulation::wait_operation(
+                ec = wait_operation(
                     folder->GetFileAsync(ref new Platform::String(p + 1)), 
                     file);
             } else {
@@ -166,7 +166,7 @@ namespace FileSystemEmulation
                     option = Windows::Storage::CreationCollisionOption::OpenIfExists;
                     break;
                 }
-                ec = SocketEmulation::wait_operation(
+                ec = wait_operation(
                     folder->CreateFileAsync(ref new Platform::String(p + 1), option), 
                     file);
             }
@@ -174,7 +174,7 @@ namespace FileSystemEmulation
         if (ec == 0) {
             Windows::Storage::FileAccessMode mode = 
                 dwDesiredAccess == GENERIC_READ ? Windows::Storage::FileAccessMode::Read : Windows::Storage::FileAccessMode::ReadWrite;
-            ec = SocketEmulation::wait_operation(
+            ec = wait_operation(
                 file->OpenAsync(mode), 
                 stream);
         }
@@ -385,7 +385,7 @@ namespace FileSystemEmulation
             assert(lpOverlapped == NULL);
             Windows::Storage::Streams::IBuffer ^ buffer = 
                 ref new Windows::Storage::Streams::Buffer(nNumberOfBytesToRead);
-            int ec = SocketEmulation::wait_operation2(
+            int ec = wait_operation2(
                 (*iter)->stream->ReadAsync(buffer, nNumberOfBytesToRead, Windows::Storage::Streams::InputStreamOptions::Partial), 
                 buffer);
             if (ec) {
@@ -425,7 +425,7 @@ namespace FileSystemEmulation
                 ref new Windows::Storage::Streams::DataWriter;
             writer->WriteBytes(Platform::ArrayReference<uint8_t>((uint8_t *)lpBuffer, nNumberOfBytesToWrite));
             uint32_t size = 0;
-            int ec = SocketEmulation::wait_operation2(
+            int ec = wait_operation2(
                 (*iter)->stream->WriteAsync(writer->DetachBuffer()), 
                 size);
             if (ec) {

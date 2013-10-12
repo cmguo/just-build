@@ -11,10 +11,30 @@
 #include "Select.h"
 #include "AsyncHelper.h"
 #include "TlsPointer.h"
+using namespace winapi;
 
 #include <assert.h>
 
-namespace SocketEmulation
+namespace winapi
+{
+    static inline u_short rotate(
+        u_short v)
+    {
+        return v >> 8 | v << 8;
+    }
+
+    static inline u_long rotate(
+        u_long v)
+    {
+        // 1 2 3 4
+        // 2 3 4 1
+        // 4 1 2 3
+        return (((v >> 24 | v << 8) & 0x00ff00ff) 
+            | ((v >> 8 | v << 24) & 0xff00ff00));
+    }
+}
+
+extern "C"
 {
 
     SOCKET WINAPI_DECL socket(
@@ -400,22 +420,6 @@ namespace SocketEmulation
     int WINAPI_DECL WSACleanup(void)
     {
         return 0;
-    }
-
-    static inline u_short rotate(
-        u_short v)
-    {
-        return v >> 8 | v << 8;
-    }
-
-    static inline u_long rotate(
-        u_long v)
-    {
-        // 1 2 3 4
-        // 2 3 4 1
-        // 4 1 2 3
-        return (((v >> 24 | v << 8) & 0x00ff00ff) 
-            | ((v >> 8 | v << 24) & 0xff00ff00));
     }
 
     u_short WINAPI_DECL htons(

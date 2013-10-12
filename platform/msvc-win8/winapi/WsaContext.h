@@ -4,7 +4,6 @@
 
 #include "SocketEmulation.h"
 #include "ThreadEmulation.h"
-using namespace ThreadEmulation;
 
 #include <vector>
 #include <deque>
@@ -15,7 +14,7 @@ using namespace ThreadEmulation;
 
 #include <assert.h>
 
-namespace SocketEmulation
+namespace winapi
 {
 
     struct wsa_handle

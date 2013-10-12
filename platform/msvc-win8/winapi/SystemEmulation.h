@@ -4,8 +4,10 @@
 
 #define FORMAT_MESSAGE_ALLOCATE_BUFFER    0x00000100
 
-namespace SystemEmulation
+#ifdef __cplusplus
+extern "C"
 {
+#endif
 
     DWORD WINAPI_DECL FormatMessage2A(
         _In_      DWORD dwFlags,
@@ -126,4 +128,6 @@ namespace SystemEmulation
       _In_      DWORD nSize
     );
 
+#ifdef __cplusplus
 }
+#endif

@@ -5,11 +5,11 @@
 #define WINAPI_DECL     __declspec(dllexport)
 
 #include "Charset.h"
-using namespace SystemEmulation;
+using namespace winapi;
 
 #include <assert.h>
 
-namespace MemoryEmulation
+extern "C"
 {
 
     HLOCAL WINAPI_DECL LocalAlloc(

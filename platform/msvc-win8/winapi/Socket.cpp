@@ -9,7 +9,7 @@
 #include "Select.h"
 #include "AsyncHelper.h"
 
-namespace SocketEmulation
+namespace winapi
 {
 
     class wsa_set_last_error

@@ -7,23 +7,46 @@
 #include "SystemEmulation.h"
 #include "FileSystemEmulation.h"
 #include "Charset.h"
+using namespace winapi;
 
 #include <assert.h>
 #include <stdio.h>
 #include <io.h>
 
-__declspec(dllexport) char ** environ = NULL;
+extern "C" __declspec(dllexport) char ** environ = NULL;
 
-namespace FileSystemEmulation
+extern "C"
+DWORD WINAPI_DECL GetLocalPathA(
+    _In_   DWORD nBufferLength,
+    _Out_  LPSTR lpBuffer);
+
+namespace winapi
 {
 
-    DWORD WINAPI_DECL GetLocalPathA(
-        _In_   DWORD nBufferLength,
-        _Out_  LPSTR lpBuffer);
+    static void init_environ()
+    {
+        if (environ != NULL)
+            return;
+        environ = new char *[32];
+        memset(environ, 0, sizeof(char *) * 32);
+        int n = 0;
+        {
+            char * TMP = new char[MAX_PATH + 8];
+            strncpy_s(TMP, MAX_PATH + 8, "TMP=", 4);
+            GetTempPathA(MAX_PATH, TMP + 4);
+            environ[n++] = TMP;
+        }
+        {
+            char * CFG = new char[MAX_PATH + 16];
+            strncpy_s(CFG, MAX_PATH + 16, "LD_CONFIG_PATH=", 15);
+            GetLocalPathA(MAX_PATH, CFG + 15);
+            environ[n++] = CFG;
+        }
+    }
 
 }
 
-namespace SystemEmulation
+extern "C"
 {
 
 #undef FormatMessageA
@@ -90,27 +113,6 @@ namespace SystemEmulation
         )
     {
         GetNativeSystemInfo(lpSystemInfo);
-    }
-
-    static void init_environ()
-    {
-        if (environ != NULL)
-            return;
-        environ = new char *[32];
-        memset(environ, 0, sizeof(char *) * 32);
-        int n = 0;
-        {
-        char * TMP = new char[MAX_PATH + 8];
-        strncpy_s(TMP, MAX_PATH + 8, "TMP=", 4);
-        FileSystemEmulation::GetTempPathA(MAX_PATH, TMP + 4);
-        environ[n++] = TMP;
-        }
-        {
-        char * CFG = new char[MAX_PATH + 16];
-        strncpy_s(CFG, MAX_PATH + 16, "LD_CONFIG_PATH=", 15);
-        FileSystemEmulation::GetLocalPathA(MAX_PATH, CFG + 15);
-        environ[n++] = CFG;
-        }
     }
 
     LPCH WINAPI_DECL GetEnvironmentStringsA(void)

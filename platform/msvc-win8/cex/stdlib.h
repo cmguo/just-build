@@ -4,12 +4,17 @@
 
 #include <..\Include\stdlib.h> // orignal stdlib.h
 
-__declspec(dllimport) char ** environ;
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-namespace cex {
+    __declspec(dllimport) char ** environ;
 
     char * __cdecl getenv(
         _In_z_ const char * _VarName
         );
 
+#ifdef __cplusplus
 }
+#endif

@@ -4,9 +4,8 @@
 
 #include "SocketEmulation.h"
 #include "ThreadEmulation.h"
-using namespace ThreadEmulation;
 
-namespace SocketEmulation
+namespace winapi
 {
 
     int inline wait_action(

@@ -6,7 +6,7 @@
 
 #include "Iocp.h"
 
-namespace SocketEmulation
+namespace winapi
 {
 
     class set_last_error

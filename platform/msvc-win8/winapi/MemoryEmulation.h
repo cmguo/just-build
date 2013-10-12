@@ -4,8 +4,10 @@
 
 #include <windows.h>
 
-namespace MemoryEmulation
+#ifdef __cplusplus
+extern "C"
 {
+#endif
 
     HLOCAL WINAPI_DECL LocalAlloc(
         _In_  UINT uFlags,
@@ -61,4 +63,6 @@ namespace MemoryEmulation
         _In_opt_  LPVOID lpBaseAddress
         );
 
+#ifdef __cplusplus
 }
+#endif

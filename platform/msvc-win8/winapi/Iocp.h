@@ -8,7 +8,7 @@
 
 #include <assert.h>
 
-namespace SocketEmulation
+namespace winapi
 {
 
     class iocp_t

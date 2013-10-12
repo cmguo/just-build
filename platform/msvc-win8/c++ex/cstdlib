@@ -6,6 +6,6 @@
 
 _STD_BEGIN
 
-using cex::getenv;
+using ::getenv;
 
 _STD_END

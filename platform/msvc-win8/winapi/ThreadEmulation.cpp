@@ -11,7 +11,7 @@
 
 #include "ThreadEmulation.h"
 #include "Charset.h"
-using namespace SystemEmulation;
+using namespace winapi;
 
 #include <assert.h>
 #include <vector>
@@ -24,8 +24,7 @@ using namespace Platform;
 using namespace Windows::Foundation;
 using namespace Windows::System::Threading;
 
-
-namespace ThreadEmulation
+extern "C"
 {
     
     // Thread local storage.

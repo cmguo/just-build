@@ -34,8 +34,11 @@
 
 #define TLS_OUT_OF_INDEXES (DWORD)-1
 
-namespace ThreadEmulation
+#ifdef __cplusplus
+extern "C"
 {
+#endif
+
     #ifndef CREATE_SUSPENDED
     #define CREATE_SUSPENDED 0x00000004
     #endif
@@ -163,4 +166,6 @@ namespace ThreadEmulation
         unsigned* thrdaddr
         );
 
+#ifdef __cplusplus
 }
+#endif

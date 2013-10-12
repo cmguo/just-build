@@ -8,7 +8,7 @@
 #include "WsaContext.h"
 #include "Socket.h"
 
-namespace SocketEmulation
+namespace winapi
 {
 
     select_t::select_t()

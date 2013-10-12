@@ -4,8 +4,10 @@
 
 #include <windows.h>
 
-namespace FileSystemEmulation
+#ifdef __cplusplus
+extern "C"
 {
+#endif
 
     BOOL WINAPI_DECL CreateDirectory2A(
         _In_      LPCSTR lpPathName,
@@ -245,4 +247,6 @@ namespace FileSystemEmulation
         _In_  HANDLE hObject
         );
 
+#ifdef __cplusplus
 }
+#endif

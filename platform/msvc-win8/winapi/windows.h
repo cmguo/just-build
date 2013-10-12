@@ -17,9 +17,3 @@
 #include "FileSystemEmulation.h"
 #include "ThreadEmulation.h"
 #include "SocketEmulation.h"
-
-using namespace MemoryEmulation;
-using namespace SystemEmulation;
-using namespace FileSystemEmulation;
-using namespace ThreadEmulation;
-using namespace SocketEmulation;
