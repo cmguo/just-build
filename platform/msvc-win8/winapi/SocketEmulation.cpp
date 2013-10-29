@@ -34,8 +34,8 @@ namespace winapi
     }
 }
 
-extern "C"
-{
+//extern "C"
+//{
 
     SOCKET WINAPI_DECL socket(
         _In_  int af,
@@ -832,4 +832,4 @@ extern "C"
         return ret;
     }
 
-}
+//}

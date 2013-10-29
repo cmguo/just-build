@@ -24,8 +24,8 @@ using namespace Platform;
 using namespace Windows::Foundation;
 using namespace Windows::System::Threading;
 
-extern "C"
-{
+//extern "C"
+//{
     
     // Thread local storage.
     typedef vector<void*> ThreadLocalData;
@@ -589,4 +589,4 @@ extern "C"
         return reinterpret_cast<uintptr_t const>(hthread);
     }
 
-}
+//}

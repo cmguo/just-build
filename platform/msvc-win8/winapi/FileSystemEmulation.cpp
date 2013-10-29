@@ -21,8 +21,8 @@ using namespace winapi;
 
 #include <assert.h>
 
-extern "C"
-{
+//extern "C"
+//{
 
     BOOL WINAPI_DECL CreateDirectory2A(
         _In_      LPCSTR lpPathName,
@@ -375,7 +375,7 @@ extern "C"
         std::vector<WinrtFileHandle *>::iterator iter = 
             std::find_if(files_.begin(), files_.end(), WinrtFileHandle::find_by_event(hFile));
         if (iter == files_.end()) {
-            return ::WriteFile(
+            return ::ReadFile(
                 hFile, 
                 lpBuffer, 
                 nNumberOfBytesToRead, 
@@ -800,4 +800,4 @@ extern "C"
         return ::CloseHandle(hObject);
     }
 
-}
+//}

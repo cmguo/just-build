@@ -9,8 +9,8 @@ using namespace winapi;
 
 #include <assert.h>
 
-extern "C"
-{
+//extern "C"
+//{
 
     HLOCAL WINAPI_DECL LocalAlloc(
         _In_  UINT uFlags,
@@ -143,4 +143,4 @@ extern "C"
             dwNumberOfBytesToMap);
     }
 
-}
+//}

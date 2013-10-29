@@ -4,10 +4,10 @@
 
 #define FORMAT_MESSAGE_ALLOCATE_BUFFER    0x00000100
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+//#ifdef __cplusplus
+//extern "C"
+//{
+//#endif
 
     DWORD WINAPI_DECL FormatMessage2A(
         _In_      DWORD dwFlags,
@@ -128,6 +128,6 @@ extern "C"
       _In_      DWORD nSize
     );
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

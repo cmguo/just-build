@@ -4,11 +4,17 @@
 
 #include <windows.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+//#ifdef __cplusplus
+//extern "C"
+//{
+//#endif
 
+    /* wrong fileapi.h file, defined some functions but can't be use
+     * CreateDirectoryA
+     * RemoveDirectoryA
+     * DeleteFileA
+     * MoveFileExA
+     */
     BOOL WINAPI_DECL CreateDirectory2A(
         _In_      LPCSTR lpPathName,
         _In_opt_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
@@ -81,6 +87,12 @@ extern "C"
         _In_   HANDLE hFile,
         _Out_  PLARGE_INTEGER lpFileSize
         );
+
+    /* fileapi.h file has following functions, but we need combine with winrt token files
+     * SetFilePointerEx
+     * ReadFile
+     * WriteFile
+     */
 
 #define SetFilePointerEx SetFilePointerEx2
 
@@ -247,6 +259,6 @@ extern "C"
         _In_  HANDLE hObject
         );
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

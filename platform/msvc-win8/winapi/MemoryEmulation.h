@@ -4,10 +4,10 @@
 
 #include <windows.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+//#ifdef __cplusplus
+//extern "C"
+//{
+//#endif
 
     HLOCAL WINAPI_DECL LocalAlloc(
         _In_  UINT uFlags,
@@ -63,6 +63,6 @@ extern "C"
         _In_opt_  LPVOID lpBaseAddress
         );
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

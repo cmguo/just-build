@@ -34,10 +34,10 @@
 
 #define TLS_OUT_OF_INDEXES (DWORD)-1
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+//#ifdef __cplusplus
+//extern "C"
+//{
+//#endif
 
     #ifndef CREATE_SUSPENDED
     #define CREATE_SUSPENDED 0x00000004
@@ -166,6 +166,6 @@ extern "C"
         unsigned* thrdaddr
         );
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

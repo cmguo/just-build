@@ -243,10 +243,10 @@ struct  servent {
 #endif
 };
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+//#ifdef __cplusplus
+//extern "C"
+//{
+//#endif
 
     SOCKET WINAPI_DECL socket(
         _In_  int af,
@@ -398,9 +398,9 @@ extern "C"
         _In_  struct in_addr in
         );
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 
 #define WSA_IO_PENDING          (ERROR_IO_PENDING)
 #define WSA_IO_INCOMPLETE       (ERROR_IO_INCOMPLETE)
@@ -473,10 +473,10 @@ typedef struct WSAData {
     char FAR       *lpVendorInfo;
 } WSADATA, *LPWSADATA;
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+//#ifdef __cplusplus
+//extern "C"
+//{
+//#endif
 
     int WINAPI_DECL __WSAFDIsSet(SOCKET fd, fd_set FAR *);
 
@@ -687,6 +687,6 @@ extern "C"
         _In_  LPCOMMTIMEOUTS lpCommTimeouts
         );
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

@@ -13,9 +13,10 @@ using namespace winapi;
 #include <stdio.h>
 #include <io.h>
 
-extern "C" __declspec(dllexport) char ** environ = NULL;
+//extern "C" 
+__declspec(dllexport) char ** environ = NULL;
 
-extern "C"
+//extern "C"
 DWORD WINAPI_DECL GetLocalPathA(
     _In_   DWORD nBufferLength,
     _Out_  LPSTR lpBuffer);
@@ -46,8 +47,8 @@ namespace winapi
 
 }
 
-extern "C"
-{
+//extern "C"
+//{
 
 #undef FormatMessageA
 
@@ -390,4 +391,4 @@ extern "C"
         return nBufferLength;
     }
 
-}
+//}
