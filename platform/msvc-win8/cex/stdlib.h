@@ -4,10 +4,10 @@
 
 #include <..\Include\stdlib.h> // orignal stdlib.h
 
-//#ifdef __cplusplus
-//extern "C"
-//{
-//#endif
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
     __declspec(dllimport) char ** environ;
 
@@ -15,6 +15,6 @@
         _In_z_ const char * _VarName
         );
 
-//#ifdef __cplusplus
-//}
-//#endif
+#ifdef __cplusplus
+}
+#endif
