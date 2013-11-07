@@ -137,38 +137,42 @@ using namespace winapi;
         _In_      DWORD dwCreationDisposition)
     {
         LPCWCHAR p = wcschr(lpFileName, '\\');
-        if (p == NULL) {
-            SetLastError(ERROR_FILE_NOT_FOUND);
-            return INVALID_HANDLE_VALUE;
-        }
-        Platform::String ^ token = ref new Platform::String(lpFileName, p - lpFileName);
-        Windows::Storage::StorageFolder ^ folder;
         Windows::Storage::StorageFile ^ file;
         Windows::Storage::Streams::IRandomAccessStream ^ stream;
-        int ec = wait_operation(
-            Windows::Storage::AccessCache::StorageApplicationPermissions::FutureAccessList->GetFolderAsync(token), 
-            folder);
-        if (ec == 0) {
-            if (dwCreationDisposition == OPEN_EXISTING || dwCreationDisposition == TRUNCATE_EXISTING) {
-                ec = wait_operation(
-                    folder->GetFileAsync(ref new Platform::String(p + 1)), 
-                    file);
-            } else {
-                Windows::Storage::CreationCollisionOption option;
-                switch (dwCreationDisposition) {
-                case CREATE_ALWAYS:
-                    option = Windows::Storage::CreationCollisionOption::ReplaceExisting;
-                    break;
-                case CREATE_NEW:
-                    option = Windows::Storage::CreationCollisionOption::FailIfExists;
-                    break;
-                case OPEN_ALWAYS:
-                    option = Windows::Storage::CreationCollisionOption::OpenIfExists;
-                    break;
+        int ec = 0;
+        if (p == NULL) {
+            Platform::String ^ token = ref new Platform::String(lpFileName);
+            ec = wait_operation(
+                Windows::Storage::AccessCache::StorageApplicationPermissions::FutureAccessList->GetFileAsync(token), 
+                file);
+        } else {
+            Platform::String ^ token = ref new Platform::String(lpFileName, p - lpFileName);
+            Windows::Storage::StorageFolder ^ folder;
+            int ec = wait_operation(
+                Windows::Storage::AccessCache::StorageApplicationPermissions::FutureAccessList->GetFolderAsync(token), 
+                folder);
+            if (ec == 0) {
+                if (dwCreationDisposition == OPEN_EXISTING || dwCreationDisposition == TRUNCATE_EXISTING) {
+                    ec = wait_operation(
+                        folder->GetFileAsync(ref new Platform::String(p + 1)), 
+                        file);
+                } else {
+                    Windows::Storage::CreationCollisionOption option;
+                    switch (dwCreationDisposition) {
+                    case CREATE_ALWAYS:
+                        option = Windows::Storage::CreationCollisionOption::ReplaceExisting;
+                        break;
+                    case CREATE_NEW:
+                        option = Windows::Storage::CreationCollisionOption::FailIfExists;
+                        break;
+                    case OPEN_ALWAYS:
+                        option = Windows::Storage::CreationCollisionOption::OpenIfExists;
+                        break;
+                    }
+                    ec = wait_operation(
+                        folder->CreateFileAsync(ref new Platform::String(p + 1), option), 
+                        file);
                 }
-                ec = wait_operation(
-                    folder->CreateFileAsync(ref new Platform::String(p + 1), option), 
-                    file);
             }
         }
         if (ec == 0) {
