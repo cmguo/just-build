@@ -13,6 +13,8 @@ CONFIG_THREAD_LIST	:= multi single
 
 CONFIG_LIB_LIST		:= static dynamic static2
 
+CONFIG			:= $(CONFIG) $(PROJECT_CONFIG)
+
 CONFIG_COMPILE		:= $(call get_config,$(CONFIG),$(CONFIG_COMPILE_LIST),debug)
 
 CONFIG_THREAD		:= $(call get_config,$(CONFIG),$(CONFIG_THREAD_LIST),multi)
@@ -26,7 +28,7 @@ else
 	CONFIG_COMPILE_FLAGS	:= $(CONFIG_COMPILE_FLAGS) -D_NDEBUG
 endif
 
-ifeq ($(PROJECT_TYPE),lib)
+ifeq ($(PROJECT_TYPE2),lib)
 
 	CONFIG_COMPILE_FLAGS	:= $(CONFIG_COMPILE_FLAGS) -D_LIB
 
@@ -64,8 +66,6 @@ else
 
 endif
 
-TARGET_DIRECTORY	:= $(TARGET_DIRECTORY)/$(CONFIG_THREAD)
-
 ifneq ($(NAME_CONFIG),)
 	NAME_CONFIG		:= -$(NAME_CONFIG)
 endif
@@ -76,7 +76,3 @@ ifeq ($(CONFIG_THREAD),multi)
 else
 	CONFIG_COMPILE_FLAGS	:= $(CONFIG_COMPILE_FLAGS) -D_SINGLE
 endif
-
-DEPEND_DIRECTORY	:= $(TARGET_DIRECTORY)/.deps
-
-OBJECT_DIRECTORY	:= $(TARGET_DIRECTORY)/.objs

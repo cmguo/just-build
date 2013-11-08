@@ -15,7 +15,7 @@ CONFIG			:= $(config) $(GLOBAL_CONFIG) $(LOCAL_CONFIG)
 
 $(call parse_config,$(CONFIG))
 
-TYPE_LIST		:= dirs proj pack auto java
+TYPE_LIST		:= dirs proj pack java
 
 ifeq ($(LOCAL_TYPE),)
 	LOCAL_TYPE		:= proj

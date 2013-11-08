@@ -9,10 +9,10 @@ BEGIN {FS = ":"; RS = "!";}
     sub(/[[:blank:]]*$/,"",$4)
     sub(/[[:blank:]]*$/,"",$5)
     sub(/^[[:blank:]]*/,"",$1)
-    sub(/^[[:blank:]]$/,"",$2)
-    sub(/^[[:blank:]]$/,"",$3)
-    sub(/^[[:blank:]]$/,"",$4) 
-    sub(/^[[:blank:]]$/,"",$5) 
+    sub(/^[[:blank:]]*/,"",$2)
+    sub(/^[[:blank:]]*/,"",$3)
+    sub(/^[[:blank:]]*/,"",$4) 
+    sub(/^[[:blank:]]*/,"",$5) 
 
     if(1 == NR)
     {
@@ -29,10 +29,11 @@ function GetArray(x,a)
     return split(x,a," ")
 }
 
-END {	
+END {
+    type[root] = "proj-lib-static";
     result[0] = root;
-    result_lib[0] = "";
     idx[root] = 0;
+    result_lib[0] = "";
     i = 0;
     n = 1;
     nl = 0; #syslib
@@ -43,7 +44,7 @@ END {
         }
         item = result[i++];
 #        print "visit-"item"-";
-        if (i == 1 || type[item] == "proj-lib-static") {
+        if (type[item] == "proj-lib-static") {
             ii = GetArray(depend[item], depends);
             for (d in depends) {
                 di = depends[d];
@@ -74,12 +75,37 @@ END {
                 idxl[si] = nl;
                 result_lib[nl] = si;
             }
+        } else {
+            ii = GetArray(depend[item], depends);
+            for (d in depends) {
+                di = depends[d];
+#                print di;
+                if (di in idx) {
+                } else if (type[di] != "proj-bin") {
+#                    print "add-"n"-"di"-";
+                    idx[di] = n;
+                    result[n++] = di;
+                    type[di] = type[di]"*";
+                } else {
+#                    print "skip-"di;
+                }
+            }
         }
     }
     for (i = 1; i < n; i++) {
         if (i in result) {
 #            print i;
-            print result[i]"/"file[result[i]];
+            item = result[i];
+            if (type[item] == "proj-lib-static" || type[item] == "proj-lib-dynamic") {
+                ii = GetArray(file[item], files);
+                for (j = 1; j <= ii; ++j) {
+                    print result[i]"/"files[j];
+                }
+            } else if (type[item] == "proj-lib-dynamic*") {
+                ii = GetArray(file[item], files);
+                sub(/[^\/]*$/,"",files[1]);
+                print result[i]"/"files[1];
+            }
         }
     }
     for (i = 1; i <= nl; i++) {

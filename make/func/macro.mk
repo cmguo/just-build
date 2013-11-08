@@ -1,5 +1,5 @@
 ################################################################################
-## @file:	info.mk
+## @file:	macro.mk
 ## @author	郭春茂 <gcm.ustc.edu>
 ## @brief	提取项目信息的函数
 ## @version	1.0
@@ -12,7 +12,7 @@
 
 define get_macro_info
 $(strip \
-        $(shell PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(CXX) -E $(1) $(addprefix -I,$(wildcard $(HEADER_DIRECTORYS))) -dM | \
+        $(shell PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(CPP) $(addprefix -I,$(HEADER_DIRECTORYS)) -imacros $(1) -x c++ /dev/null -dM | \
 		awk '$$2 == "$(2)" { gsub("\"","",$$3); print $$3; }') \
 )
 endef
@@ -24,8 +24,8 @@ endef
 
 define macro_is_defined
 $(strip \
-        $(shell PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(CXX) -E $(1) $(addprefix -I,$(wildcard $(HEADER_DIRECTORYS))) -dM | \
-		awk '$$2 == "$(2)" { gsub("\"","",$$3); print $(2); }') \
+        $(shell PATH=$(PATH) LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(CPP) $(addprefix -I,$(HEADER_DIRECTORYS)) -imacros $(1) -x c++ /dev/null -dM | \
+		awk '$$2 == "$(2)" { print $(2); }') \
 )
 endef
 

@@ -5,19 +5,17 @@
 ## @version	1.0
 ###############################################################################
 
-include $(PROJ_MAKE_DIRECTORY)/version.mk
-
 PUBLISH_MAKE_DIRECTORY		:= $(PROJ_MAKE_DIRECTORY)/publish
 
-TARGET_FILE_PRIVATE		:= $(TARGET_FILE_VERSION)
+TARGET_FILE_PRIVATE		:= $(TARGET_FILE)
 
-TARGET_FILE_PUBLIC		:= $(TARGET_FILE_VERSION)
+TARGET_FILE_PUBLIC		:= $(TARGET_FILE)
 
 ifeq ($(PROJECT_TYPE),lib)
 	PRIVATE_DIRECTORY	:= $(ROOT_LIBRARY_DIRECTORY)$(LOCAL_NAME)
 
         ifeq ($(CONFIG_LIB)-$(DYNAMIC_NAME_SUFFIX),dynamic-.dll)
-		TARGET_FILE_PRIVATE	:= $(TARGET_FILE_VERSION:%.dll=%.a)
+		TARGET_FILE_PRIVATE	:= $(TARGET_FILE:%.dll=%.a)
         endif
 
 else

@@ -27,13 +27,13 @@ include $(ROOT_MAKE_DIRECTORY)/mkdirs.mk
 $(PACKET_DEPEND_FILES): mkdirs
 	@$(ECHO) $@
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
-	@svn export $(ROOT_DIRECTORY)$@ $(TARGET_DIRECTORY)/$(notdir $@) 2>&0 > /dev/null
+	@svn export $(ROOT_DIRECTORY)$@ $(TARGET_DIRECTORY)/$(notdir $@) > /dev/null
 
 .PHONY: $(PACKET_DEPEND_FILES2)
 $(PACKET_DEPEND_FILES2): mkdirs
 	@$(ECHO) $@
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
-	$(CP) -r $(PLATFORM_BUILD_DIRECTORY)$@ $(TARGET_DIRECTORY)/$(notdir $@) 2>&0 > /dev/null
+	$(CP) -r $(PLATFORM_BUILD_DIRECTORY)$@ $(TARGET_DIRECTORY)/$(notdir $@) > /dev/null
 
 define packet_depend3
 $(if $(findstring dynamic,$(call get_item_type,$(1))), \
@@ -70,4 +70,5 @@ $(PACKET_DEPENDS): mkdirs
 
 $(info TARGET_FILE_2=$(TARGET_FILE_2))
 $(TARGET_FILE_FULL): CLEAN $(PACKET_DEPENDS) $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2) $(MAKEFILE_LIST) EXTEND
-	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE_3) $(FULL_TARGE_DIR);tar -czv -f $(TARGET_FILE_2) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES)) $(notdir $(PACKET_DEPEND_FILES2)) 2>&0 > /dev/null
+	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE_3) $(FULL_TARGE_DIR)
+	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(TARGET_FILE_2) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES)) $(notdir $(PACKET_DEPEND_FILES2))

@@ -25,26 +25,56 @@ ifeq ($(DEFAULT_FLAGS),1)
 		CONFIG_LINK_FLAGS		:= -Wl,-Os $(CONFIG_LINK_FLAGS)
         endif
 
-        ifneq ($(findstring static,$(CONFIG_LIB)),)
+        ifneq ($(findstring static,$(CONFIG_LIB2)),)
                 CONFIG_LINK_FLAGS		:=
         endif
 
-        ifeq ($(CONFIG_LIB),static)
+        ifeq ($(CONFIG_LIB2),static)
                 CONFIG_LINK_FLAGS		:= rcs $(CONFIG_LINK_FLAGS)
         endif
 endif
 
 ifneq ($(PLATFORM_SYS_ROOT),)
-	SYS_ROOT		:= --sysroot=$(PLATFORM_SYS_ROOT)
+	SYS_ROOT		:= --sysroot=$(call reletive_directory,$(PLATFORM_SYS_ROOT))
 endif
 
 COMPILE_FLAGS		:= $(CONFIG_COMPILE_FLAGS) $(GLOBAL_COMPILE_FLAGS) $(SYS_ROOT) $(PLATFORM_COMPILE_FLAGS) $(PROJECT_COMPILE_FLAGS)
 
-ifeq ($(findstring static,$(CONFIG_LIB)),)
+ifeq ($(findstring static,$(CONFIG_LIB2)),)
 LINK_FLAGS		:= $(CONFIG_LINK_FLAGS) $(GLOBAL_LINK_FLAGS) $(SYS_ROOT) $(PLATFORM_LINK_FLAGS) $(PROJECT_LINK_FLAGS)
 else
 LINK_FLAGS		:= $(CONFIG_LINK_FLAGS) $(GLOBAL_STATIC_LINK_FLAGS) $(PLATFORM_STATIC_LINK_FLAGS) $(PROJECT_LINK_FLAGS)
 endif
+
+COMPILE_INC_PATHS	:= $(addprefix -I,$(INC_PATHS))
+
+ifneq ($(CONFIG_LIB2),static) # dynamic static2, bin
+
+ifneq ($(CONFIG_LIB2),static2) # dynamic, bin
+
+ifeq ($(CONFIG_COMPILE),release)
+        ifneq ($(PROJECT_VERSION_SCRIPT),)
+		VERSION_SCRIPT		:= $(SOURCE_DIRECTORY)/$(PROJECT_VERSION_SCRIPT)
+        endif
+endif
+
+ifneq ($(VERSION_SCRIPT),)
+	LINK_FLAGS              := $(LINK_FLAGS) -Wl,--version-script=$(VERSION_SCRIPT)
+	DEPEND_FILES		:= $(VERSION_SCRIPT) $(DEPEND_FILES)
+endif
+
+LINK_FLAGS		:= $(LINK_FLAGS) -Wl,-rpath=.
+
+LINK_FLAGS		:= $(filter-out $(addsuffix %,$(PLATFORM_DISABLE_FLAGS)),$(LINK_FLAGS))
+
+endif # dynamic, bin
+
+LINK_FLAGS		:= $(strip $(LINK_FLAGS))
+
+LINK_LIB_PATHS		:= $(addprefix -L,$(LIB_PATHS))
+LINK_LIB_NAMES		:= $(addprefix -l,$(LIB_NAMES))
+
+endif # dynamic static2, bin
 
 COMPILE_FLAGS		:= $(filter-out $(addsuffix %,$(PLATFORM_DISABLE_FLAGS)),$(COMPILE_FLAGS))
 

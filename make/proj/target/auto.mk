@@ -5,48 +5,32 @@
 ## @version	1.0
 ###############################################################################
 
-include $(ROOT_MAKE_DIRECTORY)/cmd.mk
-include $(ROOT_MAKE_DIRECTORY)/func/config.mk
-include $(ROOT_MAKE_DIRECTORY)/auto/func/info.mk
-
-CONFIG_COMPILE_LIST	:= debug release
-CONFIG_COMPILE		:= $(call get_config,$(CONFIG),$(CONFIG_COMPILE_LIST),debug)
-
-CONFIG_THREAD_LIST	:= multi single
-CONFIG_THREAD		:= $(call get_config,$(CONFIG),$(CONFIG_THREAD_LIST),multi)
-
-CONFIG_LIB_LIST		:= dynamic static
-CONFIG_LIB		:= $(call get_config,$(CONFIG),$(CONFIG_LIB_LIST),static)
-
-PLATFORM_DISABLE_FLAGS	:= $(PLATFORM_DISABLE_FLAGS) -fvisibility
+COMPILE_FLAGS		:= $(filter-out -fvisibility%,$(COMPILE_FLAGS))
 
 # we need update sysroot to absolute path
-PLATFORM_SYS_ROOT	:= $(call reletive_directory,$(PLATFORM_SYS_ROOT))
-PLATFORM_INCLUDE_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_INCLUDE_DIRECTORYS))
-PLATFORM_LIBRARY_DIRECTORYS	:= $(call reletive_directory,$(PLATFORM_LIBRARY_DIRECTORYS))
+INC_PATHS		:= $(call reletive_directory,$(INC_PATHS))
+LIB_PATHS		:= $(call reletive_directory,$(LIB_PATHS))
 
-CONFIG_LIB2		:= $(CONFIG_LIB)
-CONFIG_LIB		:= dynamic # force flags.mk to generate dynamic link flags
-include $(ROOT_MAKE_DIRECTORY)/proj/target/flags.mk
-CONFIG_LIB		:= $(CONFIG_LIB2)
+COMPILE_FLAGS		:= $(COMPILE_FLAGS) $(addprefix -I,$(INC_PATHS))
 
-COMPILE_FLAGS		:= $(COMPILE_FLAGS) $(addprefix -I,$(PLATFORM_INCLUDE_DIRECTORYS))
+LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -L,$(LIB_PATHS))
+LINK_FLAGS		:= $(LINK_FLAGS) $(LINK_LIB_NAMES)
 
-LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -L,$(PLATFORM_LIBRARY_DIRECTORYS))
-LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -l,$(LOCAL_DEPEND_LIBRARYS))
-LINK_FLAGS		:= $(LINK_FLAGS) $(addprefix -l,$(PLATFORM_DEPEND_LIBRARYS))
-
-SOURCE_DIRECTORY	:= $(ROOT_SOURCE_DIRECTORY)$(LOCAL_NAME)
-
-TARGET_DIRECTORY	:= $(CONFIG_COMPILE)/$(CONFIG_LIB)/$(CONFIG_THREAD)
-TARGET_FILE_FULL	:= $(TARGET_DIRECTORY)/$(LOCAL_TARGET)
-
-BUILDABLE		:= $(if $(wildcard $(SOURCE_DIRECTORY)),yes,no)
-
-BUILD_TARGET		:= $(PLATFORM_TOOL_TARGET)
-ifeq ($(BUILD_TARGET),)
-	BUILD_TARGET	:= $(strip $(shell PATH=$(PATH) LANG=C $(PLATFORM_TOOL_PREFIX)gcc -v 2>&1 | awk -F : '$$1 == "Target" { print $$2 }'))
+BUILD_HOST		:= $(PLATFORM_TOOL_TARGET)
+ifeq ($(BUILD_HOST),)
+	BUILD_HOST	:= $(strip $(shell PATH=$(PATH) LANG=C $(PLATFORM_TOOL_PREFIX)gcc -v 2>&1 | awk -F : '$$1 == "Target" { print $$2 }'))
 endif
+
+# 通用提取项目信息
+# argment1:	项目名称
+# return:	该信息项的值
+
+define get_auto_configure_info
+$(strip \
+	$(shell LANG=C cd $(SOURCE_DIRECTORY) && ./configure --help | \
+		awk '{ if (match($$1, "--$(1)([=\\[]|$$)")) { $$1="" ; print $$0 } }') \
+)
+endef
 
 ENVIRONMENT		:= 
 
@@ -68,19 +52,24 @@ endif
 ifneq ($(call get_auto_configure_info,extra-ldflags),)
 CONFIGURE		:= $(CONFIGURE) --extra-ldflags="$(LINK_FLAGS)"
 else
-ENVIRONMENT		:= $(ENVIRONMENT) LDFLAGS="$(COMPILE_FLAGS)"
+ENVIRONMENT		:= $(ENVIRONMENT) LDFLAGS="$(LINK_FLAGS)"
 endif
 
+ifneq ($(LOCAL_SUB_TYPE),bin)
 ifeq ($(CONFIG_LIB),static)
 CONFIGURE		:= $(CONFIGURE) --enable-static --disable-shared
 else
 CONFIGURE		:= $(CONFIGURE) --disable-static --enable-shared
 endif
+endif
 
 # Cross-compilation:
 ifneq ($(PLATFORM_TOOL_PREFIX),)
+ifneq ($(call get_auto_configure_info,build),)
+#CONFIGURE		:= $(CONFIGURE) --build=$(BUILD_HOST)
+endif
 ifneq ($(call get_auto_configure_info,host),)
-CONFIGURE		:= $(CONFIGURE) --host=$(BUILD_TARGET)
+CONFIGURE		:= $(CONFIGURE) --host=$(BUILD_HOST)
 endif
 ifneq ($(call get_auto_configure_info,cross-prefix),)
 CONFIGURE		:= $(CONFIGURE) --cross-prefix=$(PLATFORM_TOOL_PREFIX)
@@ -89,41 +78,27 @@ ENVIRONMENT		:= $(ENVIRONMENT) CC=$(CC)
 ENVIRONMENT		:= $(ENVIRONMENT) CXX=$(CXX)
 endif
 endif
+ENVIRONMENT		:= $(ENVIRONMENT) $(LOCAL_CONFIGURE_VARS)
 
 ifneq ($(CONFIG_COMPILE),release)
 ifneq ($(call get_auto_configure_info,enable-debug),)
-	LOCAL_CONFIGURE		:= $(LOCAL_CONFIGURE) --enable-debug
+LOCAL_CONFIGURE		:= $(LOCAL_CONFIGURE) --enable-debug
 endif
 endif
 
 CONFIGURE		:= $(CONFIGURE) $(LOCAL_CONFIGURE)
 
-.PHONY: target
-target: $(TARGET_FILE_FULL)
-
-.PHONY: info
-info:
-	@$(ECHO) "Name: $(LOCAL_NAME)"
-	@$(ECHO) "Type: $(LOCAL_TYPE)"
-	@$(ECHO) "SourceDirectory: $(SOURCE_DIRECTORY)"
-	@$(ECHO) "Buildable: $(BUILDABLE)"
-	@$(ECHO) "TargetDirectory: $(dir $(TARGET_FILE_FULL))"
-	@$(ECHO) "Target: $(notdir $(TARGET_FILE_FULL))"
-	@$(ECHO) "Version: $(LOCAL_VERSION)"
-	@$(ECHO) "File: $(TARGET_FILE_FULL)"
-	@$(ECHO) "DependLibs: $(LOCAL_DEPEND_LIBRARYS)"
-
 FILE_ACLOCAL		:= $(SOURCE_DIRECTORY)/aclocal.m4
 
 FILE_CONFIGURE_AC	:= $(SOURCE_DIRECTORY)/configure.ac
-FILE_CONFIGURE	:= $(SOURCE_DIRECTORY)/configure
+FILE_CONFIGURE		:= $(SOURCE_DIRECTORY)/configure
 
 FILE_MAKEFILE_AM	:= $(SOURCE_DIRECTORY)/Makefile.am
 FILE_MAKEFILE_IN	:= $(SOURCE_DIRECTORY)/Makefile.in
 FILE_MAKEFILE		:= $(SOURCE_DIRECTORY)/Makefile
 
 ifneq ($(LOCAL_CONFIG_H),)
-	FILE_CONFIG_H		:= $(SOURCE_DIRECTORY)/$(LOCAL_CONFIG_H)
+FILE_CONFIG_H		:= $(SOURCE_DIRECTORY)/$(LOCAL_CONFIG_H)
 endif
 
 $(FILE_ACLOCAL):
@@ -131,9 +106,15 @@ $(FILE_ACLOCAL):
 	$(CD) $(SOURCE_DIRECTORY) && libtoolize && aclocal
 
 ifeq ($(wildcard $(FILE_CONFIGURE)),)
+ifneq ($(wildcard $(FILE_CONFIGURE_AC)),)
 $(FILE_CONFIGURE): $(FILE_CONFIGURE_AC) $(FILE_ACLOCAL)
 	@echo $@
-	$(CD) $(SOURCE_DIRECTORY) && autoconf
+	$(CD) $(SOURCE_DIRECTORY) && autoconf && rm -rf autom4te*.cache
+else
+$(FILE_CONFIGURE): 
+	@echo $@
+	$(CD) $(SOURCE_DIRECTORY) && autoreconf -fvi && rm -rf autom4te*.cache
+endif
 endif
 
 ifeq ($(wildcard $(FILE_MAKEFILE_IN)),)
@@ -154,11 +135,28 @@ $(FILE_MAKEFILE): $(FILE_MAKEFILE_IN) $(FILE_CONFIGURE)
 	$(CD) $(SOURCE_DIRECTORY) && $(ENVIRONMENT) ./configure $(CONFIGURE)
 endif
 
-ifeq ($(wildcard $(TARGET_DIRECTORY)),)
+ifeq ($(LOCAL_TARGET),)
+LOCAL_TARGET		:= $(addprefix lib/$(NAME_PREFIX),$(addsuffix $(NAME_SUFFIX),$(PROJECT_TARGET)))
+endif
+
+LOCAL_TARGET1		:= $(addprefix $(TARGET_DIRECTORY)/,$(LOCAL_TARGET))
+LOCAL_TARGET2		:= $(addprefix $(TARGET_DIRECTORY)/,$(notdir $(LOCAL_TARGET)))
+
 .PHONY: make_install
 make_install: $(FILE_MAKEFILE) $(FILE_CONFIG_H)
 	@echo $@
 	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) install && $(MAKE) distclean
+	$(CD) $(TARGET_DIRECTORY) && $(LN) -s $(addsuffix *,$(LOCAL_TARGET)) .
 
-$(TARGET_FILE_FULL): make_install
+ifeq ($(wildcard $(LOCAL_TARGET1)),)
+
+$(LOCAL_TARGET1): make_install
+
+endif
+
+ifeq ($(wildcard $(TARGET_FILE_FULL)),)
+
+$(TARGET_FILE_FULL): $(LOCAL_TARGET1)
+	$(LN) $(filter $(patsubst %$(NAME_SUFFIX_FULL),%,$@)%,$(LOCAL_TARGET2)) $@
+
 endif

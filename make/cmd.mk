@@ -13,6 +13,10 @@ ifeq ($(AS),)
 	AS		:= as
 endif
 
+ifeq ($(CPP),)
+	CPP		:= cpp
+endif
+
 ifeq ($(CC),)
 	CC		:= gcc
 endif
@@ -38,6 +42,7 @@ endif
 
 AR		:= $(PLATFORM_TOOL_PREFIX)$(AR)
 AS		:= $(PLATFORM_TOOL_PREFIX)$(AS)
+CPP		:= $(PLATFORM_TOOL_PREFIX)$(CPP)
 CC		:= $(PLATFORM_TOOL_PREFIX)$(CC)
 CXX		:= $(PLATFORM_TOOL_PREFIX)$(CXX)
 LD		:= $(PLATFORM_TOOL_PREFIX)$(LD)

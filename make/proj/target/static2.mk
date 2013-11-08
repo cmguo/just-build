@@ -5,8 +5,14 @@
 ## @version	1.0
 ###############################################################################
 
-include $(TARGET_MAKE_DIRECTORY)/link.mk
+ifneq ($(PLATFORM_CRTBEGIN_STATICBIN),)
+	PLATFORM_CRTBEGIN_STATICBIN	:= $(wildcard $(addsuffix /$(PLATFORM_CRTBEGIN_STATICBIN),$(PLATFORM_LIBRARY_DIRECTORYS)))
+endif
+
+ifneq ($(PLATFORM_CRTEND_STATICBIN),)
+	PLATFORM_CRTEND_STATICBIN	:= $(wildcard $(addsuffix /$(PLATFORM_CRTEND_STATICBIN),$(PLATFORM_LIBRARY_DIRECTORYS)))
+endif
 
 $(TARGET_FILE_FULL): $(SOURCE_OBJECTS) $(HEADER_OBJECTS) $(MAKEFILE_LIST) $(DEPEND_FILES)
 	@$(RM) $@
-	$(LT) $(LINK_FLAGS) $(SOURCE_OBJECTS_FULL) $(LIB_PATHS) $(LIB_NAMES) -o $@
+	$(LT) $(LINK_FLAGS) $(SOURCE_OBJECTS_FULL) $(LINK_LIB_PATHS) $(LINK_LIB_NAMES) -o $@

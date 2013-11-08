@@ -56,7 +56,7 @@ info:
 	@$(ECHO) "Name: $(LOCAL_NAME)"
 	@$(ECHO) "Type: $(LOCAL_TYPE)"
 	@$(ECHO) "Subs: $(strip $(DIRECTORY_SUBS))"
-	@$(ECHO) "Depends: $(addprefix $(LOCAL_NAME)/,$(DIRECTORY_SUBS))"
+	@$(ECHO) "Depends: $(addprefix $(LOCAL_NAME)/,$(strip $(DIRECTORY_SUBS)))"
 
 .PHONY: $(OTHER_TARGETS_NO_INFO)
 $(OTHER_TARGETS_NO_INFO): $(SUBS) 

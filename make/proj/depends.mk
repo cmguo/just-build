@@ -18,11 +18,14 @@ endef
 
 iiii := $(call tree_visit,$(LOCAL_NAME),Type File Depends DependLibs,proj_print,dirs_z,depends_z)
 
-DEPEND_FILES := $(shell echo "$(depends_z)" | awk -f $(ROOT_MAKE_DIRECTORY)/awk/depend.awk)
+DEPEND_FILES		:= $(shell echo "$(depends_z)" | awk -f $(ROOT_MAKE_DIRECTORY)/awk/depend.awk)
 
 DEPEND_FILES		:= $(patsubst %.dll,%.a,$(DEPEND_FILES))
 
-SYSTEM_LIB := $(filter-out %.a %$(DYNAMIC_NAME_SUFFIX),$(DEPEND_FILES))
-DEPEND_FILES := $(filter %.a %$(DYNAMIC_NAME_SUFFIX),$(DEPEND_FILES))
-DEPEND_FILES  := $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(DEPEND_FILES))
+SYSTEM_LIB 		:= $(filter-out /%,$(DEPEND_FILES))
+DEPEND_FILES 		:= $(filter /%,$(DEPEND_FILES))
+DEPEND_FILES  		:= $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(DEPEND_FILES))
+
+DEPEND_PATHS		:= $(dir $(DEPEND_FILES))
+DEPEND_NAMES		:= $(notdir$(DEPEND_FILES))
 
