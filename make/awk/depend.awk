@@ -96,7 +96,7 @@ END {
         if (i in result) {
 #            print i;
             item = result[i];
-            if (type[item] == "proj-lib-static" || type[item] == "proj-lib-dynamic") {
+            if (type[item] !~ /\*/) {
                 ii = GetArray(file[item], files);
                 for (j = 1; j <= ii; ++j) {
                     print result[i]"/"files[j];

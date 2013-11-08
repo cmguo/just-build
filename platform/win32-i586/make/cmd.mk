@@ -1,3 +1,5 @@
 PLATFORM_TOOL_NAME	:= mingw32
 
 PLATFORM_TOOL_PREFIX	:= i586-mingw32msvc-
+
+PLATFORM_TOOL_TARGET	:= i586-mingw32msvc
