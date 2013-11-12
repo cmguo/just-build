@@ -445,6 +445,21 @@ using namespace Windows::System::Threading;
         if (charset.ec()) {
             return NULL;
         }
+        HANDLE hEvent = CreateEventW(
+            lpEventAttributes, 
+            bManualReset, 
+            bInitialState, 
+            charset.wstr());
+        return hEvent;
+    }
+
+    HANDLE WINAPI_DECL CreateEventW(
+        _In_opt_  LPSECURITY_ATTRIBUTES lpEventAttributes,
+        _In_      BOOL bManualReset,
+        _In_      BOOL bInitialState,
+        _In_opt_  LPCWSTR lpName
+        )
+    {
         DWORD dwFlags = 0;
         if (bManualReset)
             dwFlags |= CREATE_EVENT_MANUAL_RESET;
@@ -452,7 +467,7 @@ using namespace Windows::System::Threading;
             dwFlags |= CREATE_EVENT_INITIAL_SET;
         HANDLE hEvent = CreateEventExW(
             lpEventAttributes, 
-            charset.wstr(), 
+            lpName, 
             dwFlags, 
             EVENT_ALL_ACCESS);
         return hEvent;
@@ -469,12 +484,25 @@ using namespace Windows::System::Threading;
             assert(false);
             return NULL;
         }
+        HANDLE hMutex = CreateMutexW(
+            lpMutexAttributes, 
+            bInitialOwner, 
+            charset.wstr());
+        return hMutex;
+    }
+
+    HANDLE WINAPI_DECL CreateMutexW(
+        _In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
+        _In_      BOOL bInitialOwner,
+        _In_opt_  LPCWSTR lpName
+        )
+    {
         DWORD dwFlags = 0;
         if (bInitialOwner)
             dwFlags |= CREATE_MUTEX_INITIAL_OWNER;
         HANDLE hMutex = CreateMutexExW(
             lpMutexAttributes, 
-            charset.wstr(), 
+            lpName, 
             dwFlags, 
             MUTEX_ALL_ACCESS);
         return hMutex;
@@ -508,12 +536,27 @@ using namespace Windows::System::Threading;
         if (charset.ec()) {
             return NULL;
         }
+        HANDLE hSemaphore = CreateSemaphoreW(
+            lpSemaphoreAttributes, 
+            lInitialCount, 
+            lMaximumCount, 
+            charset.wstr());
+        return hSemaphore;
+    }
+
+    HANDLE WINAPI_DECL CreateSemaphoreW(
+        _In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
+        _In_      LONG lInitialCount,
+        _In_      LONG lMaximumCount,
+        _In_opt_  LPCWSTR lpName
+        )
+    {
         DWORD dwFlags = 0;
         HANDLE hSemaphore = CreateSemaphoreExW(
             lpSemaphoreAttributes, 
             lInitialCount, 
             lMaximumCount, 
-            charset.wstr(), 
+            lpName, 
             dwFlags, 
             SEMAPHORE_ALL_ACCESS);
         return hSemaphore;

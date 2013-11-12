@@ -105,7 +105,11 @@
         _In_opt_  LPCWSTR lpName
         );
 
-#define CreateEvent CreateEventA
+#ifdef UNICODE
+#define CreateEvent  CreateEventW
+#else
+#define CreateEvent  CreateEventA
+#endif // !UNICODE
 
     HANDLE WINAPI_DECL CreateMutexA(
           _In_opt_  LPSECURITY_ATTRIBUTES lpMutexAttributes,
@@ -119,11 +123,29 @@
           _In_opt_  LPCWSTR lpName
         );
 
+#ifdef UNICODE
+#define CreateMutex  CreateMutexW
+#else
+#define CreateMutex  CreateMutexA
+#endif // !UNICODE
+
     HANDLE WINAPI_DECL OpenMutexA(
         _In_  DWORD dwDesiredAccess,
         _In_  BOOL bInheritHandle,
         _In_  LPCSTR lpName
         );
+
+    //HANDLE WINAPI_DECL OpenMutexW(
+    //    _In_  DWORD dwDesiredAccess,
+    //    _In_  BOOL bInheritHandle,
+    //    _In_  LPCWSTR lpName
+    //    );
+
+#ifdef UNICODE
+//#define OpenMutex  OpenMutexW
+#else
+#define OpenMutex  OpenMutexA
+#endif // !UNICODE
 
     HANDLE WINAPI_DECL CreateSemaphoreA(
         _In_opt_  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
@@ -139,11 +161,29 @@
         _In_opt_  LPCWSTR lpName
         );
 
+#ifdef UNICODE
+#define CreateSemaphore  CreateSemaphoreW
+#else
+#define CreateSemaphore  CreateSemaphoreA
+#endif // !UNICODE
+
     HANDLE WINAPI_DECL OpenSemaphoreA(
         _In_  DWORD dwDesiredAccess,
         _In_  BOOL bInheritHandle,
         _In_  LPCSTR lpName
         );
+
+    //HANDLE WINAPI_DECL OpenSemaphoreW(
+    //    _In_  DWORD dwDesiredAccess,
+    //    _In_  BOOL bInheritHandle,
+    //    _In_  LPCWSTR lpName
+    //    );
+
+#ifdef UNICODE
+//#define OpenSemaphore  OpenSemaphoreW
+#else
+#define OpenSemaphore  OpenSemaphoreA
+#endif // !UNICODE
 
     DWORD WINAPI_DECL WaitForSingleObject(
         _In_  HANDLE hHandle,

@@ -603,6 +603,12 @@ typedef struct WSAData {
         _Inout_   LPDWORD lpdwAddressStringLength
         );
 
+#ifdef UNICODE
+#define WSAAddressToString  WSAAddressToStringW
+#else
+#define WSAAddressToString  WSAAddressToStringA
+#endif // !UNICODE
+
     INT WINAPI_DECL WSAStringToAddressA(
         _In_      LPSTR AddressString,
         _In_      INT AddressFamily,
@@ -618,6 +624,12 @@ typedef struct WSAData {
         _Out_     LPSOCKADDR lpAddress,
         _Inout_   LPINT lpAddressLength
         );
+
+#ifdef UNICODE
+#define WSAStringToAddress  WSAStringToAddressW
+#else
+#define WSAStringToAddress  WSAStringToAddressA
+#endif // !UNICODE
 
     void WINAPI_DECL WSASetLastError(
         _In_  int iError

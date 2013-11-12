@@ -22,12 +22,23 @@
 
 #define CreateDirectoryA CreateDirectory2A
 
+#ifdef UNICODE
+//#define CreateDirectory  CreateDirectoryW
+#else
+#define CreateDirectory  CreateDirectoryA
+#endif // !UNICODE
+
     BOOL WINAPI_DECL RemoveDirectory2A(
         _In_  LPCSTR lpPathName
         );
 
 #define RemoveDirectoryA RemoveDirectory2A
 
+#ifdef UNICODE
+//#define RemoveDirectory  RemoveDirectoryW
+#else
+#define RemoveDirectory  RemoveDirectoryA
+#endif // !UNICODE
 
     DWORD WINAPI_DECL GetFileAttributesA(
         _In_  LPCSTR lpFileName
@@ -36,6 +47,12 @@
     DWORD WINAPI_DECL GetFileAttributesW(
         _In_  LPCWSTR lpFileName
         );
+
+#ifdef UNICODE
+#define GetFileAttributes  GetFileAttributesW
+#else
+#define GetFileAttributes  GetFileAttributesA
+#endif // !UNICODE
 
     HANDLE WINAPI_DECL CreateFileA(
         _In_      LPCSTR lpFileName,
@@ -56,6 +73,12 @@
         _In_      DWORD dwFlagsAndAttributes,
         _In_opt_  HANDLE hTemplateFile
         );
+
+#ifdef UNICODE
+#define CreateFile  CreateFileW
+#else
+#define CreateFile  CreateFileA
+#endif // !UNICODE
 
     BOOL WINAPI_DECL DeleteFile2A(
         _In_  LPCSTR lpFileName
@@ -133,6 +156,12 @@
         _Out_  LPWSTR lpBuffer
         );
 
+#ifdef UNICODE
+#define GetCurrentDirectory  GetCurrentDirectoryW
+#else
+#define GetCurrentDirectory  GetCurrentDirectoryA
+#endif // !UNICODE
+
     BOOL WINAPI_DECL SetCurrentDirectoryA(
         _In_  LPCSTR lpPathName
         );
@@ -140,6 +169,12 @@
     BOOL WINAPI_DECL SetCurrentDirectoryW(
         _In_  LPCWSTR lpPathName
         );
+
+#ifdef UNICODE
+#define SetCurrentDirectory  SetCurrentDirectoryW
+#else
+#define SetCurrentDirectory  SetCurrentDirectoryA
+#endif // !UNICODE
 
     BOOL WINAPI_DECL CreateHardLinkA(
         _In_        LPCSTR lpFileName,
@@ -152,6 +187,12 @@
         _In_        LPCWSTR lpExistingFileName,
         _Reserved_  LPSECURITY_ATTRIBUTES lpSecurityAttributes
         );
+
+#ifdef UNICODE
+#define CreateHardLink  CreateHardLinkW
+#else
+#define CreateHardLink  CreateHardLinkA
+#endif // !UNICODE
 
     DWORD WINAPI_DECL GetFullPathNameA(
         _In_   LPCSTR lpFileName,
@@ -167,6 +208,12 @@
         _Out_  LPWSTR *lpFilePart
         );
 
+#ifdef UNICODE
+#define GetFullPathName  GetFullPathNameW
+#else
+#define GetFullPathName  GetFullPathNameA
+#endif // !UNICODE
+
     DWORD WINAPI_DECL GetShortPathNameA(
         _In_   LPCSTR lpszLongPath,
         _Out_  LPSTR lpszShortPath,
@@ -179,6 +226,12 @@
         _In_   DWORD cchBuffer
         );
 
+#ifdef UNICODE
+#define GetShortPathName  GetShortPathNameW
+#else
+#define GetShortPathName  GetShortPathNameA
+#endif // !UNICODE
+
     BOOL WINAPI_DECL MoveFileA(
         _In_  LPCSTR lpExistingFileName,
         _In_  LPCSTR lpNewFileName
@@ -188,6 +241,12 @@
         _In_  LPCWSTR lpExistingFileName,
         _In_  LPCWSTR lpNewFileName
         );
+
+#ifdef UNICODE
+#define MoveFile  MoveFileW
+#else
+#define MoveFile  MoveFileA
+#endif // !UNICODE
 
     BOOL WINAPI_DECL CopyFileA(
         _In_  LPCSTR lpExistingFileName,
@@ -201,6 +260,12 @@
         _In_  BOOL bFailIfExists
         );
 
+#ifdef UNICODE
+#define CopyFile  CopyFileW
+#else
+#define CopyFile  CopyFileA
+#endif // !UNICODE
+
     HANDLE WINAPI_DECL FindFirstFileA(
         _In_   LPCSTR lpFileName,
         _Out_  LPWIN32_FIND_DATAA lpFindFileData
@@ -210,6 +275,12 @@
         _In_   LPCWSTR lpFileName,
         _Out_  LPWIN32_FIND_DATAW lpFindFileData
         );
+
+#ifdef UNICODE
+#define FindFirstFile  FindFirstFileW
+#else
+#define FindFirstFile  FindFirstFileA
+#endif // !UNICODE
 
     typedef struct _BY_HANDLE_FILE_INFORMATION {
         DWORD    dwFileAttributes;
@@ -252,6 +323,12 @@
         _In_   DWORD nBufferLength,
         _Out_  LPWSTR lpBuffer
         );
+
+#ifdef UNICODE
+#define GetTempPath  GetTempPathW
+#else
+#define GetTempPath  GetTempPathA
+#endif // !UNICODE
 
 #define CloseHandle CloseHandle2
 

@@ -121,6 +121,11 @@ namespace winapi
         return "";
     }
 
+    LPWCH WINAPI_DECL GetEnvironmentStringsW(void)
+    {
+        return L"";
+    }
+
     DWORD WINAPI_DECL GetEnvironmentVariableA(
         _In_opt_   LPCSTR lpName,
         _Out_opt_  LPSTR lpBuffer,
@@ -149,9 +154,29 @@ namespace winapi
         return 0;
     }
 
+    DWORD WINAPI_DECL GetEnvironmentVariableW(
+        _In_opt_   LPCWSTR lpName,
+        _Out_opt_  LPWSTR lpBuffer,
+        _In_       DWORD nSize
+        )
+    {
+        assert(0);
+        SetLastError(ERROR_ENVVAR_NOT_FOUND);
+        return 0;
+    }
+
     BOOL WINAPI_DECL SetEnvironmentVariableA(
         _In_      LPCSTR lpName,
         _In_opt_  LPCSTR lpValue
+        )
+    {
+        assert(0);
+        return FALSE;
+    }
+
+    BOOL WINAPI_DECL SetEnvironmentVariableW(
+        _In_      LPCWSTR lpName,
+        _In_opt_  LPCWSTR lpValue
         )
     {
         assert(0);
@@ -309,6 +334,14 @@ namespace winapi
         return FALSE;
     }
 
+    BOOL WINAPI_DECL GetConsoleScreenBufferInfo(
+        _In_ HANDLE hConsoleOutput,
+        _Out_ PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo
+        )
+    {
+        return FALSE;
+    }
+
     BOOL WINAPI_DECL FileTimeToLocalFileTime(
         _In_   const FILETIME *lpFileTime,
         _Out_  LPFILETIME lpLocalFileTime
@@ -337,11 +370,20 @@ namespace winapi
         )
     {
         charset_t charset(lpModuleName);
-        if (charset.wstr() == NULL) {
+        HMODULE hModule = GetModuleHandleW(
+            charset.wstr());
+        return hModule;
+    }
+
+    HMODULE WINAPI_DECL GetModuleHandleW(
+        _In_opt_  LPCWSTR lpModuleName
+        )
+    {
+        if (lpModuleName == NULL) {
             return (HMODULE)GetCurrentProcess();
         }
         HMODULE hModule = LoadPackagedLibrary(
-            charset.wstr(), 
+            lpModuleName, 
             0);
         return hModule;
     }
@@ -354,8 +396,17 @@ namespace winapi
         if (charset.wstr() == NULL) {
             return NULL;
         }
+        HMODULE hModule = LoadLibraryW(
+            charset.wstr());
+        return hModule;
+    }
+
+    HMODULE WINAPI_DECL LoadLibraryW(
+        _In_  LPCWSTR lpFileName
+        )
+    {
         HMODULE hModule = LoadPackagedLibrary(
-            charset.wstr(), 
+            lpFileName, 
             0);
         return hModule;
     }
@@ -363,6 +414,24 @@ namespace winapi
     DWORD WINAPI_DECL GetModuleFileNameA(
       _In_opt_  HMODULE hModule,
       _Out_     LPSTR lpFilename,
+      _In_      DWORD nSize
+    )
+    {
+        charset_t charset(lpFilename, nSize);
+        DWORD nBufferLength = GetModuleFileNameW(
+            hModule, 
+            charset.wstr(), 
+            charset.wlen());
+        if (nBufferLength == 0)
+            return 0;
+        charset.wlen(nBufferLength);
+        charset.w2a();
+        return charset.len();
+    }
+
+    DWORD WINAPI_DECL GetModuleFileNameW(
+      _In_opt_  HMODULE hModule,
+      _Out_     LPWSTR lpFilename,
       _In_      DWORD nSize
     )
     {
@@ -374,21 +443,21 @@ namespace winapi
             Windows::ApplicationModel::Package::Current->InstalledLocation->Path;
         Platform::String ^ name = 
             Windows::ApplicationModel::Package::Current->Id->Name;
-        DWORD nBufferLength = charset_t::w2a(
-            path->Data(), path->Length(), 
-            lpFilename, nSize - 1);
-        if (nBufferLength == 0)
-            return 0;
+        DWORD nBufferLength = path->Length();
+        if (nBufferLength > nSize)
+            nBufferLength = nSize;
+        memcpy(lpFilename, path->Data(), nBufferLength * sizeof(WCHAR));
         if (nBufferLength + 1 < nSize) {
             lpFilename[nBufferLength++] = '\\';
         }
-        nBufferLength += charset_t::w2a(
-            name->Data(), name->Length(), 
-            lpFilename + nBufferLength, nSize - nBufferLength - 1);
-        if (nBufferLength < nSize) {
-            lpFilename[nBufferLength] = '\0';
+        DWORD nBufferLength2 = name->Length();
+        if (nBufferLength + nBufferLength2 > nSize)
+            nBufferLength2 = nSize - nBufferLength;
+        memcpy(lpFilename + nBufferLength, name->Data(), nBufferLength2 * sizeof(WCHAR));
+        if (nBufferLength + nBufferLength2 < nSize) {
+            lpFilename[nBufferLength + nBufferLength2] = '\0';
         }
-        return nBufferLength;
+        return nBufferLength + nBufferLength2;
     }
 
 //}

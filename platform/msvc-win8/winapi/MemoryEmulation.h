@@ -40,11 +40,38 @@
         _In_opt_  LPCSTR lpName
         );
 
+    HANDLE WINAPI_DECL CreateFileMappingW(
+        _In_      HANDLE hFile,
+        _In_opt_  LPSECURITY_ATTRIBUTES lpAttributes,
+        _In_      DWORD flProtect,
+        _In_      DWORD dwMaximumSizeHigh,
+        _In_      DWORD dwMaximumSizeLow,
+        _In_opt_  LPCWSTR lpName
+        );
+
+#ifdef UNICODE
+#define CreateFileMapping  CreateFileMappingW
+#else
+#define CreateFileMapping  CreateFileMappingA
+#endif // !UNICODE
+
     HANDLE WINAPI_DECL OpenFileMappingA(
         _In_ DWORD dwDesiredAccess,
         _In_ BOOL bInheritHandle,
         _In_ LPCSTR lpName
         );
+
+    HANDLE WINAPI_DECL OpenFileMappingW(
+        _In_ DWORD dwDesiredAccess,
+        _In_ BOOL bInheritHandle,
+        _In_ LPCWSTR lpName
+        );
+
+#ifdef UNICODE
+#define OpenFileMapping  OpenFileMappingW
+#else
+#define OpenFileMapping  OpenFileMappingA
+#endif // !UNICODE
 
     LPVOID WINAPI_DECL MapViewOfFile(
         _In_  HANDLE hFileMappingObject,

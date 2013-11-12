@@ -4,6 +4,7 @@
 
 #define WINAPI_DECL     __declspec(dllexport)
 
+#include "MemoryEmulation.h"
 #include "Charset.h"
 using namespace winapi;
 
@@ -80,13 +81,32 @@ using namespace winapi;
         if (charset.ec()) {
             return NULL;
         }
+        HANDLE hFileMapping = CreateFileMappingW(
+            hFile, 
+            lpAttributes, 
+            flProtect, 
+            dwMaximumSizeHigh, 
+            dwMaximumSizeLow, 
+            charset.wstr());
+        return hFileMapping;
+    }
+
+    HANDLE WINAPI_DECL CreateFileMappingW(
+        _In_      HANDLE hFile,
+        _In_opt_  LPSECURITY_ATTRIBUTES lpAttributes,
+        _In_      DWORD flProtect,
+        _In_      DWORD dwMaximumSizeHigh,
+        _In_      DWORD dwMaximumSizeLow,
+        _In_opt_  LPCWSTR lpName
+        )
+    {
         ULONG64 ulMaximumSize = (ULONG64)dwMaximumSizeHigh << 32 | dwMaximumSizeLow;
         HANDLE hFileMapping = CreateFileMappingFromApp(
             hFile, 
             lpAttributes, 
             flProtect, 
             ulMaximumSize , 
-            charset.wstr());
+            lpName);
         return hFileMapping;
     }
 
@@ -97,6 +117,25 @@ using namespace winapi;
         )
     {
         HANDLE hFileMapping = CreateFileMappingA(
+            INVALID_HANDLE_VALUE, 
+            NULL, 
+            dwDesiredAccess, 
+            0, 
+            0, 
+            lpName);
+        if (hFileMapping != NULL && GetLastError() == ERROR_ALREADY_EXISTS) {
+            SetLastError(0);
+        }
+        return hFileMapping;
+    }
+
+    HANDLE WINAPI_DECL OpenFileMappingW(
+        _In_ DWORD dwDesiredAccess,
+        _In_ BOOL bInheritHandle,
+        _In_ LPCWSTR lpName
+        )
+    {
+        HANDLE hFileMapping = CreateFileMappingW(
             INVALID_HANDLE_VALUE, 
             NULL, 
             dwDesiredAccess, 
