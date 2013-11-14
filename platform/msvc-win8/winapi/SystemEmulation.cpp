@@ -212,9 +212,6 @@ namespace winapi
             return 0;
         }
         charset_t charset2(code_page, lpDestStr, cchDest);
-        if (charset2.wstr() == NULL) {
-            return 0;
-        }
         int cchWideChar2 = LCMapStringEx(
             LOCALE_NAME_SYSTEM_DEFAULT, 
             dwMapFlags, 
@@ -229,7 +226,10 @@ namespace winapi
             return 0;
         }
         charset2.wlen(cchWideChar2);
-        charset2.w2a();
+        if (dwMapFlags == LCMAP_SORTKEY)
+            charset2.copy();
+        else
+            charset2.w2a();
         return charset2.len();
     }
 

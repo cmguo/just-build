@@ -123,18 +123,34 @@ namespace winapi
  			lpStr_ = lpStr;
 			nSize_ = nSize;
 			nSizeW_ = nSize;
-			lpStrW_ = (LPWSTR)new WCHAR[nSizeW_];
-			if (lpStrW_ == NULL) {
-				ec_ = ERROR_NOT_ENOUGH_MEMORY;
-				return;
-			}
-			bOwnW_ = TRUE;
+            if (lpStr_ != NULL && nSize_ != 0) {
+			    lpStrW_ = (LPWSTR)new WCHAR[nSizeW_];
+			    if (lpStrW_ == NULL) {
+				    ec_ = ERROR_NOT_ENOUGH_MEMORY;
+				    return;
+			    }
+                bOwnW_ = TRUE;
+            }
        }
 
 		void w2a()
 		{
-			nSize_ = w2a(nCodePage_, lpStrW_, nSizeW_, lpStr_, nSize_);
+            if (lpStr_ != NULL && nSize_ != 0)
+			    nSize_ = w2a(nCodePage_, lpStrW_, nSizeW_, lpStr_, nSize_);
+            else
+                nSize_ = nSizeW_;
 		}
+
+        void copy()
+        {
+            if (lpStr_ != NULL && nSize_ != 0) {
+                if (nSizeW_ < nSize_)
+                    nSize_ = nSizeW_;
+			    memcpy(lpStr_, lpStrW_, nSize_);
+            } else {
+                nSize_ = nSizeW_;
+            }
+        }
 
 	public:
 		LPWSTR wstr() const
