@@ -16,7 +16,7 @@ endif
 LINK_FLAGS		:= $(LINK_FLAGS) -shared -Wl,-soname=$(TARGET_FILE)
 
 ifeq ($(DYNAMIC_NAME_SUFFIX),.dll)
-	LINK_FLAGS		:= $(LINK_FLAGS) -Wl,--out-implib,$(TARGET_FILE_FULL:%.dll=%.a)
+	LINK_FLAGS		:= $(LINK_FLAGS) -Wl,--out-implib,$(TARGET_FILE:$(DYNAMIC_NAME_PREFIX)%.dll=$(TARGET_DIRECTORY)/$(STATIC_NAME_PREFIX)%.dll.a)
 endif
 
 $(TARGET_FILE_FULL): $(SOURCE_OBJECTS) $(DEPEND_FILES) $(MAKEFILE_LIST)

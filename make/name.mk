@@ -5,11 +5,11 @@
 ## @version	1.0
 ###############################################################################
 
-ifeq ($(STATIC_NAME_PREFIX),)
+ifeq ($(origin STATIC_NAME_PREFIX),undefined)
         STATIC_NAME_PREFIX		:= lib
 endif
 
-ifeq ($(DYNAMIC_NAME_PREFIX),)
+ifeq ($(origin DYNAMIC_NAME_PREFIX),undefined)
         DYNAMIC_NAME_PREFIX		:= $(STATIC_NAME_PREFIX)
 endif
 
