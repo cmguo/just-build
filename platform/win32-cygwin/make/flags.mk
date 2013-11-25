@@ -1,0 +1,10 @@
+PLATFORM_COMPILE_FLAGS	:= -Wno-unused-local-typedefs
+
+PLATFORM_DISABLE_FLAGS	:= -fPIC
+
+DYNAMIC_NAME_PREFIX		:= cyg
+
+DYNAMIC_NAME_SUFFIX		:= .dll
+
+BIN_NAME_SUFFIX			:= .exe
+
