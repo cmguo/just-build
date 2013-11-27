@@ -60,8 +60,10 @@ COMMON_MAKE_FILES		:= $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(addsuffix /Commo
 
 -include $(COMMON_MAKE_FILES)
 
+PROJECT_DIRECTORY		:= $(ROOT_PROJECT_DIRECTORY)$(LOCAL_NAME)
+
 ifneq ($(LOCAL_NAME),/cex)
-        include $(ROOT_PROJECT_DIRECTORY)$(LOCAL_NAME)/Makefile.in
+        include $(PROJECT_DIRECTORY)/Makefile.in
 else
         include $(ROOT_MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.in
 endif

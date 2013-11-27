@@ -34,22 +34,12 @@ MAKE_DIRECTORYS		:= $(DEPEND_DIRECTORY) $(OBJECT_DIRECTORY) $(DEPEND_SUB_DIRECTO
 
 include $(ROOT_MAKE_DIRECTORY)/mkdirs.mk
 
-include $(PROJ_MAKE_DIRECTORY)/shell.mk
+include $(TARGET_MAKE_DIRECTORY)/actions.mk
+
+include $(TARGET_MAKE_DIRECTORY)/buildver.mk
 
 DEPENDS                 := $(PROJECT_DEPENDS) $(PLATFORM_DEPENDS)
 
 include $(TARGET_MAKE_DIRECTORY)/$(PROJECT_TYPE).mk
 
-target: $(TARGET_FILE_FULL)
-
-ifeq ($(BUILDABLE)$(CONFIG_build_version),yesyes)
-
-MAKE_VERSION_FILE	:= $(TARGET_FILE_FULL).version
-
-target: $(MAKE_VERSION_FILE)
-
-$(MAKE_VERSION_FILE): $(TARGET_FILE_FULL) $(BUILD_VERSION_FILE)
-	$(EV) $(TARGET_FILE_FULL) $(VERSION_NAME) $(VERSION).$(BUILD_VERSION)
-	@touch $@
-
-endif
+target: $(TARGET_FILE_FULL) post_build

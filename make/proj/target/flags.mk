@@ -5,33 +5,44 @@
 ## @version	1.0
 ###############################################################################
 
-ifeq ($(DEFAULT_FLAGS),)
-	DEFAULT_FLAGS		:= 1
+COMPILE_FLAGS_all		?= -g -fPIC -Wall
+
+COMPILE_FLAGS_multi		?= -pthread
+COMPILE_FLAGS_single		?=
+COMPILE_FLAGS_debug		?= -DDEBUG
+COMPILE_FLAGS_release		?= -Os -DNDEBUG
+
+COMPILE_FLAGS_multi_debug	?=
+COMPILE_FLAGS_single_debug	?=
+COMPILE_FLAGS_multi_release	?=
+COMPILE_FLAGS_single_release	?=
+
+
+LINK_FLAGS_all			?=
+
+LINK_FLAGS_multi		?= -pthread
+LINK_FLAGS_single		?=
+LINK_FLAGS_debug		?=
+LINK_FLAGS_release		?= -Wl,-Os
+
+LINK_FLAGS_multi_debug		?=
+LINK_FLAGS_single_debug		?=
+LINK_FLAGS_multi_release	?=
+LINK_FLAGS_single_release	?=
+
+CONFIG_COMPILE_FLAGS		:= $(CONFIG_COMPILE_FLAGS) $(COMPILE_FLAGS_all)
+CONFIG_COMPILE_FLAGS		:= $(CONFIG_COMPILE_FLAGS) $(COMPILE_FLAGS_$(CONFIG_THREAD))
+CONFIG_COMPILE_FLAGS		:= $(CONFIG_COMPILE_FLAGS) $(COMPILE_FLAGS_$(CONFIG_COMPILE))
+CONFIG_COMPILE_FLAGS		:= $(CONFIG_COMPILE_FLAGS) $(COMPILE_FLAGS_$(CONFIG_THREAD)_$(CONFIG_COMPILE))
+
+CONFIG_COMPILE_FLAGS		:= $(CONFIG_COMPILE_FLAGS) $(CONFIG_MACROS:%=-D%)
+
+ifneq ($(findstring static,$(CONFIG_LIB2)),)
+        CONFIG_LINK_FLAGS		:=
 endif
 
-ifeq ($(DEFAULT_FLAGS),1)
-        CONFIG_COMPILE_FLAGS			:= -fPIC $(CONFIG_COMPILE_FLAGS)
-
-        ifeq ($(CONFIG_THREAD),multi)
-		CONFIG_COMPILE_FLAGS		:= -pthread $(CONFIG_COMPILE_FLAGS)
-		CONFIG_LINK_FLAGS		:= -pthread $(CONFIG_LINK_FLAGS)
-        endif
-
-        ifeq ($(CONFIG_COMPILE),debug)
-		CONFIG_COMPILE_FLAGS		:= -Wall -g -DDEBUG $(CONFIG_COMPILE_FLAGS)
-		CONFIG_LINK_FLAGS		:= $(CONFIG_LINK_FLAGS)
-        else
-		CONFIG_COMPILE_FLAGS		:= -Wall -g -Os -DNDEBUG $(CONFIG_COMPILE_FLAGS)
-		CONFIG_LINK_FLAGS		:= -Wl,-Os $(CONFIG_LINK_FLAGS)
-        endif
-
-        ifneq ($(findstring static,$(CONFIG_LIB2)),)
-                CONFIG_LINK_FLAGS		:=
-        endif
-
-        ifeq ($(CONFIG_LIB2),static)
-                CONFIG_LINK_FLAGS		:= rcs $(CONFIG_LINK_FLAGS)
-        endif
+ifeq ($(CONFIG_LIB2),static)
+        CONFIG_LINK_FLAGS		:= rcs $(CONFIG_LINK_FLAGS)
 endif
 
 ifneq ($(PLATFORM_SYS_ROOT),)
