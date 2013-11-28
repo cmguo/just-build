@@ -20,7 +20,7 @@ endif
 
 include $(TARGET_MAKE_DIRECTORY)/paths.mk
 
-include $(TARGET_MAKE_DIRECTORY)/flags.mk
+include $(TARGET_MAKE_DIRECTORY)/ccflags.mk
 
 ifneq ($(PROJECT_TYPE),auto)
 
@@ -38,7 +38,7 @@ include $(TARGET_MAKE_DIRECTORY)/actions.mk
 
 include $(TARGET_MAKE_DIRECTORY)/buildver.mk
 
-DEPENDS                 := $(PROJECT_DEPENDS) $(PLATFORM_DEPENDS)
+include $(TARGET_MAKE_DIRECTORY)/ldflags.mk
 
 include $(TARGET_MAKE_DIRECTORY)/$(PROJECT_TYPE).mk
 

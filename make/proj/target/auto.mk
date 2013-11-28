@@ -90,7 +90,7 @@ endif
 endif
 ENVIRONMENT		:= $(ENVIRONMENT) $(LOCAL_CONFIGURE_VARS)
 
-ifneq ($(CONFIG_COMPILE),release)
+ifneq ($(CONFIG_PROFILE),release)
 ifneq ($(call get_auto_configure_info,enable-debug),)
 LOCAL_CONFIGURE		:= $(LOCAL_CONFIGURE) --enable-debug
 endif

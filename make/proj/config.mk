@@ -7,7 +7,7 @@
 
 include $(ROOT_MAKE_DIRECTORY)/name.mk
 
-CONFIG_COMPILE_LIST	:= debug release
+CONFIG_PROFILE_LIST	:= debug release
 
 CONFIG_THREAD_LIST	:= multi single
 
@@ -15,13 +15,13 @@ CONFIG_LIB_LIST		:= static dynamic static2
 
 CONFIG			:= $(CONFIG) $(PROJECT_CONFIG)
 
-CONFIG_COMPILE		:= $(call get_config,$(CONFIG),$(CONFIG_COMPILE_LIST),debug)
+CONFIG_PROFILE		:= $(call get_config,$(CONFIG),$(CONFIG_PROFILE_LIST),debug)
 
 CONFIG_THREAD		:= $(call get_config,$(CONFIG),$(CONFIG_THREAD_LIST),multi)
 
-TARGET_DIRECTORY	:= $(CONFIG_COMPILE)
+TARGET_DIRECTORY	:= $(CONFIG_PROFILE)
 
-ifeq ($(CONFIG_COMPILE),debug)
+ifeq ($(CONFIG_PROFILE),debug)
 	NAME_CONFIG		:= gd
 	CONFIG_MACROS		:= $(CONFIG_MACROS) _DEBUG
 else

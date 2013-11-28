@@ -21,7 +21,7 @@ DEPENDS2		:= $(call reletive_directory,$(DEPENDS2),$(LOCAL_NAME))
 info:
 	@$(ECHO) "Name: $(LOCAL_NAME)"
 	@$(ECHO) "Type: $(LOCAL_TYPE)-$(PROJECT_TYPE2)$(if $(findstring lib,$(PROJECT_TYPE2)),-$(CONFIG_LIB))"
-	@$(ECHO) "Config: $(CONFIG_COMPILE) $(CONFIG_THREAD) $(CONFIG_LIB)"
+	@$(ECHO) "Config: $(CONFIG_PROFILE) $(CONFIG_THREAD) $(CONFIG_LIB)"
 	@$(ECHO) "SourceDirectory: $(SOURCE_DIRECTORY)"
 	@$(ECHO) "HeaderDirectory: $(HEADER_DIRECTORY)"
 	@$(ECHO) "Buildable: $(BUILDABLE)"
