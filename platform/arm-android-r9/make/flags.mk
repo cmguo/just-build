@@ -1,6 +1,7 @@
 PLATFORM_SYS_ROOT		:= /android-ndk-r9/platforms/android-9/arch-arm
-PLATFORM_INCLUDE_DIRECTORYS	:= /android-ndk-r9/sources/cxx-stl/stlport/stlport
-PLATFORM_LIBRARY_DIRECTORYS	:= /android-ndk-r9/sources/cxx-stl/stlport/libs/armeabi
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-ndk-r9/sources/cxx-stl/gnu-libstdc++/4.6/include
+PLATFORM_INCLUDE_DIRECTORYS	:= $(PLATFORM_INCLUDE_DIRECTORYS) /android-ndk-r9/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi/include
+PLATFORM_LIBRARY_DIRECTORYS	:= $(PLATFORM_LIBRARY_DIRECTORYS) /android-ndk-r9/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi
 
 PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -fpic
 PLATFORM_COMPILE_FLAGS		:= $(PLATFORM_COMPILE_FLAGS) -mthumb-interwork
@@ -43,6 +44,7 @@ PLATFORM_CRTEND_DYNAMICBIN	:= crtend_android.o
 	
 #PLATFORM_DEPEND_LIBRARYS	:= $(PLATFORM_DEPEND_LIBRARYS) stdc++
 #PLATFORM_DEPEND_LIBRARYS	:= $(PLATFORM_DEPEND_LIBRARYS) m gcc c dl
-PLATFORM_DEPEND_LIBRARYS	:= $(PLATFORM_DEPEND_LIBRARYS) stlport_static
+#PLATFORM_DEPEND_LIBRARYS	:= $(PLATFORM_DEPEND_LIBRARYS) gnustl_static
 
-PLATFORM_DISABLE_FLAGS		:= -pthread -Os -Wl,-Os
+PLATFORM_DISABLE_FLAGS		:= $(PLATFORM_DISABLE_FLAGS) -pthread
+PLATFORM_DISABLE_FLAGS		:= $(PLATFORM_DISABLE_FLAGS) -lrt -lpthread -ldl
