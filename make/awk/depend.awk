@@ -29,11 +29,26 @@ function GetArray(x,a)
     return split(x,a," ")
 }
 
+function Log(msg)
+{
+    if (debug)
+        print msg > "/dev/stderr";
+}
+
 END {
+
+#   all bins is skipped
+#   if after static($), marked with '$' suffix, except already added with no suffix
+#   if after static2($), marked with '^' suffix, except already added with no suffix
+#   if after dynamic($), marked with '*' suffix, except already added
+#   if after static(^) static2(^), marked with '^' suffix, except already added with no suffix
+#   if dynamic(^) after static(*) static2(*) dynamic(*), marked with '*' suffix, except already added
+
     type[root] = "proj-lib-static";
+    mark[root] = "$"; # "$" "^", "*"
     result[0] = root;
     idx[root] = 0;
-    result_lib[0] = "";
+    syslibs[0] = "";
     i = 0;
     n = 1;
     nl = 0; #syslib
@@ -43,65 +58,84 @@ END {
             continue;
         }
         item = result[i++];
-#        print "visit-"item"-";
-        if (type[item] == "proj-lib-static") {
+        Log("visit("item")");
+        if (type[item] == "proj-lib-static" && mark[item] == "$") {
             ii = GetArray(depend[item], depends);
             for (d in depends) {
                 di = depends[d];
-#                print di;
+                Log("  "di);
                 if (di in idx) {
-#                    print "del-"idx[di]"-"di;
+                    Log("    del("di","mark[di]","idx[di]")");
                     delete result[idx[di]];
-#                    print "add-"n"-"di"-";
+                    Log("    add("di",$,"n")");
+                    mark[di] = "$";
                     idx[di] = n;
                     result[n++] = di;
                 } else if (type[di] != "proj-bin") {
-#                    print "add-"n"-"di"-";
+                    Log("    add("di",$,"n")");
+                    mark[di] = "$";
                     idx[di] = n;
                     result[n++] = di;
                 } else {
-#                    print "skip-"di;
+                    Log("    skip("di")");
                 }
             }
-            ii = GetArray(syslib[item], syslibs);
-            for (j = 1; j <= ii; ++j) {
-                si = syslibs[j];
-                ++nl;
-                if (si in idxl) {
-#                    print "del lib "idxl[si]"-"si;
-                    delete result_lib[ idxl[si]];
-                } 
-#                print "add lib "nl"-"si;
-                idxl[si] = nl;
-                result_lib[nl] = si;
+        } else if (type[item] == "proj-lib-dynamic" || mark[item] == "*") {
+            ii = GetArray(depend[item], depends);
+            for (d in depends) {
+                di = depends[d];
+                Log("  "di);
+                if (di in idx) {
+                } else if (type[di] != "proj-bin") {
+                    Log("    add("id",*,"n")");
+                    mark[di] = "*";
+                    idx[di] = n;
+                    result[n++] = di;
+                } else {
+                    Log("    skip("di")");
+                }
             }
+            syslib[item] = "";
         } else {
             ii = GetArray(depend[item], depends);
             for (d in depends) {
                 di = depends[d];
-#                print di;
+                Log("  "di);
                 if (di in idx) {
+                    if (mark[di] == "*")
+                        mark[di] = "^";
                 } else if (type[di] != "proj-bin") {
-#                    print "add-"n"-"di"-";
+                    Log("    add("di",^,"n")");
+                    mark[di] = "^";
                     idx[di] = n;
                     result[n++] = di;
-                    type[di] = type[di]"*";
                 } else {
-#                    print "skip-"di;
+                    Log("    skip("di")");
                 }
             }
+        }
+        ii = GetArray(syslib[item], deplibs);
+        for (j = 1; j <= ii; ++j) {
+            si = deplibs[j];
+            ++nl;
+            if (si in idxl) {
+                Log("  del syslib("si","idxl[si]")");
+                delete syslibs[idxl[si]];
+            } 
+            Log("  add syslib("si","nl")");
+            idxl[si] = nl;
+            syslibs[nl] = si;
         }
     }
     for (i = 1; i < n; i++) {
         if (i in result) {
-#            print i;
             item = result[i];
-            if (type[item] !~ /\*/) {
+            if (mark[item] == "$") {
                 ii = GetArray(file[item], files);
                 for (j = 1; j <= ii; ++j) {
                     print result[i]"/"files[j];
                 }
-            } else if (type[item] == "proj-lib-dynamic*") {
+            } else if (mark[item] == "*") {
                 ii = GetArray(file[item], files);
                 sub(/[^\/]*$/,"",files[1]);
                 print result[i]"/"files[1];
@@ -109,9 +143,8 @@ END {
         }
     }
     for (i = 1; i <= nl; i++) {
-        if (i in result_lib) {
-#            print i;
-            print result_lib[i];
+        if (i in syslibs) {
+            print syslibs[i];
         }
     }
 }
