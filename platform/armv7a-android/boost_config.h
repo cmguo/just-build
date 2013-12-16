@@ -24,3 +24,5 @@
 #define IN6_IS_ADDR_MC_GLOBAL(a) \
         (IN6_IS_ADDR_MULTICAST(a)                                             \
          && ((((__const uint8_t *) (a))[1] & 0xf) == 0xe))
+
+#define get_nprocs() 1

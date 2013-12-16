@@ -12,3 +12,4 @@
 #include <unistd.h>
 #undef _POSIX_SHARED_MEMORY_OBJECTS
 
+#define get_nprocs() 1

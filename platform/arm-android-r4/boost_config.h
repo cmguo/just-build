@@ -25,4 +25,6 @@
         (IN6_IS_ADDR_MULTICAST(a)                                             \
          && ((((__const uint8_t *) (a))[1] & 0xf) == 0xe))
 
+#define IOV_MAX 8
+
 #define get_nprocs() 1

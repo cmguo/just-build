@@ -14,9 +14,4 @@
 #include <unistd.h>
 #undef _POSIX_SHARED_MEMORY_OBJECTS
 
-__BEGIN_DECLS
-
-int get_nprocs(void);
-
-__END_DECLS
-
+#define get_nprocs() 1

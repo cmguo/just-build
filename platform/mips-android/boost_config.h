@@ -19,9 +19,4 @@
 #define INET_ADDRSTRLEN 16
 #define INET6_ADDRSTRLEN 46
 
-__BEGIN_DECLS
-
-int get_nprocs(void);
-
-__END_DECLS
-
+#define get_nprocs() 1
