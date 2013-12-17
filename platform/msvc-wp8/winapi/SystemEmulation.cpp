@@ -232,6 +232,7 @@ namespace SystemEmulation
 			return cchSrc;
 		} else {
 			assert(false);
+            return 0;
 		}
     }
 

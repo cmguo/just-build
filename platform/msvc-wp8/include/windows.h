@@ -8,15 +8,15 @@
 
 #define WIN_PHONE    1
 
-#include <..\Include\windows.h> // orignal windows.h
+#include <..\windows.h> // orignal windows.h
 
 #define WINAPI_DECL     __declspec(dllimport)
 
-#include "MemoryEmulation.h"
-#include "SystemEmulation.h"
-#include "FileSystemEmulation.h"
-#include "ThreadEmulation.h"
-#include "NetworkEmulation.h"
+#include <..\winapi\MemoryEmulation.h>
+#include <..\winapi\SystemEmulation.h>
+#include <..\winapi\FileSystemEmulation.h>
+#include <..\winapi\ThreadEmulation.h>
+#include <..\winapi\NetworkEmulation.h>
 
 using namespace MemoryEmulation;
 using namespace SystemEmulation;

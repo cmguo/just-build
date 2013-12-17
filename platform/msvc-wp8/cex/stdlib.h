@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <..\..\WP80\include\stdlib.h> // orignal stdlib.h
+#include <..\Include\stdlib.h> // orignal stdlib.h
 
 __declspec(dllimport) char ** environ;
 

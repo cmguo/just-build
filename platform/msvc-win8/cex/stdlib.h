@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <..\..\VC\include\stdlib.h> // orignal stdlib.h
+#include <..\Include\stdlib.h> // orignal stdlib.h
 
 #ifdef __cplusplus
 extern "C"
