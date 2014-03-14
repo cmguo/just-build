@@ -1,29 +1,29 @@
-## ÏîÄ¿ÀàÐÍ
+## é¡¹ç›®ç±»åž‹
 
 LOCAL_TYPE			:= pack
 
-## ¸ÃÏîÄ¿Ä¬ÈÏµÄÅäÖÃ
+## è¯¥é¡¹ç›®é»˜è®¤çš„é…ç½®
 
 LOCAL_CONFIG			:= $(LOCAL_CONFIG)
 
-## Éú³ÉÄ¿±êÃû³Æ£¨ÍêÕûÎÄ¼þÃû³ÆÒª¸ù¾ÝÅäÖÃPACKET_CONFIG¡¢°æ±¾PACKET_VERSIONÔö¼ÓÇ°×º¡¢ºó×º£©
+## ç”Ÿæˆç›®æ ‡åç§°ï¼ˆå®Œæ•´æ–‡ä»¶åç§°è¦æ ¹æ®é…ç½®PACKET_CONFIGã€ç‰ˆæœ¬PACKET_VERSIONå¢žåŠ å‰ç¼€ã€åŽç¼€ï¼‰
 
 PACKET_TARGET			:=
 
-## ¸ÃÏîÄ¿ÒÀÀµµÄÏîÄ¿
+## è¯¥é¡¹ç›®ä¾èµ–çš„é¡¹ç›®
 
 PACKET_DEPENDS			:= \
 				$(PACKET_DEPENDS)
 
-## ¸ÃÏîÄ¿¶îÍâÒÀÀµµÄÎÄ¼þ£¨Ïà¶ÔÓÚ¸ùÄ¿Â¼ROOT_DIRECTORY£©
+## è¯¥é¡¹ç›®é¢å¤–ä¾èµ–çš„æ–‡ä»¶ï¼ˆç›¸å¯¹äºŽæ ¹ç›®å½•ROOT_DIRECTORYï¼‰
 
 PACKET_DEPEND_FILES		:= \
 				$(PACKET_DEPEND_FILES)
 
-## ÏîÄ¿°æ±¾¶¨ÒåÎÄ¼þ
+## é¡¹ç›®ç‰ˆæœ¬å®šä¹‰æ–‡ä»¶
 
 PACKET_VERSION_DEPEND		:=
 
-## ¸ÃÏîÄ¿Ä¬ÈÏµÄÅäÖÃÀàÐÍ
+## è¯¥é¡¹ç›®é»˜è®¤çš„é…ç½®ç±»åž‹
 
 PACKET_CONFIG			:=

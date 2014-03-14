@@ -1,11 +1,11 @@
-## 项目类型
+## 椤圭洰绫诲瀷
 
 LOCAL_TYPE		:= dirs
 
-## 该项目默认的配置
+## 璇ラ」鐩粯璁ょ殑閰嶇疆
 
 LOCAL_CONFIG			:= $(LOCAL_CONFIG)
 
-## 子目录列表（如果为空，将自动搜索子目录）
+## 瀛愮洰褰曞垪琛紙濡傛灉涓虹┖锛屽皢鑷姩鎼滅储瀛愮洰褰曪級
 
 DIRECTORY_SUBS		:= $(DIRECTORY_SUBS) \

@@ -1,17 +1,17 @@
 ################################################################################
 ## @file: 	config.mk
-## @author	¹ù´ºÃ¯ <gcm.ustc.edu>
-## @brief	´¦ÀíÅäÖÃ.
+## @author	éƒ­æ˜¥èŒ‚ <gcm.ustc.edu>
+## @brief	å¤„ç†é…ç½®.
 ## @version	1.0
 ###############################################################################
 
 include $(ROOT_MAKE_DIRECTORY)/func/base.mk
 
-# »ñÈ¡Ã¶¾ÙÀàĞÍµÄÅäÖÃÖµ
-# argment1:	Êµ¼ÊÊäÈëµÄÅäÖÃ²ÎÊı
-# argment2:	Ã¶¾Ù¶¨ÒåµÄËùÓĞ¿ÉÄÜÖµ
-# argment3:	Ã¶¾Ù¶¨ÒåµÄÄ¬ÈÏÖµ
-# return:	Êµ¼ÊÊäÈëÖĞµÚÒ»¸ö³öÏÖµÄÃ¶¾ÙÖµ»òÕßÄ¬ÈÏÖµ
+# è·å–æšä¸¾ç±»å‹çš„é…ç½®å€¼
+# argment1:	å®é™…è¾“å…¥çš„é…ç½®å‚æ•°
+# argment2:	æšä¸¾å®šä¹‰çš„æ‰€æœ‰å¯èƒ½å€¼
+# argment3:	æšä¸¾å®šä¹‰çš„é»˜è®¤å€¼
+# return:	å®é™…è¾“å…¥ä¸­ç¬¬ä¸€ä¸ªå‡ºç°çš„æšä¸¾å€¼æˆ–è€…é»˜è®¤å€¼
 
 get_config		= $(firstword $(strip $(foreach config,$(1),$(findstring $(config),$(2))) $(3)))
 
@@ -21,11 +21,11 @@ define handle_config
         $(if $(filter --%,$(1)),$(patsubst --%,CONFIG_%,$(word 1,$(call split,=,$(1)))):=$(call split,:,$(patsubst $(word 1,$(call split,=,$(1)))=%,%,$(1))))))
 endef
 
-# ½âÎöÅäÖÃ²ÎÊı
-# --enable-NAME Ìæ»»Îª CONFIG_NAME:=yes
-# --disable-NAME Ìæ»»Îª CONFIG_NAME:=no
-# --NAME=A:B:C Ìæ»»Îª CONFIG_NAME:=A B C
-# argment1:	Êµ¼ÊÊäÈëµÄÅäÖÃ²ÎÊı¼¯
+# è§£æé…ç½®å‚æ•°
+# --enable-NAME æ›¿æ¢ä¸º CONFIG_NAME:=yes
+# --disable-NAME æ›¿æ¢ä¸º CONFIG_NAME:=no
+# --NAME=A:B:C æ›¿æ¢ä¸º CONFIG_NAME:=A B C
+# argment1:	å®é™…è¾“å…¥çš„é…ç½®å‚æ•°é›†
 # return:
 
 parse_config		= $(foreach config,$(call revert,$(1)),$(eval $(call handle_config,$(config))))

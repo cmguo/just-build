@@ -1,64 +1,64 @@
-## ����ĿĬ�ϵ�����
+## 该项目默认的配置
 
 LOCAL_CONFIG			:= debug multi
 
-## ��Ŀ����
+## 项目类型
 
 PROJECT_TYPE			:= bin
 
-## ����Ŀ�����ƣ������ļ�����Ҫ��������LOCAL_TYPE������PROJECT_CONFIG���汾PROJECT_VERSION����ǰ׺����׺��
+## 生成目标名称（完整文件名称要根据类型LOCAL_TYPE、配置PROJECT_CONFIG、版本PROJECT_VERSION增加前缀、后缀）
 
 PROJECT_TARGET			:=
 
-## ��Ŀ�汾�ţ�ֻҪǰ��λ�����һλ�Զ����ɣ�
+## 项目版本号（只要前三位，最后一位自动生成）
 
 PROJECT_VERSION			:=
 
-## ������Ŀ�汾�ŵ�ͷ�ļ�
+## 定义项目版本号的头文件
 
 PROJECT_VERSION_HEADER		:=
 
-## ָ��Դ�ļ�Ŀ¼������ĿԴ�ļ�����Ŀ¼�������Դ�ļ���Ŀ¼ROOT_SOURCE_DIRECTORY��Ĭ��ΪLOCAL_NAME��
+## 指定源文件目录（该项目源文件的总目录，相对于源文件根目录ROOT_SOURCE_DIRECTORY，默认为LOCAL_NAME）
 
 PROJECT_SOURCE_DIRECTORY	:= 
 
-## ���Դ��Ŀ¼����Ŀ¼��ָ����Ŀ¼�����ƣ�û��ָ��ʱ�����Զ�������Ŀ¼��
+## 如果源码目录有子目录，指定子目录的名称（没有指定时，将自动搜索子目录）
 
 PROJECT_SOURCE_SUB_DIRECTORYS	:= 
 
-## ָ������Դ����Ŀ¼����ȣ�Ĭ��Ϊ1��
+## 指定搜索源码子目录的深度（默认为1）
 
 PROJECT_SOURCE_DEPTH   		:=
 
-## ָ��ͷ�ļ�Ŀ¼������Ŀͷ�ļ�����Ŀ¼�������ͷ�ļ���Ŀ¼ROOT_HEADER_DIRECTORY��Ĭ��ΪLOCAL_NAME��
+## 指定头文件目录（该项目头文件的总目录，相对于头文件根目录ROOT_HEADER_DIRECTORY，默认为LOCAL_NAME）
 
 PROJECT_HEADER_DIRECTORY	:=
 
-## ��ĿԤ����ͷ�ļ�
+## 项目预编译头文件
 
 PROJECT_COMMON_HEADERS  	:=
 
-## �ڲ�����Ŀ¼�������Դ�ļ���Ŀ¼ROOT_SOURCE_DIRECTORY��
+## 内部包含目录（相对于源文件根目录ROOT_SOURCE_DIRECTORY）
 
 PROJECT_INTERNAL_INCLUDES	:=
 
-## �������Ŀ¼�����������ڰ�����Ŀ¼ROOT_INCLUDE_DIRECTORY��
+## 额外包含目录（多个，相对于包含根目录ROOT_INCLUDE_DIRECTORY）
 
 PROJECT_EXTERNAL_INCLUDES	:=
 
-## ����Ŀ�ص�ı���ѡ��
+## 该项目特点的编译选项
 
 PROJECT_COMPILE_FLAGS		:= $(PROJECT_COMPILE_FLAGS)
 
-## ����Ŀ�ص������ѡ��
+## 该项目特点的链接选项
 
 PROJECT_LINK_FLAGS		:= $(PROJECT_LINK_FLAGS)
 
-## ����Ŀ������������Ŀ
+## 该项目依赖的其他项目
 
 PROJECT_DEPENDS			:= \
 				$(PROJECT_DEPENDS)
 
-## ����Ŀ�ض������ÿ�
+## 该项目特定的引用库
 
 PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS)

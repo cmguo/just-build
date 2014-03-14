@@ -49,7 +49,7 @@ namespace winapi
     {
         wsa_context()
         {
-            handles_.push_back(wsa_handle::pointer_t()); // 0 ÊÇÎŞĞ§¾ä±ú
+            handles_.push_back(wsa_handle::pointer_t()); // 0 æ˜¯æ— æ•ˆå¥æŸ„
         }
 
         ~wsa_context()
