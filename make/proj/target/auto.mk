@@ -56,21 +56,28 @@ ENVIRONMENT		:= $(ENVIRONMENT) LDFLAGS="$(LINK_FLAGS)"
 endif
 
 ifneq ($(LOCAL_SUB_TYPE),bin)
+
 ifeq ($(CONFIG_LIB),static)
+CONFIGURE_static	:= yes
+CONFIGURE_shared	:= no
+else
+CONFIGURE_static	:= no
+CONFIGURE_shared	:= yes
+endif
+
 ifneq ($(call get_auto_configure_info,enable-static),)
-CONFIGURE		:= $(CONFIGURE) --enable-static
+CONFIGURE		:= $(CONFIGURE) --enable-static=$(CONFIGURE_static)
 endif
 ifneq ($(call get_auto_configure_info,disable-shared),)
-CONFIGURE		:= $(CONFIGURE) --disable-shared
+CONFIGURE		:= $(CONFIGURE) --disable-shared=$(CONFIGURE_static)
 endif
-else
 ifneq ($(call get_auto_configure_info,disable-static),)
-CONFIGURE		:= $(CONFIGURE) --disable-static
+CONFIGURE		:= $(CONFIGURE) --disable-static=$(CONFIGURE_shared)
 endif
 ifneq ($(call get_auto_configure_info,enable-shared),)
-CONFIGURE		:= $(CONFIGURE) --enable-shared
+CONFIGURE		:= $(CONFIGURE) --enable-shared=$(CONFIGURE_shared)
 endif
-endif # CONFIG_LIB == static
+
 endif # LOCAL_SUB_TYPE != bin
 
 # Cross-compilation:
@@ -98,9 +105,8 @@ endif
 
 CONFIGURE		:= $(CONFIGURE) $(LOCAL_CONFIGURE)
 
-FILE_ACLOCAL		:= $(SOURCE_DIRECTORY)/aclocal.m4
-
 FILE_CONFIGURE_AC	:= $(SOURCE_DIRECTORY)/configure.ac
+FILE_CONFIGURE_IN	:= $(SOURCE_DIRECTORY)/configure.in
 FILE_CONFIGURE		:= $(SOURCE_DIRECTORY)/configure
 
 FILE_MAKEFILE_AM	:= $(SOURCE_DIRECTORY)/Makefile.am
@@ -111,27 +117,17 @@ ifneq ($(LOCAL_CONFIG_H),)
 FILE_CONFIG_H		:= $(SOURCE_DIRECTORY)/$(LOCAL_CONFIG_H)
 endif
 
-$(FILE_ACLOCAL):
-	@echo $@
-	$(CD) $(SOURCE_DIRECTORY) && libtoolize && aclocal
-
 ifeq ($(wildcard $(FILE_CONFIGURE)),)
-ifneq ($(wildcard $(FILE_CONFIGURE_AC)),)
-$(FILE_CONFIGURE): $(FILE_CONFIGURE_AC) $(FILE_ACLOCAL)
-	@echo $@
-	$(CD) $(SOURCE_DIRECTORY) && autoconf && rm -rf autom4te*.cache
-else
 $(FILE_CONFIGURE): 
 	@echo $@
 	$(CD) $(SOURCE_DIRECTORY) && autoreconf -fvi && rm -rf autom4te*.cache
 endif
-endif
 
-ifeq ($(wildcard $(FILE_MAKEFILE_IN)),)
-$(FILE_MAKEFILE_IN): $(FILE_MAKEFILE_AM) $(FILE_CONFIGURE_AC) $(FILE_ACLOCAL)
+ifeq ($(wildcard $(FILE_MAKEFILE)),)
+$(FILE_MAKEFILE): $(FILE_CONFIGURE)
 	@echo $@
-	$(CD) $(SOURCE_DIRECTORY) && automake -a
-endif
+	$(CD) $(SOURCE_DIRECTORY) && $(ENVIRONMENT) ./configure $(CONFIGURE)
+else
 
 ifneq ($(FILE_CONFIG_H),)
 $(FILE_CONFIG_H): $(FILE_CONFIGURE)
@@ -139,10 +135,6 @@ $(FILE_CONFIG_H): $(FILE_CONFIGURE)
 	$(CD) $(SOURCE_DIRECTORY) && $(ENVIRONMENT) ./configure $(CONFIGURE)
 endif
 
-ifeq ($(wildcard $(FILE_MAKEFILE)),)
-$(FILE_MAKEFILE): $(FILE_MAKEFILE_IN) $(FILE_CONFIGURE)
-	@echo $@
-	$(CD) $(SOURCE_DIRECTORY) && $(ENVIRONMENT) ./configure $(CONFIGURE)
 endif
 
 LOCAL_TARGET_		:= $(addprefix lib/$(NAME_PREFIX),$(PROJECT_TARGET))
@@ -162,7 +154,10 @@ LOCAL_TARGET_UP_ALL	:= $(filter-out $(TARGET_FILE_FULL) $(TARGET_FILE_FULL2),$(L
 .PHONY: make_install
 make_install: $(FILE_MAKEFILE) $(FILE_CONFIG_H)
 	@echo $@
-	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) install && $(MAKE) distclean
+	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) install
+	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) distclean
+	$(CD) $(SOURCE_DIRECTORY) && $(RM) `svn st | awk '{ if ($$1 == "?") print $$2 }'`
+	$(CD) $(SOURCE_DIRECTORY) && svn revert -R .
 
 ifeq ($(LOCAL_TARGET_ALL),)
 LOCAL_TARGET_ALL 	:= make_install
