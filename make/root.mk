@@ -42,7 +42,7 @@ $(PLATFORM_NAME_ALL) : % : boot//%$(if $(CONFIG_strategy),.$(CONFIG_strategy))
 ifneq ($(CONFIG_strategy),)
 	@test -f $(ROOT_STRATEGY_DIRECTORY)/$(CONFIG_strategy).mk || (echo root.mk: no strategy $(CONFIG_strategy) && false)
 endif
-	$(MAKE) -C $@$(if $(CONFIG_strategy),.$(CONFIG_strategy)) config="$(strip $(config))" $(PASS_TARGETS)
+	$(MAKE) -C $(ROOT_OUTPUT_DIRECTORY)/$@$(if $(CONFIG_strategy),.$(CONFIG_strategy)) config="$(strip $(config))" $(PASS_TARGETS)
 	@echo
 
 .PHONY: $(STRATEGY_TARGETS)

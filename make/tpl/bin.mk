@@ -1,10 +1,18 @@
+## 项目类型
+
+LOCAL_TYPE			:= proj
+
 ## 该项目默认的配置
 
-LOCAL_CONFIG			:= debug multi
+LOCAL_CONFIG			:= debug
 
 ## 项目类型
 
 PROJECT_TYPE			:= bin
+
+## 工程默认的配置
+
+PROJECT_CONFIG			:= multi
 
 ## 生成目标名称（完整文件名称要根据类型LOCAL_TYPE、配置PROJECT_CONFIG、版本PROJECT_VERSION增加前缀、后缀）
 
@@ -18,7 +26,7 @@ PROJECT_VERSION			:=
 
 PROJECT_VERSION_HEADER		:=
 
-## 指定源文件目录（该项目源文件的总目录，相对于源文件根目录ROOT_SOURCE_DIRECTORY，默认为LOCAL_NAME）
+## 指定源文件目录（该项目源文件的总目录，相对于根目录ROOT_DIRECTORY，默认为LOCAL_NAME）
 
 PROJECT_SOURCE_DIRECTORY	:= 
 
@@ -30,19 +38,11 @@ PROJECT_SOURCE_SUB_DIRECTORYS	:=
 
 PROJECT_SOURCE_DEPTH   		:=
 
-## 指定头文件目录（该项目头文件的总目录，相对于头文件根目录ROOT_HEADER_DIRECTORY，默认为LOCAL_NAME）
-
-PROJECT_HEADER_DIRECTORY	:=
-
 ## 项目预编译头文件
 
 PROJECT_COMMON_HEADERS  	:=
 
-## 内部包含目录（相对于源文件根目录ROOT_SOURCE_DIRECTORY）
-
-PROJECT_INTERNAL_INCLUDES	:=
-
-## 额外包含目录（多个，相对于包含根目录ROOT_INCLUDE_DIRECTORY）
+## 额外包含目录（多个，相对于根目录ROOT_DIRECTORY）
 
 PROJECT_EXTERNAL_INCLUDES	:=
 
@@ -56,8 +56,7 @@ PROJECT_LINK_FLAGS		:= $(PROJECT_LINK_FLAGS)
 
 ## 该项目依赖的其他项目
 
-PROJECT_DEPENDS			:= \
-				$(PROJECT_DEPENDS)
+PROJECT_DEPENDS			:= $(PROJECT_DEPENDS)
 
 ## 该项目特定的引用库
 
