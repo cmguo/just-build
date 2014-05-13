@@ -6,6 +6,7 @@
 ###############################################################################
 
 include $(ROOT_MAKE_DIRECTORY)/func/macro.mk
+include $(ROOT_MAKE_DIRECTORY)/func/repo.mk
 
 ifeq ($(PROJECT_VERSION),)
         ifneq ($(PROJECT_VERSION_HEADER),)
@@ -36,7 +37,7 @@ ifeq ($(BUILDABLE)$(CONFIG_build_version),yesyes)
                 $(error VERSION_NAME not defined in $(VERSION_HEADER))
         endif
 	
-	BUILD_VERSION		:= $(shell LANG=C svn info $(SOURCE_DIRECTORY) | awk -F : '$$1 == "Revision" { print $$2}' 2> /dev/null)
+	BUILD_VERSION		:= $(call repo_version,$(SOURCE_DIRECTORY))
 
 	BUILD_VERSION		:= $(strip $(BUILD_VERSION))
 

@@ -156,10 +156,7 @@ make_install: $(FILE_MAKEFILE) $(FILE_CONFIG_H)
 	@echo $@
 	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) install
 	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) distclean
-	-$(CD) $(SOURCE_DIRECTORY) && $(RM) `svn st | awk '{ if ($$1 == "?") print $$2 }'`
-	-$(CD) $(SOURCE_DIRECTORY) && svn revert -R .
-	-$(CD) $(SOURCE_DIRECTORY) && git clean -f -d
-	-$(CD) $(SOURCE_DIRECTORY) && git checkout .
+	$(call repo_clean,$(SOURCE_DIRECTORY))
 
 ifeq ($(AUTO_TARGET_ALL),)
 AUTO_TARGET_ALL 	:= make_install
