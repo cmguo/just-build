@@ -25,10 +25,24 @@ endif
 # argment1:	项目名称
 # return:	该信息项的值
 
-define get_auto_configure_info
+define get_conf
 $(strip \
 	$(shell LANG=C cd $(SOURCE_DIRECTORY) && ./configure --help | \
-		awk '{ if (match($$1, "--$(1)([=\\[]|$$)")) { $$1="" ; print $$0 } }') \
+		awk '{ if (match($$1, "--$(1)(\\[=[A-Z]+\\]|=[A-Z]+|)$$")) { print $$1 } }') \
+)
+endef
+
+define set_conf
+$(strip \
+	$(shell LANG=C cd $(SOURCE_DIRECTORY) && ./configure --help | \
+	awk '{ if (match($$1, "--$(1)(\\[=[A-Z]+\\]|=[A-Z]+|)$$", result)) { if (!result[1]) print "--$(1)"; } }') \
+)
+endef
+
+define set_conf_value
+$(strip \
+	$(shell LANG=C cd $(SOURCE_DIRECTORY) && ./configure --help | \
+	awk '{ if (match($$1, "--$(1)(\\[=[A-Z]+\\]|=[A-Z]+|)$$", result)) { if (result[1]) print "--$(1)=$(2)"; } }') \
 )
 endef
 
@@ -39,17 +53,17 @@ CONFIGURE		:=
 # Standard options:
 CONFIGURE		:= $(CONFIGURE) --prefix=$(shell pwd)/$(TARGET_DIRECTORY)
 
-ifneq ($(call get_auto_configure_info,extra-cflags),)
+ifneq ($(call get_conf,extra-cflags),)
 CONFIGURE		:= $(CONFIGURE) --extra-cflags="$(COMPILE_FLAGS)"
 else
 ENVIRONMENT		:= $(ENVIRONMENT) CFLAGS="$(COMPILE_FLAGS)"
 endif
-ifneq ($(call get_auto_configure_info,extra-cxxflags),)
+ifneq ($(call get_conf,extra-cxxflags),)
 CONFIGURE		:= $(CONFIGURE) --extra-cxxflags="$(COMPILE_FLAGS)"
 else
 ENVIRONMENT		:= $(ENVIRONMENT) CXXFLAGS="$(COMPILE_FLAGS)"
 endif
-ifneq ($(call get_auto_configure_info,extra-ldflags),)
+ifneq ($(call get_conf,extra-ldflags),)
 CONFIGURE		:= $(CONFIGURE) --extra-ldflags="$(LINK_FLAGS)"
 else
 ENVIRONMENT		:= $(ENVIRONMENT) LDFLAGS="$(LINK_FLAGS)"
@@ -60,35 +74,29 @@ ifneq ($(AUTO_SUB_TYPE),bin)
 ifeq ($(CONFIG_LIB),static)
 CONFIGURE_static	:= yes
 CONFIGURE_shared	:= no
+CONFIGURE		:= $(CONFIGURE) $(call set_conf,enable-static)
+CONFIGURE		:= $(CONFIGURE) $(call set_conf,disable-shared)
 else
 CONFIGURE_static	:= no
 CONFIGURE_shared	:= yes
+CONFIGURE		:= $(CONFIGURE) $(call set_conf,disable-static)
+CONFIGURE		:= $(CONFIGURE) $(call set_conf,enable-shared)
 endif
 
-ifneq ($(call get_auto_configure_info,enable-static),)
-CONFIGURE		:= $(CONFIGURE) --enable-static=$(CONFIGURE_static)
-endif
-ifneq ($(call get_auto_configure_info,disable-shared),)
-CONFIGURE		:= $(CONFIGURE) --disable-shared=$(CONFIGURE_static)
-endif
-ifneq ($(call get_auto_configure_info,disable-static),)
-CONFIGURE		:= $(CONFIGURE) --disable-static=$(CONFIGURE_shared)
-endif
-ifneq ($(call get_auto_configure_info,enable-shared),)
-CONFIGURE		:= $(CONFIGURE) --enable-shared=$(CONFIGURE_shared)
-endif
+CONFIGURE		:= $(CONFIGURE) $(call set_conf_value,enable-static,$(CONFIGURE_static))
+CONFIGURE		:= $(CONFIGURE) $(call set_conf_value,enable-shared,$(CONFIGURE_shared))
 
 endif # AUTO_SUB_TYPE != bin
 
 # Cross-compilation:
 ifneq ($(PLATFORM_TOOL_PREFIX),)
-ifneq ($(call get_auto_configure_info,build),)
+ifneq ($(call get_conf,build),)
 #CONFIGURE		:= $(CONFIGURE) --build=$(BUILD_HOST)
 endif
-ifneq ($(call get_auto_configure_info,host),)
+ifneq ($(call get_conf,host),)
 CONFIGURE		:= $(CONFIGURE) --host=$(BUILD_HOST)
 endif
-ifneq ($(call get_auto_configure_info,cross-prefix),)
+ifneq ($(call get_conf,cross-prefix),)
 CONFIGURE		:= $(CONFIGURE) --cross-prefix=$(PLATFORM_TOOL_PREFIX)
 else
 ENVIRONMENT		:= $(ENVIRONMENT) CC=$(CC)
@@ -98,9 +106,7 @@ endif
 ENVIRONMENT		:= $(ENVIRONMENT) $(AUTO_CONFIGURE_VARS)
 
 ifneq ($(CONFIG_PROFILE),release)
-ifneq ($(call get_auto_configure_info,enable-debug),)
-AUTO_CONFIGURE		:= $(AUTO_CONFIGURE) --enable-debug
-endif
+CONFIGURE		:= $(CONFIGURE) $(call set_conf,enable-debug)
 endif
 
 CONFIGURE		:= $(CONFIGURE) $(AUTO_CONFIGURE)
