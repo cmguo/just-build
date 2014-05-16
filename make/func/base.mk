@@ -32,3 +32,15 @@ split			= $(subst $(1), ,$(2))
 # return:	如果相等：OK，否则：空
 
 equal			= $(shell if [ \"$(1)\" = \"$(2)\" ] ; then echo \"OK\" ; fi)
+
+# 输出变量信息
+# argment1: 变量名数组
+# return:	无
+
+dump			= $(foreach v,$(1),$(info $(2)$(v)=$($(v))))
+
+# 去除列表中重复的元素
+# # argment1: 列表
+# # return:   去重后的列表
+
+uniq			= $(if $(1),$(firstword $(1)) $(call uniq,$(filter-out $(firstword $(1)),$(1))))
