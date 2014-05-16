@@ -63,9 +63,15 @@ COMMON_MAKE_FILES		:= $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(addsuffix /Commo
 PROJECT_DIRECTORY		:= $(ROOT_DIRECTORY)$(LOCAL_NAME)
 
 ifneq ($(LOCAL_NAME),/cex)
-        include $(PROJECT_DIRECTORY)/Makefile.in
+		MAKE_FILE		:= $(wildcard $(PROJECT_DIRECTORY)/Makefile.mk $(PROJECT_DIRECTORY)/Makefile.in)
 else
-        include $(ROOT_MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.in
+		MAKE_FILE		:= $(wildcard $(MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.mk $(MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.in)
+endif
+
+ifneq ($(MAKE_FILE),)
+		include $(firstword $(MAKE_FILE))
+else
+		LOCAL_TYPE		:= dirs
 endif
 
 COMMON_MAKE_FILES		:= $(addprefix $(ROOT_DIRECTORY),$(addsuffix /Common.mk,$(LOCAL_NAME) $(call root_directories,$(LOCAL_NAME))) /Common.mk)

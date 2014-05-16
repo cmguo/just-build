@@ -30,8 +30,9 @@ ifeq ($(findstring all-project,$(SUBS)),all-project)
 	SUBS			:= $(DIRECTORY_SUBS) $(filter-out all-project,$(SUBS))
 endif
 
-SUBS1			:= $(SUBS)
-SUBS1			:= $(foreach dir,$(SUBS1),$(wildcard $(ROOT_DIRECTORY)$(LOCAL_NAME)/$(dir)/Makefile.in))
+SUBS1			:=
+SUBS1			:= $(SUBS1) $(foreach dir,$(SUBS),$(wildcard $(ROOT_DIRECTORY)$(LOCAL_NAME)/$(dir)/Makefile.mk))
+SUBS1			:= $(SUBS1) $(foreach dir,$(SUBS),$(wildcard $(ROOT_DIRECTORY)$(LOCAL_NAME)/$(dir)/Makefile.in))
 SUBS1			:= $(patsubst $(ROOT_DIRECTORY)$(LOCAL_NAME)/%,%,$(SUBS1))
 SUBS1			:= $(sort $(SUBS1))
 SUBS1			:= $(patsubst %/,%,$(dir $(SUBS1)))
