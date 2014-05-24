@@ -10,7 +10,7 @@
 # return:	工程项目目标文件
 
 define get_project_file
-$(PLATFORM_BUILD_DIRECTORY)$(1)/$(call get_item_info,$(1),File)
+$(PLATFORM_OUTPUT_DIRECTORY)$(1)/$(call get_item_info,$(1),File)
 endef
 
 # 递归遍历树（深度优先）

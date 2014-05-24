@@ -20,7 +20,7 @@ DEPEND_FILES		:= $(shell echo "$(DEPEND_OUTPUT)" | awk -f $(ROOT_MAKE_DIRECTORY)
 
 SYSTEM_LIB 		:= $(filter-out /%,$(DEPEND_FILES))
 DEPEND_FILES 		:= $(filter /%,$(DEPEND_FILES))
-DEPEND_FILES  		:= $(addprefix $(PLATFORM_BUILD_DIRECTORY),$(DEPEND_FILES))
+DEPEND_FILES  		:= $(addprefix $(PLATFORM_OUTPUT_DIRECTORY),$(DEPEND_FILES))
 
 DEPEND_PATHS		:= $(dir $(DEPEND_FILES))
 DEPEND_PATHS		:= $(call uniq,$(DEPEND_PATHS))

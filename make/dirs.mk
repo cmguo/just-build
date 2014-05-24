@@ -88,6 +88,6 @@ FORCE:
 
 /%: FORCE
 	@echo $@
-	$(MAKE) -C $(PLATFORM_BUILD_DIRECTORY)$@ NO_RECURSION=yes config="$(strip $(config))" $(MAKE_TARGETS)
+	$(MAKE) -C $(PLATFORM_OUTPUT_DIRECTORY)$@ NO_RECURSION=yes config="$(strip $(config))" $(MAKE_TARGETS)
 	@echo
 
