@@ -49,7 +49,7 @@ endif
 $(STRATEGY_TARGETS) : % : boot//%
 	@echo $@
 	@test -f $(ROOT_STRATEGY_DIRECTORY)/$(word 2,$(subst ., ,$(STRATEGY_TARGETS))).mk || (echo root.mk: no strategy $(word 2,$(subst ., ,$(STRATEGY_TARGETS))) && false)
-	$(MAKE) -C $@ config="$(strip $(config))" $(PASS_TARGETS)
+	$(MAKE) -C $(ROOT_OUTPUT_DIRECTORY)/$@ config="$(strip $(config))" $(PASS_TARGETS)
 	@echo
 
 .PHONY: $(OTHER_TARGETS)

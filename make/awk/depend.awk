@@ -58,7 +58,7 @@ END {
             continue;
         }
         item = result[i++];
-        Log("visit("item")");
+        Log("visit("item") | "type[item]" | "mark[item]);
         if (type[item] == "proj-lib-static" && mark[item] == "$") {
             ii = GetArray(depend[item], depends);
             for (d in depends) {
@@ -133,17 +133,20 @@ END {
             if (mark[item] == "$") {
                 ii = GetArray(file[item], files);
                 for (j = 1; j <= ii; ++j) {
+                    Log(result[i]"/"files[j]);
                     print result[i]"/"files[j];
                 }
             } else if (mark[item] == "*") {
                 ii = GetArray(file[item], files);
                 sub(/[^\/]*$/,"",files[1]);
+                Log(result[i]"/"files[1]);
                 print result[i]"/"files[1];
             }
         }
     }
     for (i = 1; i <= nl; i++) {
         if (i in syslibs) {
+            Log(syslibs[i]);
             print syslibs[i];
         }
     }
