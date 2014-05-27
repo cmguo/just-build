@@ -39,6 +39,8 @@ ifeq ($(SOURCES),)
 	SOURCES			:= $(patsubst $(SOURCE_DIRECTORY)/%,%,$(SOURCES))
 endif
 
+SOURCES			:= $(filter-out $(PROJECT_DISCARD_SOURCES),$(SOURCES))
+
 SOURCE_SUB_DIRECTORYS	:= $(sort $(filter-out .,$(patsubst %/,%,$(dir $(SOURCES)))))
 
 SOURCE_DEPENDS		:= $(patsubst %$(SOURCE_SUFFIX),%.dep,$(SOURCES))

@@ -35,7 +35,7 @@ $(DEPEND_FILES): mkdirs
 $(DEPEND_FILES2): mkdirs
 	@$(ECHO) $@
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
-	$(CP) -r $@ $(TARGET_STRIP_DIRECTORY)/$(notdir $@) > /dev/null
+	$(CP) -r $@ $(TARGET_DIRECTORY)/$(notdir $@) > /dev/null
 
 define pack_depend
 $(call pack_depend2,$(1),$(call get_item_type,$(1)),$(call get_item_file,$(1)))
@@ -63,7 +63,9 @@ $(PACKET_DEPENDS): mkdirs
 $(TARGET_FILE_FULL): $(PACKET_DEPENDS) $(DEPEND_FILES) $(DEPEND_FILES2) $(MAKEFILE_LIST)
 	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(call shell_escape,$(TARGET_FILE)) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2))
 
+ifneq ($(CONFIG_symbol),)
 $(TARGET_FILE_FULL): $(TARGET_FILE_SYMBOL_FULL)
+endif
 
 $(TARGET_FILE_SYMBOL_FULL): $(PACKET_DEPENDS)
 	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(call shell_escape,$(TARGET_FILE_SYMBOL)) $(PLATFORM_STRATEGY_NAME)-symbol
