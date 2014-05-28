@@ -37,12 +37,10 @@ function Log(msg)
 
 END {
 
-#   all bins is skipped
-#   if after static($), marked with '$' suffix, except already added with no suffix
-#   if after static2($), marked with '^' suffix, except already added with no suffix
-#   if after dynamic($), marked with '*' suffix, except already added
-#   if after static(^) static2(^), marked with '^' suffix, except already added with no suffix
-#   if dynamic(^) after static(*) static2(*) dynamic(*), marked with '*' suffix, except already added
+    # all bins is skipped
+    # if after static($), marked with '$' suffix, except already added with no suffix
+    # if after dynamic($^*) static(*) static2(*), marked with '*' suffix, except already added
+    # if after static(^) static2(^) static2($), marked with '^' suffix, except already added with no suffix
 
     type[root] = "proj-lib-static";
     mark[root] = "$"; # "$" "^", "*"
@@ -127,6 +125,10 @@ END {
             syslibs[nl] = si;
         }
     }
+
+    # all static, after static are include
+    # all dynamic after dynamic are include with directory only, without file
+
     for (i = 1; i < n; i++) {
         if (i in result) {
             item = result[i];
@@ -136,7 +138,7 @@ END {
                     Log(result[i]"/"files[j]);
                     print result[i]"/"files[j];
                 }
-            } else if (mark[item] == "*") {
+            } else if (type[item] == "proj-lib-dynamic" && mark[item] == "*") {
                 ii = GetArray(file[item], files);
                 sub(/[^\/]*$/,"",files[1]);
                 Log(result[i]"/"files[1]);
@@ -144,6 +146,7 @@ END {
             }
         }
     }
+
     for (i = 1; i <= nl; i++) {
         if (i in syslibs) {
             Log(syslibs[i]);
