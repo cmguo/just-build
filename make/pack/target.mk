@@ -44,7 +44,7 @@ endef
 # pack_depend2 name type  file
 define pack_depend2
    	$(CP) $(PLATFORM_OUTPUT_DIRECTORY)$(1)/$(3) $(TARGET_SYMBOL_DIRECTORY)/$(notdir $(3))
-	$(if $(findstring dynamic,$(2)), \
+	$(if $(findstring static,$(2)),, \
 		$(STRIP) $(PLATFORM_OUTPUT_DIRECTORY)$(1)/$(3) -o $(TARGET_STRIP_DIRECTORY)/$(notdir $(3)))
 	$(call call_post_action,$(TARGET_STRIP_DIRECTORY)/$(notdir $(3)),$(PACKET_POST_ACTION))
 endef

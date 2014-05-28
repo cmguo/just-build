@@ -73,7 +73,7 @@ PROJECT_DIRECTORY		:= $(ROOT_DIRECTORY)$(LOCAL_NAME)
 ifneq ($(LOCAL_NAME),/cex)
 		MAKE_FILE		:= $(wildcard $(PROJECT_DIRECTORY)/Makefile.mk $(PROJECT_DIRECTORY)/Makefile.in)
 else
-		MAKE_FILE		:= $(wildcard $(MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.mk $(MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.in)
+		MAKE_FILE		:= $(wildcard $(ROOT_MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.mk $(ROOT_MAKE_DIRECTORY)$(LOCAL_NAME)/Makefile.in)
 endif
 
 ifneq ($(MAKE_FILE),)
