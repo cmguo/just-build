@@ -38,9 +38,9 @@ function Log(msg)
 END {
 
     # all bins is skipped
-    # if after static($), marked with '$' suffix, except already added with no suffix
+    # if after static($), marked with '$' suffix, except already added
     # if after dynamic($^*) static(*) static2(*), marked with '*' suffix, except already added
-    # if after static(^) static2(^) static2($), marked with '^' suffix, except already added with no suffix
+    # if after static(^) static2(^) static2($), marked with '^' suffix, except already added
 
     type[root] = "proj-lib-static";
     mark[root] = "$"; # "$" "^", "*"
@@ -69,7 +69,7 @@ END {
                     mark[di] = "$";
                     idx[di] = n;
                     result[n++] = di;
-                } else if (type[di] != "proj-bin") {
+                } else if (pack || type[di] != "proj-bin") {
                     Log("    add("di",$,"n")");
                     mark[di] = "$";
                     idx[di] = n;
@@ -78,7 +78,7 @@ END {
                     Log("    skip("di")");
                 }
             }
-        } else if (type[item] == "proj-lib-dynamic" || mark[item] == "*") {
+        } else if (type[item] == "proj-lib-dynamic" || type[item] == "proj-bin" || mark[item] == "*") {
             ii = GetArray(depend[item], depends);
             for (d in depends) {
                 di = depends[d];
@@ -100,8 +100,6 @@ END {
                 di = depends[d];
                 Log("  "di);
                 if (di in idx) {
-                    if (mark[di] == "*")
-                        mark[di] = "^";
                 } else if (type[di] != "proj-bin") {
                     Log("    add("di",^,"n")");
                     mark[di] = "^";
@@ -140,9 +138,16 @@ END {
                 }
             } else if (type[item] == "proj-lib-dynamic" && mark[item] == "*") {
                 ii = GetArray(file[item], files);
-                sub(/[^\/]*$/,"",files[1]);
-                Log(result[i]"/"files[1]);
-                print result[i]"/"files[1];
+                if (!pack) {
+                    sub(/[^\/]*$/,"",files[1]);
+                    Log(result[i]"/"files[1]);
+                    print result[i]"/"files[1];
+                } else {
+                    for (j = 1; j <= ii; ++j) {
+                        Log(result[i]"/"files[j]);
+                        print result[i]"/"files[j];
+                    }
+                }
             }
         }
     }

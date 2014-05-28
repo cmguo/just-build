@@ -5,10 +5,7 @@
 ## @version	1.0
 ###############################################################################
 
-include $(ROOT_MAKE_DIRECTORY)/func/info.mk
 include $(ROOT_MAKE_DIRECTORY)/func/depends.mk
-
-include $(PROJ_MAKE_DIRECTORY)/func/info.mk
 
 print_proj			= $1:$2:$3:$4:$5!
 

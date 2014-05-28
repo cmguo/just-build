@@ -6,12 +6,13 @@
 ###############################################################################
 
 include $(ROOT_MAKE_DIRECTORY)/func/repo.mk
+include $(PACK_MAKE_DIRECTORY)/depends.mk
 
 TARGET_STRIP_DIRECTORY	:= $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)
 TARGET_SYMBOL_DIRECTORY	:= $(TARGET_DIRECTORY)/$(PLATFORM_STRATEGY_NAME)-symbol
 MAKE_DIRECTORYS         := $(TARGET_DIRECTORY) $(TARGET_STRIP_DIRECTORY) $(TARGET_SYMBOL_DIRECTORY)
 
-DEPEND_FILES			:= $(PACKET_DEPEND_FILES:%=$(ROOT_DIRECTORY)%)
+DEPEND_FILES1			:= $(PACKET_DEPEND_FILES:%=$(ROOT_DIRECTORY)%)
 DEPEND_FILES2			:= $(PACKET_DEPEND_FILES2:%=$(PLATFORM_OUTPUT_DIRECTORY)%)
 
 ifneq ($(CONFIG_packet),)
@@ -26,7 +27,7 @@ target: $(TARGET_FILE_FULL)
 include $(ROOT_MAKE_DIRECTORY)/mkdirs.mk
 
 .PHONY: $(DEPEND_FILES)
-$(DEPEND_FILES): mkdirs
+$(DEPEND_FILES1): mkdirs
 	@$(ECHO) $@
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
 	@$(call repo_export,$@,$(TARGET_DIRECTORY)) > /dev/null
@@ -37,16 +38,13 @@ $(DEPEND_FILES2): mkdirs
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
 	$(CP) -r $@ $(TARGET_DIRECTORY)/$(notdir $@) > /dev/null
 
+# pack_depend file
 define pack_depend
-$(call pack_depend2,$(1),$(call get_item_type,$(1)),$(call get_item_file,$(1)))
-endef
-
-# pack_depend2 name type  file
-define pack_depend2
-   	$(CP) $(PLATFORM_OUTPUT_DIRECTORY)$(1)/$(3) $(TARGET_SYMBOL_DIRECTORY)/$(notdir $(3))
-	$(if $(findstring static,$(2)),, \
-		$(STRIP) $(PLATFORM_OUTPUT_DIRECTORY)$(1)/$(3) -o $(TARGET_STRIP_DIRECTORY)/$(notdir $(3)))
-	$(call call_post_action,$(TARGET_STRIP_DIRECTORY)/$(notdir $(3)),$(PACKET_POST_ACTION))
+   	$(LN) $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_SYMBOL_DIRECTORY)/$(notdir $(1))
+	$(if $(findstring /static/,$(1)), \
+		$(CP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)), \
+		$(STRIP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) -o $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)))
+	$(call call_post_action,$(TARGET_STRIP_DIRECTORY)/$(notdir $(1)),$(PACKET_POST_ACTION))
 endef
 
 shell_escape2		= $(if $(2),$(call shell_escape2,$(subst $(firstword $(2)),\\$(firstword $(2)),$(1)),$(wordlist 2,$(words $(2)),$(2))),$(1))
@@ -56,11 +54,11 @@ shell_escape_char	:= ( )
 shell_escape		= $(call shell_escape2,$(1),$(shell_escape_char))
 
 .PHONY: $(PACKET_DEPENDS)
-$(PACKET_DEPENDS): mkdirs
+$(DEPEND_FILES): mkdirs
 	@$(ECHO) $@
 	$(call pack_depend,$@)
 
-$(TARGET_FILE_FULL): $(PACKET_DEPENDS) $(DEPEND_FILES) $(DEPEND_FILES2) $(MAKEFILE_LIST)
+$(TARGET_FILE_FULL): $(DEPEND_FILES) $(DEPEND_FILES1) $(DEPEND_FILES2) $(MAKEFILE_LIST)
 	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(call shell_escape,$(TARGET_FILE)) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2))
 
 ifneq ($(CONFIG_symbol),)
