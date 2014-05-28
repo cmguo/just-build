@@ -1,52 +1,57 @@
 ################################################################################
 ## @file:	depends.mk
-## @author      张框正 
-## @brief       提取项目信息的函数/用于依赖目录取
+## @author	郭春茂 <gcm.ustc.edu>
+## @brief   沿着项目依赖关系遍历项目
 ## @version     1.0
 ###############################################################################
 
 include $(ROOT_MAKE_DIRECTORY)/func/info.mk
 
-# __为了防止重名
-define make_item_depends_pack
-$2            := $(strip $($2) __$1__)
-endef
+depend_cut			= $(shell echo '$1' | cut -d '|' -f $2)
 
-define enable_item_depends_pack
-$1
-$(eval $(call make_item_depends_pack,$1,$2))
-$(foreach item,$1,$(call enable_item_depends_pack,$(filter-out $(strip $($2)),$(call get_item_depends,$(item))),$2))
-endef
+# 递归遍历辅助回调函数
+# argment1:	访问回调函数
+# argment2:	当前项目
+# argment3:	提取的信息项
 
-# param 1 root 2 handle
-define get_child
-$(strip $(call get_item,$1,Depends))
-endef
+depend_callback		= $(eval depend_callback_ret:=$$(call $1,$2,$3))$(depend_callback_ret)
 
-define get_item_info_vaul
-$(eval get_item_info_as_var_ret:=$(strip \
-        $(shell $(MAKE) LOCAL_NAME=$1 config="$(strip $(config))" info | \
-                awk -F : ' 
-                        BEGIN { $(foreach info,$2,infos["$(info)"];);ii="$1"; } 
-                        { if ($$1 in infos) printf "$$(eval %s_%s:=%s)", ii, $$1, $$2; } 
-                ' \
-        ) \
-))$(get_item_info_as_var_ret)
-endef
+# 递归遍历辅助递归函数4
+# argment1: 访问回调函数
+# argment2: 需要提取信息项（包括当前项，格式化字符串，如：{Depend}|{Type},{File}）
+# argment3: 已发现还没有访问的项目
+# argment4: 已经遍历的项目
+# return:	回调函数返回值合并
 
+depend_visit_4		= $(if $3,$(call depend_visit_2,$1,$2,$(firstword $3),$3,$4))
 
-define get_item
-$($1_$2)
-endef
+# 递归遍历辅助递归函数3
+# argment1: 访问回调函数
+# argment2: 需要提取信息项（包括当前项，格式化字符串，如：{Depend}|{Type},{File}）
+# argment3: 当前项目
+# argment4: 提取的信息项（包括依赖项目）
+# argment5: 已发现还没有访问的项目（包括当前项）
+# argment6: 已经遍历的项目（不包括当前项）
+# return:	回调函数返回值合并
 
+depend_visit_3		= $(call depend_callback,$1,$3,$(call depend_cut,$4,2))$(call depend_visit_4,$1,$2,$(filter-out $6 $3,$5 $(call depend_cut,$4,1)),$6 $3)
 
-#param 1 rootdir(/ppbox/ppbox)  2 list(Depends File) 3 fun(for print) 4 variable(key) 5 fromat 
-define tree_visit
-$(strip $1 \
-	$(eval $(call make_item_depends_pack,$1,$4)) \
-	$(call get_item_info_vaul,$1,$2) \
-	$(eval $(call $3,$1,$5)) \
-	$(foreach item,$(call get_child,$1),$(if $(findstring __$(item)__,$($4)),,$(call tree_visit,$(item),$2,$3,$4,$5))) \
-)
-endef
+# 递归遍历辅助递归函数2
+# argment1: 访问回调函数
+# argment2: 需要提取信息项（包括当前项，格式化字符串，如：{Depend}|{Type},{File}）
+# argment3: 当前项目
+# argment4: 已发现还没有访问的项目（包括当前项）
+# argment5: 已经遍历的项目（不包括当前项）
+# return:	回调函数返回值合并
 
+depend_visit_2		= $(call depend_visit_3,$1,$2,$3,$(call get_item_info_format,$3,$2),$4,$5)
+
+# 递归遍历
+# argment1: 根项目（可以多个，在递归调用时表示已发现还没有访问的项目）
+# argment2: 访问回调函数
+# argment3: 需要提取信息项
+# return:	回调函数返回值合并
+
+COMMA	:=,
+
+depend_visit		= $(strip $(call depend_visit_2,$2,{Depends}|$(call joinlist,$(COMMA),$(patsubst %,{%},$3)),$(firstword $1),$1,))

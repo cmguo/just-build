@@ -16,7 +16,7 @@ revert			= $(if $1,$(call revert,$(wordlist 2,$(words $1),$1)) $(firstword $1))
 # argment2:	列表
 # return:	合并后的整串
 
-joinlist		= $(if $(word 2,$2),$(join $(firstword $2)$1,$(call joinlist,$1,$(wordlist 2,$(words $2),$2))),$2)
+joinlist		= $(if $(word 2,$2),$(firstword $2)$1$(call joinlist,$1,$(wordlist 2,$(words $2),$2)),$2)
 
 # 切割整串为列表
 # argment1:	分隔符

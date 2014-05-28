@@ -7,7 +7,7 @@
 
 # 通用提取项目信息
 # argment1:	项目名称
-# argment2: 	提取的信息项
+# argment2: 需要提取的信息项
 # return:	该信息项的值
 
 define get_item_info
@@ -17,11 +17,11 @@ $(strip \
 )
 endef
 
-# 通用提取项目信息
+# 通用提取项目信息（多项，可以指定分隔符）
 # argment1:	项目名称
-# argment2: 	多项信息的分隔符
-# argment3: 	提取的信息项，多项
-# return:	该信息项的值
+# argment2: 多项信息的分隔符
+# argment3: 需求提取的信息项，多项
+# return:	提取的信息项
 
 define get_item_infos
 $(strip \
@@ -33,10 +33,29 @@ $(strip \
 )
 endef
 
+# 通用提取项目信息（格式化）
+# argment1:	项目名称
+# argment2: 格式化字符串（{A},{B}:{C}）
+# return:	格式化结果
+
+define get_item_info_format
+$(strip \
+	$(shell $(MAKE) LOCAL_NAME=$1 config="$(strip $(config))" info | \
+                awk -F : ' 
+                        BEGIN { result="$2" } 
+                        { 
+							regex="{"$$1"}";
+							sub(/^[[:blank:]]*/,"",$$2);
+							sub(/[[:blank:]]*$$/,"",$$2);
+							gsub(regex,$$2,result);
+						}
+                        END { print result; }') \
+)
+endef
 # 通用提取项目信息到变量中（可以同时多项）
 # argment1:	项目名称
-# argment2: 	提取的信息项（多项）
-# argment3: 	变量名后缀（默认为项目名，/转换为_）
+# argment2: 提取的信息项（多项）
+# argment3: 变量名后缀（默认为项目名，/转换为_）
 # return:	变量名称列表
 
 define get_item_info_as_var
