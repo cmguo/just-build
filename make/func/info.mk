@@ -12,8 +12,8 @@
 
 define get_item_info
 $(strip \
-	$(shell $(MAKE) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
-		awk -F : '{ if ($$1 == "$(2)") print $$2 }') \
+	$(shell $(MAKE) LOCAL_NAME=$1 config="$(strip $(config))" info | \
+		awk -F : '{ if ($$1 == "$2") print $$2 }') \
 )
 endef
 
@@ -25,11 +25,11 @@ endef
 
 define get_item_infos
 $(strip \
-	$(shell $(MAKE) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
+	$(shell $(MAKE) LOCAL_NAME=$1 config="$(strip $(config))" info | \
                 awk -F : ' 
-                        BEGIN { $(foreach info,$(3),infos["$(info)"];) } 
+                        BEGIN { $(foreach info,$3,infos["$(info)"];) } 
                         { if ($$1 in infos) infos["$$1"] = $$2; }
-                        END { $(foreach info,$(3),print infos["$(info)"];print $(2)) }') \
+                        END { $(foreach info,$3,print infos["$(info)"];print $2) }') \
 )
 endef
 
@@ -41,9 +41,9 @@ endef
 
 define get_item_info_as_var
 $(eval get_item_info_as_var_ret:=$(strip \
-	$(shell $(MAKE) LOCAL_NAME=$(1) config="$(strip $(config))" info | \
+	$(shell $(MAKE) LOCAL_NAME=$1 config="$(strip $(config))" info | \
 		awk -F : ' 
-			BEGIN { $(foreach info,$(2),infos["$(info)"];) suffix="$(if $(3),$(3),$(subst /,_,$(1)))"; } 
+			BEGIN { $(foreach info,$2,infos["$(info)"];) suffix="$(if $3,$3,$(subst /,_,$1))"; } 
 			{ if ($$1 in infos) printf "%s%s $$(eval %s%s:=%s)", $$1, suffix, $$1, suffix, $$2; } 
 		' \
 	) \
@@ -56,7 +56,7 @@ endef
 # return:	项目类型
 
 define get_item_type
-$(call get_item_info,$(1),Type)
+$(call get_item_info,$1,Type)
 endef
 
 # 提取项目目标文件
@@ -64,7 +64,7 @@ endef
 # return:	项目类型
 
 define get_item_file
-$(call get_item_info,$(1),File)
+$(call get_item_info,$1,File)
 endef
 
 # 提取工程直接依赖项
@@ -73,5 +73,5 @@ endef
 # return:	项目直接依赖项
 
 define get_item_depends
-$(call get_item_info,$(1),Depends)
+$(call get_item_info,$1,Depends)
 endef
