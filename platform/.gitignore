@@ -1,0 +1,9 @@
+ipch
+Debug
+Release
+Generated Files
+*_h.h
+*.opensdf
+*.sdf
+*.suo
+*.user
