@@ -9,6 +9,8 @@
 #include "Select.h"
 #include "AsyncHelper.h"
 
+#include <algorithm>
+
 namespace winapi
 {
 
@@ -691,7 +693,7 @@ namespace winapi
         _In_  ULONG_PTR CompletionKey)
     {
         std::unique_lock<std::recursive_mutex> lc(mutex_);
-        this->iocp_ = boost::static_pointer_cast<iocp_t>(iocp->shared_from_this());
+        this->iocp_ = std::static_pointer_cast<iocp_t>(iocp->shared_from_this());
         lpCompletionKey_ = CompletionKey;
     }
 

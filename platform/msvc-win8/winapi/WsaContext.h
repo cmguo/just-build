@@ -8,8 +8,7 @@
 #include <vector>
 #include <deque>
 #include <mutex>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
+#include <memory>
 #include <condition_variable>
 
 #include <assert.h>
@@ -18,9 +17,9 @@ namespace winapi
 {
 
     struct wsa_handle
-        : public boost::enable_shared_from_this<wsa_handle>
+        : public std::enable_shared_from_this<wsa_handle>
     {
-        typedef boost::shared_ptr<wsa_handle> pointer_t;
+        typedef std::shared_ptr<wsa_handle> pointer_t;
 
         size_t index;
         size_t cls; // 1 - socket, 2 - iocp
@@ -30,18 +29,18 @@ namespace winapi
     struct wsa_handle_t
         : wsa_handle
     {
-        typedef boost::shared_ptr<T> pointer_t;
+        typedef std::shared_ptr<T> pointer_t;
 
         static size_t const CLS = C;
 
-        boost::shared_ptr<T> shared_from_this()
+        std::shared_ptr<T> shared_from_this()
         {
-            return boost::static_pointer_cast<T>(wsa_handle::shared_from_this());
+            return std::static_pointer_cast<T>(wsa_handle::shared_from_this());
         }
 
-        boost::shared_ptr<T const> shared_from_this() const
+        std::shared_ptr<T const> shared_from_this() const
         {
-            return boost::static_pointer_cast<T const>(wsa_handle::shared_from_this());
+            return std::static_pointer_cast<T const>(wsa_handle::shared_from_this());
         }
     };
 
@@ -57,7 +56,7 @@ namespace winapi
         }
 
         template <typename handle_t>
-        boost::shared_ptr<handle_t> alloc()
+        std::shared_ptr<handle_t> alloc()
         {
             std::unique_lock<std::mutex> lc(mutex_);
             wsa_handle::pointer_t handle(new handle_t);
@@ -71,12 +70,12 @@ namespace winapi
                 assert(handles_[handle->index] == NULL);
                 handles_[handle->index] = handle;
             }
-            return boost::static_pointer_cast<handle_t>(handle);
+            return std::static_pointer_cast<handle_t>(handle);
         }
 
         template <typename handle_t>
         void free(
-            boost::shared_ptr<handle_t> handle)
+            std::shared_ptr<handle_t> handle)
         {
             std::unique_lock<std::mutex> lc(mutex_);
             assert(handles_[handle->index]);
@@ -85,14 +84,14 @@ namespace winapi
         }
 
         template <typename handle_t>
-        boost::shared_ptr<handle_t> get(
+        std::shared_ptr<handle_t> get(
             size_t index)
         {
             std::unique_lock<std::mutex> lc(mutex_);
             assert(handles_[index]);
             wsa_handle::pointer_t handle = handles_[index];
             assert(handle->cls == handle_t::CLS);
-            return boost::static_pointer_cast<handle_t>(handle);
+            return std::static_pointer_cast<handle_t>(handle);
         }
 
     private:

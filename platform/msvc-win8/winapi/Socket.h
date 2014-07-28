@@ -316,7 +316,7 @@ namespace winapi
         Windows::Networking::Sockets::StreamSocketListener ^ stream_listener_;
         Windows::Networking::Sockets::DatagramSocket ^ datagram_socket_;
         std::deque<Windows::Networking::Sockets::StreamSocket ^> accept_sockets_;
-        boost::shared_ptr<iocp_t> iocp_;
+        std::shared_ptr<iocp_t> iocp_;
         ULONG_PTR lpCompletionKey_;
         std::deque<overlap_task> read_tasks_; // or accept tasks
         std::deque<overlap_task> write_tasks_;
