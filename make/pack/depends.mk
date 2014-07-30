@@ -10,7 +10,6 @@ include $(ROOT_MAKE_DIRECTORY)/func/depends.mk
 print_proj			= $1:$2:$3:$4:!
 
 DEPEND_OUTPUT		= $(call depend_visit,$(LOCAL_NAME),print_proj,Type File Depends)
-$(call dump,DEPEND_OUTPUT)
 
 DEPEND_FILES		:= $(shell echo "$(DEPEND_OUTPUT)" | awk -vpack=1 -f $(ROOT_MAKE_DIRECTORY)/awk/depend.awk)
 

@@ -47,7 +47,7 @@ define pack_depend
 	$(call call_post_action,$(TARGET_STRIP_DIRECTORY)/$(notdir $(1)),$(PACKET_POST_ACTION))
 endef
 
-shell_escape2		= $(if $(2),$(call shell_escape2,$(subst $(firstword $(2)),\\$(firstword $(2)),$(1)),$(wordlist 2,$(words $(2)),$(2))),$(1))
+shell_escape2		= $(if $(2),$(call shell_escape2,$(subst $(firstword $(2)),\$(firstword $(2)),$(1)),$(wordlist 2,$(words $(2)),$(2))),$(1))
 
 shell_escape_char	:= ( )
 
