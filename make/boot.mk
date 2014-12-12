@@ -16,7 +16,7 @@ make_code_boot		= $(eval $(call code_boot,$(1))) $(if $(call directory,$(1)),$(c
 
 $(ROOT_OUTPUT_DIRECTORY):
 	@$(MKDIR) $(ROOT_OUTPUT_DIRECTORY)
-	@test -f $(ROOT_OUTPUT_DIRECTORY)/Makefile || $(CP) $(ROOT_MAKE_DIRECTORY)/tpl/makefile.mk $(ROOT_OUTPUT_DIRECTORY)/Makefile
+	@test -f $(ROOT_OUTPUT_DIRECTORY)/Makefile || $(CP) $(ROOT_MAKE_DIRECTORY)/tpl/outputmakefile.mk $(ROOT_OUTPUT_DIRECTORY)/Makefile
 	@test -f $(ROOT_OUTPUT_DIRECTORY)/BootStrap.mk || $(CP) $(ROOT_MAKE_DIRECTORY)/tpl/bootstrap.mk $(ROOT_OUTPUT_DIRECTORY)/BootStrap.mk
 
 boot//% : $(ROOT_OUTPUT_DIRECTORY)
