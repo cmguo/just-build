@@ -6,5 +6,6 @@
 ###############################################################################
 
 $(TARGET_FILE_FULL): $(SOURCE_OBJECTS) $(HEADER_OBJECTS) $(MAKEFILE_LIST)
+	@echo AR: $@
 	@$(RM) $@
-	$(AR) $(LINK_FLAGS) $@ $(SOURCE_OBJECTS_FULL)
+	@$(AR) $(LINK_FLAGS) $@ $(SOURCE_OBJECTS_FULL)
