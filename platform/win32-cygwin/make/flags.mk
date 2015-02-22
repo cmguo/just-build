@@ -1,6 +1,6 @@
-PLATFORM_COMPILE_FLAGS	:= -Wno-unused-local-typedefs
+PLATFORM_COMPILE_FLAGS	:= -Wno-unused
 
-PLATFORM_DISABLE_FLAGS	:= -fPIC
+PLATFORM_DISABLE_FLAGS	:= -fPIC -pthread
 
 DYNAMIC_NAME_PREFIX		:= cyg
 
