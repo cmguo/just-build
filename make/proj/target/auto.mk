@@ -56,17 +56,20 @@ CONFIGURE		:= $(CONFIGURE) --prefix=$(shell pwd)/$(TARGET_DIRECTORY)
 ifneq ($(call get_conf,extra-cflags),)
 CONFIGURE		:= $(CONFIGURE) --extra-cflags="$(COMPILE_FLAGS)"
 else
-ENVIRONMENT		:= $(ENVIRONMENT) CFLAGS="$(COMPILE_FLAGS)"
+CFLAGS			:= $(COMPILE_FLAGS)
+ENVIRONMENT		+= CFLAGS
 endif
 ifneq ($(call get_conf,extra-cxxflags),)
 CONFIGURE		:= $(CONFIGURE) --extra-cxxflags="$(COMPILE_FLAGS)"
 else
-ENVIRONMENT		:= $(ENVIRONMENT) CXXFLAGS="$(COMPILE_FLAGS)"
+CXXFLAGS		:= $(COMPILE_FLAGS)
+ENVIRONMENT		+= CXXFLAGS
 endif
 ifneq ($(call get_conf,extra-ldflags),)
 CONFIGURE		:= $(CONFIGURE) --extra-ldflags="$(LINK_FLAGS)"
 else
-ENVIRONMENT		:= $(ENVIRONMENT) LDFLAGS="$(LINK_FLAGS)"
+LDFLAGS			:= $(LINK_FLAGS)
+ENVIRONMENT		+= LDFLAGS
 endif
 
 ifneq ($(AUTO_SUB_TYPE),bin)
@@ -99,11 +102,12 @@ endif
 ifneq ($(call get_conf,cross-prefix),)
 CONFIGURE		:= $(CONFIGURE) --cross-prefix=$(PLATFORM_TOOL_PREFIX)
 else
-ENVIRONMENT		:= $(ENVIRONMENT) CC=$(CC)
-ENVIRONMENT		:= $(ENVIRONMENT) CXX=$(CXX)
+ENVIRONMENT		+= CC
+ENVIRONMENT		+= CXX
 endif
-endif
-ENVIRONMENT		:= $(ENVIRONMENT) $(AUTO_CONFIGURE_VARS)
+endif # $(PLATFORM_TOOL_PREFIX)
+
+ENVIRONMENT		+= $(AUTO_CONFIGURE_VARS)
 
 ifneq ($(CONFIG_PROFILE),release)
 CONFIGURE		:= $(CONFIGURE) $(call set_conf,enable-debug)
@@ -119,9 +123,16 @@ FILE_MAKEFILE_AM	:= $(SOURCE_DIRECTORY)/Makefile.am
 FILE_MAKEFILE_IN	:= $(SOURCE_DIRECTORY)/Makefile.in
 FILE_MAKEFILE		:= $(SOURCE_DIRECTORY)/Makefile
 
+# for pkg-config
+PKG_CONFIG_LIBDIR	:=
+PKG_CONFIG_PATH		:= $(call joinlist,:,$(LIB_PATHS:%=%/lib/pkgconfig))
+ENVIRONMENT			+= PKG_CONFIG_LIBDIR PKG_CONFIG_PATH
+
 ifneq ($(AUTO_CONFIG_H),)
 FILE_CONFIG_H		:= $(SOURCE_DIRECTORY)/$(AUTO_CONFIG_H)
 endif
+
+ENVIRONMENT		:= $(foreach e,$(ENVIRONMENT),$(e)="$($(e))")
 
 ifeq ($(wildcard $(FILE_CONFIGURE)),)
 $(FILE_CONFIGURE): 
@@ -179,7 +190,9 @@ endif
 target: $(TARGET_FILE_FULL2)
 
 $(TARGET_FILE_FULL): $(AUTO_TARGET_UP_ALL)
-	$(RM) $@ && $(CD) $(TARGET_DIRECTORY) && $(LN) -s $(@:$(TARGET_DIRECTORY)/$(NAME_PREFIX)%$(NAME_SUFFIX_FULL)=*%*$(NAME_SUFFIX)) $(@:$(TARGET_DIRECTORY)/%=%)
+	$(RM) $@ && $(CD) $(TARGET_DIRECTORY) \
+		&& $(LN) -s $(@:$(TARGET_DIRECTORY)/$(NAME_PREFIX)%$(NAME_SUFFIX_FULL)=*%$(NAME_SUFFIX)) $(@:$(TARGET_DIRECTORY)/%=%) \
+		|| $(LN) -s $(@:$(TARGET_DIRECTORY)/$(NAME_PREFIX)%$(NAME_SUFFIX_FULL)=*%*$(NAME_SUFFIX)) $(@:$(TARGET_DIRECTORY)/%=%)
 
 $(TARGET_FILE_FULL2): $(AUTO_TARGET_UP_ALL)
 	$(RM) $@ && $(LN) $(@:%$(NAME_SUFFIX_FULL).a=%*$(NAME_SUFFIX).a) $@
