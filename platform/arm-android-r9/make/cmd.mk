@@ -4,6 +4,6 @@ PLATFORM_TOOL_NAME	:= gcc46
 
 PLATFORM_TOOL_PREFIX	:= arm-linux-androideabi-
 
-PLATFORM_TOOL_TARGET	:= arm-linux
+PLATFORM_TOOL_TARGET	:= arm-linux-androideabi
 
 CC			:= gcc
