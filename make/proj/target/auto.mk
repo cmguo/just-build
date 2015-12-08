@@ -155,6 +155,7 @@ endif
 endif
 
 AUTO_TARGET_		:= $(addprefix lib/$(NAME_PREFIX),$(PROJECT_TARGET))
+AUTO_TARGET			:= $(AUTO_TARGET_:%=$(TARGET_DIRECTORY)/%$(NAME_SUFFIX))
 
 ifeq ($(NAME_SUFFIX),.dll)
 	TARGET_FILE_FULL2		:= $(TARGET_FILE:$(DYNAMIC_NAME_PREFIX)%=$(TARGET_DIRECTORY)/$(STATIC_NAME_PREFIX)%.a)
@@ -163,8 +164,9 @@ ifeq ($(NAME_SUFFIX),.dll)
 endif
 
 AUTO_TARGET_		:= $(addsuffix *,$(AUTO_TARGET_))
-AUTO_TARGET_ALL	:= $(wildcard $(addprefix $(TARGET_DIRECTORY)/,$(AUTO_TARGET_)))
+AUTO_TARGET_ALL		:= $(wildcard $(addprefix $(TARGET_DIRECTORY)/,$(AUTO_TARGET_)))
 
+AUTO_TARGET_UP		:= $(PROJECT_TARGET:%=$(TARGET_DIRECTORY)/$(NAME_PREFIX)%$(NAME_SUFFIX))
 AUTO_TARGET_UP_ALL	:= $(wildcard $(TARGET_DIRECTORY)/*.*)
 AUTO_TARGET_UP_ALL	:= $(filter-out $(TARGET_FILE_FULL) $(TARGET_FILE_FULL2),$(AUTO_TARGET_UP_ALL))
 
@@ -179,20 +181,27 @@ ifeq ($(AUTO_TARGET_ALL),)
 AUTO_TARGET_ALL 	:= make_install
 endif
 
+ifneq ($(AUTO_TARGET),$(wildcard $(AUTO_TARGET)))
+$(AUTO_TARGET): make_install
+endif
+
 .PHONY: link_up
-link_up: $(AUTO_TARGET_ALL)
-	$(CD) $(TARGET_DIRECTORY) && $(LN) -s $(AUTO_TARGET_) .
+link_up: $(AUTO_TARGET)
+	$(CD) $(TARGET_DIRECTORY) && $(LN) -sf $(AUTO_TARGET_) .
 
 ifeq ($(AUTO_TARGET_UP_ALL),)
 AUTO_TARGET_UP_ALL 	:= link_up
 endif
 
+ifneq ($(AUTO_TARGET_UP),$(wildcard $(AUTO_TARGET_UP)))
+$(AUTO_TARGET_UP): link_up
+endif
+
 target: $(TARGET_FILE_FULL2)
 
-$(TARGET_FILE_FULL): $(AUTO_TARGET_UP_ALL)
+$(TARGET_FILE_FULL): %$(NAME_SUFFIX_FULL) : %$(NAME_SUFFIX)
 	$(RM) $@ && $(CD) $(TARGET_DIRECTORY) \
-		&& $(LN) -s $(@:$(TARGET_DIRECTORY)/$(NAME_PREFIX)%$(NAME_SUFFIX_FULL)=*%$(NAME_SUFFIX)) $(@:$(TARGET_DIRECTORY)/%=%) \
-		|| $(LN) -s $(@:$(TARGET_DIRECTORY)/$(NAME_PREFIX)%$(NAME_SUFFIX_FULL)=*%*$(NAME_SUFFIX)) $(@:$(TARGET_DIRECTORY)/%=%)
+		&& $(LN) -s $(<:$(TARGET_DIRECTORY)/%=%) $(@:$(TARGET_DIRECTORY)/%=%)
 
 $(TARGET_FILE_FULL2): $(AUTO_TARGET_UP_ALL)
 	$(RM) $@ && $(LN) $(@:%$(NAME_SUFFIX_FULL).a=%*$(NAME_SUFFIX).a) $@
