@@ -174,7 +174,7 @@ AUTO_TARGET_UP_ALL	:= $(filter-out $(TARGET_FILE_FULL) $(TARGET_FILE_FULL2),$(AU
 make_install: $(FILE_MAKEFILE) $(FILE_CONFIG_H)
 	@echo $@
 	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) install
-	$(CD) $(SOURCE_DIRECTORY) && $(MAKE) distclean
+	#$(CD) $(SOURCE_DIRECTORY) && $(MAKE) distclean
 	$(call repo_clean,$(SOURCE_DIRECTORY))
 
 ifeq ($(AUTO_TARGET_ALL),)
