@@ -27,8 +27,10 @@ endif
 
 NAME_VERSION		:= $(VERSION)
 
-ifneq ($(NAME_VERSION),)
-	NAME_VERSION		:= -$(NAME_VERSION)
+ifneq ($(VERSION),)
+	VERSION_MAJOR		:= $(shell echo $(VERSION) | cut -d . -f 1)
+	NAME_VERSION		:= -$(VERSION)
+	NAME_VERSION_MAJOR	:= -$(VERSION_MAJOR)
 endif
 
 ifeq ($(BUILDABLE)$(CONFIG_build_version),yesyes)
