@@ -28,6 +28,8 @@ info:
 	@$(ECHO) "TargetDirectory: $(TARGET_DIRECTORY)"
 	@$(ECHO) "Target: $(PROJECT_TARGET)"
 	@$(ECHO) "Version: $(VERSION)"
+	@$(ECHO) "VersionMajor: $(VERSION_MAJOR)"
 	@$(ECHO) "File: $(TARGET_FILE_FULL)"
+	@$(ECHO) "FileMajor: $(TARGET_FILE_MAJOR)"
 	@$(ECHO) "Depends: $(DEPENDS1) $(DEPENDS2)"
 	@$(ECHO) "DependLibs: $(PROJECT_DEPEND_LIBRARYS)"

@@ -5,16 +5,16 @@
 ## @version	1.0
 ###############################################################################
 
-COMPILE_FLAGS_all		?= -g -fPIC -Wall
+COMPILE_FLAGS_all			?= -g -fPIC -Wall
 
-COMPILE_FLAGS_debug		?= -DDEBUG
+COMPILE_FLAGS_debug			?= -DDEBUG
 COMPILE_FLAGS_release		?= -Os -DNDEBUG
-COMPILE_FLAGS_multi		?= -pthread
+COMPILE_FLAGS_multi			?= -pthread
 COMPILE_FLAGS_single		?=
 
-COMPILE_FLAGS_debug_multi	?=
-COMPILE_FLAGS_debug_single	?=
-COMPILE_FLAGS_release_multi	?=
+COMPILE_FLAGS_debug_multi		?=
+COMPILE_FLAGS_debug_single		?=
+COMPILE_FLAGS_release_multi		?=
 COMPILE_FLAGS_release_single	?=
 
 CONFIG_COMPILE_FLAGS		:= $(CONFIG_COMPILE_FLAGS) $(COMPILE_FLAGS_all)

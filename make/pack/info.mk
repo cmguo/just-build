@@ -13,5 +13,7 @@ info:
 	@$(ECHO) "Directory: $(TARGET_DIRECTORY)"
 	@$(ECHO) "Target: $(PACKET_TARGET)"
 	@$(ECHO) "Version: $(VERSION)"
+	@$(ECHO) "VersionMajor: $(VERSION_MAJOR)"
 	@$(ECHO) "File: $(TARGET_FILE_FULL)"
+	@$(ECHO) "FileMajor: $(TARGET_FILE_MAJOR)"
 	@$(ECHO) "Depends: $(PACKET_DEPENDS)"

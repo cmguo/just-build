@@ -93,7 +93,8 @@ END {
                     Log("    skip("di")");
                 }
             }
-            syslib[item] = "";
+            if (!pack)
+                syslib[item] = "";
         } else {
             ii = GetArray(depend[item], depends);
             for (d in depends) {
@@ -127,35 +128,48 @@ END {
     # all static, after static are include
     # all dynamic after dynamic are include with directory only, without file
 
+    for (l in syslib) {
+        Log(l"->"syslib[l]);
+    }
+
     for (i = 1; i < n; i++) {
         if (i in result) {
             item = result[i];
             if (mark[item] == "$") {
                 ii = GetArray(file[item], files);
-                for (j = 1; j <= ii; ++j) {
-                    Log(result[i]"/"files[j]);
-                    print result[i]"/"files[j];
+                if (!pack) {
+                    for (j = 1; j <= ii; ++j) {
+                        Log(result[i]"/"files[j]);
+                        print result[i]"/"files[j];
+                    }
+                } else {
+                    for (j = 1; j <= ii; ++j) {
+                        Log(result[i]"/"files[j]":"syslib[item]);
+                        print result[i]"/"files[j]":"syslib[item];
+                    }
                 }
             } else if (type[item] == "proj-lib-dynamic" && mark[item] == "*") {
                 ii = GetArray(file[item], files);
                 if (!pack) {
                     sub(/[^\/]*$/,"",files[1]);
-                    Log(result[i]"/"files[1]);
-                    print result[i]"/"files[1];
+                    Log(item"/"files[1]);
+                    print item"/"files[1];
                 } else {
                     for (j = 1; j <= ii; ++j) {
-                        Log(result[i]"/"files[j]);
-                        print result[i]"/"files[j];
+                        Log(item"/"files[j]":"syslib[item]);
+                        print item"/"files[j]":"syslib[item];
                     }
                 }
             }
         }
     }
 
-    for (i = 1; i <= nl; i++) {
-        if (i in syslibs) {
-            Log(syslibs[i]);
-            print syslibs[i];
+    if (!pack) {
+        for (i = 1; i <= nl; i++) {
+            if (i in syslibs) {
+                Log(syslibs[i]);
+                print syslibs[i];
+            }
         }
     }
 }

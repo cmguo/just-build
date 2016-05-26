@@ -26,7 +26,7 @@ target: $(TARGET_FILE_FULL)
 
 include $(ROOT_MAKE_DIRECTORY)/mkdirs.mk
 
-.PHONY: $(DEPEND_FILES)
+.PHONY: $(DEPEND_FILES1)
 $(DEPEND_FILES1): mkdirs
 	@$(ECHO) $@
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
@@ -38,27 +38,32 @@ $(DEPEND_FILES2): mkdirs
 	@$(RM) $(TARGET_DIRECTORY)/$(notdir $@)
 	$(CP) -r $@ $(TARGET_DIRECTORY)/$(notdir $@) > /dev/null
 
-# pack_depend file
-define pack_depend
-   	$(LN) $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_SYMBOL_DIRECTORY)/$(notdir $(1))
-	$(if $(findstring /static/,$(1)), \
-		$(CP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)), \
-		$(STRIP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) -o $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)))
-	$(call call_post_action,$(TARGET_STRIP_DIRECTORY)/$(notdir $(1)),$(PACKET_POST_ACTION))
-endef
-
 shell_escape2		= $(if $(2),$(call shell_escape2,$(subst $(firstword $(2)),\$(firstword $(2)),$(1)),$(wordlist 2,$(words $(2)),$(2))),$(1))
 
 shell_escape_char	:= ( )
 
 shell_escape		= $(call shell_escape2,$(1),$(shell_escape_char))
 
-.PHONY: $(PACKET_DEPENDS)
-$(DEPEND_FILES): mkdirs
-	@$(ECHO) $@
-	$(call pack_depend,$@)
+define make_depend_rule3
+$1 : PRIVATE_LINKS := $(notdir $2)
+DEPEND_FILES3	+= $1
+.PHONY: $1
+$1 : mkdirs
+	@$(ECHO) $1
+	$(LN) $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_SYMBOL_DIRECTORY)/$(notdir $(1))
+	$(if $2,$(LN) -s $$(notdir $1) $$(PRIVATE_LINKS:%=$(TARGET_STRIP_DIRECTORY)/%))
+	$(if $(findstring /static/,$(1)), \
+		$(CP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)), \
+		$(STRIP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) -o $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)))
+	$(call call_post_action,$(TARGET_STRIP_DIRECTORY)/$(notdir $(1)),$(PACKET_POST_ACTION))
+endef
 
-$(TARGET_FILE_FULL): $(DEPEND_FILES) $(DEPEND_FILES1) $(DEPEND_FILES2) $(MAKEFILE_LIST)
+make_depend_rule2 = $(call make_depend_rule3,$(firstword $1),$(wordlist 2,$(words $1),$1))
+make_depend_rule = $(eval $(call make_depend_rule2,$(subst :, ,$(1))))
+
+$(foreach d,$(DEPEND_FILES),$(call make_depend_rule,${d}))
+
+$(TARGET_FILE_FULL): $(DEPEND_FILES3) $(DEPEND_FILES1) $(DEPEND_FILES2) $(MAKEFILE_LIST)
 	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(call shell_escape,$(TARGET_FILE)) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2))
 
 ifneq ($(CONFIG_symbol),)
