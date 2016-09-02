@@ -10,6 +10,6 @@
 
 #if 0
 
-PROJECT_DEPEND_LIBRARYS	:= uuid ssl
+PROJECT_DEPEND_LIBRARYS	:= uuid crypto
 
 #endif
