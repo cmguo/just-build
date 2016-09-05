@@ -42,4 +42,7 @@ include $(TARGET_MAKE_DIRECTORY)/ldflags.mk
 
 include $(TARGET_MAKE_DIRECTORY)/$(PROJECT_TYPE).mk
 
-target: $(TARGET_FILE_FULL) post_build
+$(TARGET_FILE_MAJOR) : $(TARGET_FILE_FULL)
+	$(LN) -s $(subst $(NAME_VERSION_MAJOR),$(NAME_VERSION),$(notdir $@)) $@
+
+target: $(TARGET_FILE_FULL) $(TARGET_FILE_MAJOR) post_build
