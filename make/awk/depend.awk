@@ -143,9 +143,10 @@ END {
                         print result[i]"/"files[j];
                     }
                 } else {
+                    GetArray(syslib[item], syslibs);
                     for (j = 1; j <= ii; ++j) {
-                        Log(result[i]"/"files[j]":"syslib[item]);
-                        print result[i]"/"files[j]":"syslib[item];
+                        Log(result[i]"/"files[j]":"syslibs[j]);
+                        print result[i]"/"files[j]":"syslibs[j];
                     }
                 }
             } else if (type[item] == "proj-lib-dynamic" && mark[item] == "*") {
@@ -155,9 +156,10 @@ END {
                     Log(item"/"files[1]);
                     print item"/"files[1];
                 } else {
+                    GetArray(syslib[item], syslibs);
                     for (j = 1; j <= ii; ++j) {
-                        Log(item"/"files[j]":"syslib[item]);
-                        print item"/"files[j]":"syslib[item];
+                        Log(item"/"files[j]":"syslibs[j]);
+                        print item"/"files[j]":"syslibs[j];
                     }
                 }
             }
