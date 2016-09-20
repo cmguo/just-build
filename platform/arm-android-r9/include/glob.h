@@ -187,9 +187,9 @@ extern void globfree __P ((glob_t *__pglob));
 #else
 extern int glob __P ((__const char *__pattern, int __flags,
 		      int (*__errfunc) (__const char *, int),
-		      glob_t *__pglob)) __asm__ ("glob64");
+		      glob_t *__pglob)) __asm__ ("glob");
 
-extern void globfree __P ((glob_t *__pglob)) __asm__ ("globfree64");
+extern void globfree __P ((glob_t *__pglob)) __asm__ ("globfree");
 #endif
 
 
