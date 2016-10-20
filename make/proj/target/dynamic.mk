@@ -13,7 +13,12 @@ ifneq ($(PLATFORM_CRTEND_DYNAMIC),)
 	PLATFORM_CRTEND_DYNAMIC		:= $(wildcard $(addsuffix /$(PLATFORM_CRTEND_DYNAMIC),$(PLATFORM_LIBRARY_DIRECTORYS)))
 endif
 
+TARGET_NAME_MAJOR := $(strip $(TARGET_NAME_MAJOR))
+ifeq ($(TARGET_NAME_MAJOR),)
+LINK_FLAGS		:= $(LINK_FLAGS) -shared -Wl,-soname=$(TARGET_NAME_FULL)
+else
 LINK_FLAGS		:= $(LINK_FLAGS) -shared -Wl,-soname=$(TARGET_NAME_MAJOR)
+endif
 
 ifeq ($(DYNAMIC_NAME_SUFFIX),.dll)
 	LINK_FLAGS		:= $(LINK_FLAGS) -Wl,--out-implib,$(TARGET_FILE_FULL:%=%.a)

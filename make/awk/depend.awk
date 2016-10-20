@@ -139,8 +139,8 @@ END {
                 ii = GetArray(file[item], files);
                 if (!pack) {
                     for (j = 1; j <= ii; ++j) {
-                        Log(result[i]"/"files[j]);
-                        print result[i]"/"files[j];
+                        Log(item"/"files[j]);
+                        print item"/"files[j];
                     }
                 } else {
                     GetArray(syslib[item], syslibs);
@@ -152,9 +152,11 @@ END {
             } else if (type[item] == "proj-lib-dynamic" && mark[item] == "*") {
                 ii = GetArray(file[item], files);
                 if (!pack) {
-                    sub(/[^\/]*$/,"",files[1]);
-                    Log(item"/"files[1]);
-                    print item"/"files[1];
+                    for (j = 1; j <= ii; ++j) {
+                        #sub(/[^\/]*$/,"",files[j]);
+                        Log(item"/"files[j]);
+                        print item"/"files[j];
+                    }
                 } else {
                     GetArray(syslib[item], syslibs);
                     for (j = 1; j <= ii; ++j) {

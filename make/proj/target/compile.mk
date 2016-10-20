@@ -7,11 +7,15 @@
 
 INCLUDES		:= $(INC_PATHS)
 
+#$(warning $(INCLUDES))
+
 ifneq ($(HEADERS),)
 	INCLUDES		:= $(OBJECT_DIRECTORY) $(INCLUDES)
 endif
 
 INCLUDES		:= $(addprefix -I,$(INCLUDES))
+PKG_CONFIG_INC_PATHS := $(addprefix -I,$(PKG_CONFIG_INC_PATHS))
+INCLUDES := $(INCLUDES) $(PKG_CONFIG_INC_PATHS)
 
 vpath %.h $(patsubst -I%,%,$(INCLUDES))
 
