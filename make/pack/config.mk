@@ -11,10 +11,12 @@ CONFIG_PROFILE		:= $(call get_config,$(CONFIG),debug release,debug)
 
 TARGET_DIRECTORY	:= $(CONFIG_PROFILE)
 
+VERSION				:= $(call get_item_info,$(PACKET_VERSION_DEPEND),Version)
 VERSION_DEPEND		:= $(call get_item_info,$(PACKET_VERSION_DEPEND),File)
 VERSION_DEPEND		:= $(PLATFORM_OUTPUT_DIRECTORY)$(PACKET_VERSION_DEPEND)/$(VERSION_DEPEND) 
 
-VERSION				:= $(strip $(shell $(EV) $(VERSION_DEPEND) $(call get_item_info,$(PACKET_VERSION_DEPEND),Target)))
+VERSION_ALL			:= $(strip $(shell $(EV) $(VERSION_DEPEND) $(call get_item_info,$(PACKET_VERSION_DEPEND),Target)))
+BUILD_VERSION		:= $(BUILD_VERSION:$(VERSION)_%=%)
 
 ifneq ($(CONFIG_packet),)
 	NAME_PACKET_STRATEGY	:= ($(CONFIG_packet))

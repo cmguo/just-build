@@ -15,6 +15,14 @@ MAKE_DIRECTORYS         := $(TARGET_DIRECTORY) $(TARGET_STRIP_DIRECTORY) $(TARGE
 DEPEND_FILES1			:= $(PACKET_DEPEND_FILES:%=$(ROOT_DIRECTORY)%)
 DEPEND_FILES2			:= $(PACKET_DEPEND_FILES2:%=$(PLATFORM_OUTPUT_DIRECTORY)%)
 
+BUILD_PROP_FILE			:= $(TARGET_DIRECTORY)/build.prop
+
+$(shell echo version.product=$(VERSION) > $(BUILD_PROP_FILE))
+$(shell echo version.type=$(VERSION_TYPE) >> $(BUILD_PROP_FILE))
+$(shell echo version.build=$(BUILD_NUMBER) >> $(BUILD_PROP_FILE))
+$(shell echo version.time=$(shell date +%s) >> $(BUILD_PROP_FILE))
+$(shell echo version.name=$(VERSION_ALL) >> $(BUILD_PROP_FILE))
+
 ifneq ($(CONFIG_packet),)
 include $(ROOT_STRATEGY_DIRECTORY)/packet/$(CONFIG_packet).mk
 endif

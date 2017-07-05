@@ -41,7 +41,7 @@ ifeq ($(BUILDABLE)$(CONFIG_build_version),yesyes)
                 $(error VERSION_NAME not defined in $(VERSION_HEADER))
         endif
 	
-	BUILD_VERSION		:= $(call repo_version,$(SOURCE_DIRECTORY))
+	BUILD_VERSION		:= $(if $(VERSION_TYPE)$(BUILD_NUMBER),$(VERSION_TYPE)_$(BUILD_NUMBER),$(call repo_version,$(SOURCE_DIRECTORY)))
 
 	BUILD_VERSION		:= $(strip $(BUILD_VERSION))
 
