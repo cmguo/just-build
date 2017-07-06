@@ -58,11 +58,12 @@ DEPEND_FILES3	+= $1
 .PHONY: $1
 $1 : mkdirs
 	@$(ECHO) $1
-	$(LN) $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_SYMBOL_DIRECTORY)/$(notdir $(1))
 	$(if $2,$(LN) -s $$(notdir $1) $$(PRIVATE_LINKS:%=$(TARGET_STRIP_DIRECTORY)/%))
 	$(if $(findstring /static/,$(1)), \
 		$(CP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)), \
-		$(STRIP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) -o $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)))
+		$(STRIP) $(PLATFORM_OUTPUT_DIRECTORY)$(1) -o $(TARGET_STRIP_DIRECTORY)/$(notdir $(1)); \
+		dump_syms $(PLATFORM_OUTPUT_DIRECTORY)$(1) $(TARGET_SYMBOL_DIRECTORY) > $(TARGET_SYMBOL_DIRECTORY)/$(notdir $(1)).sym; \
+	    $$(foreach l,$$(PRIVATE_LINKS),dump_syms $(PLATFORM_OUTPUT_DIRECTORY)/$(dir $(1))$$(l) $(TARGET_SYMBOL_DIRECTORY) > $(TARGET_SYMBOL_DIRECTORY)/$$(l).sym;))
 	$(call call_post_action,$(TARGET_STRIP_DIRECTORY)/$(notdir $(1)),$(PACKET_POST_ACTION))
 endef
 
@@ -72,11 +73,5 @@ make_depend_rule = $(eval $(call make_depend_rule2,$(subst :, ,$(1))))
 $(foreach d,$(DEPEND_FILES),$(call make_depend_rule,${d}))
 
 $(TARGET_FILE_FULL): $(DEPEND_FILES3) $(DEPEND_FILES1) $(DEPEND_FILES2) $(MAKEFILE_LIST)
-	$(CD) $(TARGET_DIRECTORY) ; $(PACK) $(call shell_escape,$(TARGET_FILE)) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2))
-
-ifneq ($(CONFIG_symbol),)
-$(TARGET_FILE_FULL): $(TARGET_FILE_SYMBOL_FULL)
-endif
-
-$(TARGET_FILE_SYMBOL_FULL): $(DEPEND_FILES3)
-	$(CD) $(TARGET_DIRECTORY) ; $(PACK) $(call shell_escape,$(TARGET_FILE_SYMBOL)) $(PLATFORM_STRATEGY_NAME)-symbol
+	$(CD) $(TARGET_DIRECTORY) ; $(PACK) $(call shell_escape,$(TARGET_FILE)) $(PLATFORM_STRATEGY_NAME) $(PLATFORM_STRATEGY_NAME)-symbol $(notdir $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2))
+	$(RM) $(TARGET_STRIP_DIRECTORY) $(TARGET_SYMBOL_DIRECTORY)

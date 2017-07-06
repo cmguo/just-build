@@ -26,7 +26,7 @@ ifeq ($(PACKET_TYPE),tar.gz)
 	PACK	:= tar -czv -f 
 else
 ifeq ($(PACKET_TYPE),zip)
-	PACK	:= zip -j -r 
+	PACK	:= zip --symlinks -r 
 else
 	PACKET_TYPE	:= tar.gz
 	PACK    := tar -czv -f
