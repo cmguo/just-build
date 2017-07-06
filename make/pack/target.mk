@@ -72,11 +72,11 @@ make_depend_rule = $(eval $(call make_depend_rule2,$(subst :, ,$(1))))
 $(foreach d,$(DEPEND_FILES),$(call make_depend_rule,${d}))
 
 $(TARGET_FILE_FULL): $(DEPEND_FILES3) $(DEPEND_FILES1) $(DEPEND_FILES2) $(MAKEFILE_LIST)
-	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(call shell_escape,$(TARGET_FILE)) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2))
+	$(CD) $(TARGET_DIRECTORY) ; $(PACK) $(call shell_escape,$(TARGET_FILE)) $(PLATFORM_STRATEGY_NAME) $(notdir $(PACKET_DEPEND_FILES) $(PACKET_DEPEND_FILES2))
 
 ifneq ($(CONFIG_symbol),)
 $(TARGET_FILE_FULL): $(TARGET_FILE_SYMBOL_FULL)
 endif
 
-$(TARGET_FILE_SYMBOL_FULL): $(PACKET_DEPENDS)
-	$(CD) $(TARGET_DIRECTORY) ; tar -czv -f $(call shell_escape,$(TARGET_FILE_SYMBOL)) $(PLATFORM_STRATEGY_NAME)-symbol
+$(TARGET_FILE_SYMBOL_FULL): $(DEPEND_FILES3)
+	$(CD) $(TARGET_DIRECTORY) ; $(PACK) $(call shell_escape,$(TARGET_FILE_SYMBOL)) $(PLATFORM_STRATEGY_NAME)-symbol
