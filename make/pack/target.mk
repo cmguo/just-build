@@ -19,6 +19,7 @@ BUILD_PROP_FILE			:= $(TARGET_DIRECTORY)/build.prop
 
 $(shell echo version.product=$(VERSION) > $(BUILD_PROP_FILE))
 $(shell echo version.type=$(VERSION_TYPE) >> $(BUILD_PROP_FILE))
+$(shell echo version.branch=$(BRANCH) >> $(BUILD_PROP_FILE))
 $(shell echo version.build=$(BUILD_NUMBER) >> $(BUILD_PROP_FILE))
 $(shell echo version.time=$(shell date +%s) >> $(BUILD_PROP_FILE))
 $(shell echo version.name=$(VERSION_ALL) >> $(BUILD_PROP_FILE))
